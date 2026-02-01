@@ -1,3 +1,26 @@
 spring:
   application:
     name: shifterizator-backend
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: always
+
+jwt:
+  secret: ${JWT_SECRET:change-me-in-prod}
+  expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

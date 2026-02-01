@@ -1,4 +1,4 @@
-# 🚀 Shiftly - Automatic Multi-Business Schedule Generator
+# 🚀 Shifterizator - Automatic Multi-Business Schedule Generator
 
 ## 🎯 Product Vision (Jan 31, 2026)
 **For jewelry/retail managers in Barcelona [who]**, generates optimal 1‑month schedules [what], considering positions/seniority/languages/managers + employee preferences [how], **scalable multi‑tenant** (3–50 employees/business) [why].

@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  shifterizator-mysql:
+    image: mysql:8.0
+    container_name: shifterizator-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shifterizator_dev
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - shifterizator_mysql_data:/var/lib/mysql
+
+volumes:
+  shifterizator_mysql_data:
