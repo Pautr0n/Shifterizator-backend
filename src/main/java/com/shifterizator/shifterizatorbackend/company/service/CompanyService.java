@@ -87,6 +87,12 @@ public class CompanyService {
 
     }
 
+    public List<Company> listAllCompanies(){
+
+        return companyRepository.findAll();
+
+    }
+
     public List<Company> listActiveCompanies() {
 
         return companyRepository.findByIsActive(true);
