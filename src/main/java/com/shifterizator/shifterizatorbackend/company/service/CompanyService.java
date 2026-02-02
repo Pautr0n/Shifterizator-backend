@@ -72,6 +72,15 @@ public class CompanyService {
 
     }
 
+    @Transactional
+    public void deleteCompany (Long id){
+
+        Company company = validateCompanyExistsAndReturnCompany(id);
+
+        companyRepository.delete(company);
+
+    }
+
     public Company getCompany(Long id) {
 
         return validateCompanyExistsAndReturnCompany(id);
