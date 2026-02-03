@@ -10,22 +10,22 @@ import java.util.Optional;
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, Long> {
 
-    public Optional<Company> findByName(String name);
+    Optional<Company> findByName(String name);
 
-    public Optional<Company> findByTaxId(String taxId);
+    Optional<Company> findByTaxId(String taxId);
 
-    public Optional<Company> findByEmail(String email);
+    Optional<Company> findByEmail(String email);
 
-    public List<Company> findByIsActive(Boolean isActive);
+    List<Company> findByIsActive(Boolean isActive);
 
-    public List<Company> findByNameContainingIgnoreCase(String name);
+    List<Company> findByNameContainingIgnoreCase(String name);
 
-    public List<Company> findByNameContainingIgnoreCaseAndIsActive(String name, boolean isActive);
+    List<Company> findByNameContainingIgnoreCaseAndIsActive(String name, boolean isActive);
 
-    public boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
 
-    public boolean existsByEmailIgnoreCaseAndIdNot(String email, Long id);
+    boolean existsByEmailIgnoreCaseAndIdNot(String email, Long id);
 
-    public boolean existsByTaxIdIgnoreCaseAndIdNot(String taxId, Long id);
+    boolean existsByTaxIdIgnoreCaseAndIdNot(String taxId, Long id);
 
 }
