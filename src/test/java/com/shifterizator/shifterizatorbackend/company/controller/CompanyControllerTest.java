@@ -3,6 +3,8 @@ package com.shifterizator.shifterizatorbackend.company.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shifterizator.shifterizatorbackend.company.dto.CompanyRequestDto;
 import com.shifterizator.shifterizatorbackend.company.dto.CompanyResponseDto;
+import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
+import com.shifterizator.shifterizatorbackend.company.exception.CompanyValidationException;
 import com.shifterizator.shifterizatorbackend.company.mapper.CompanyMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.service.CompanyService;
@@ -23,6 +25,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -90,8 +93,8 @@ class CompanyControllerTest {
 
     @Test
     void createCompany_should_return_201_and_body() throws Exception {
-        Mockito.when(companyService.createCompany(any())).thenReturn(company1);
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.createCompany(any())).thenReturn(company1);
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(post("/api/companies")
                         .with(csrf())
@@ -100,9 +103,26 @@ class CompanyControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        Mockito.verify(companyService).createCompany(any());
-        Mockito.verify(companyMapper).toDto(company1);
+        verify(companyService).createCompany(any());
+        verify(companyMapper).toDto(company1);
     }
+
+    @Test
+    void createCompany_should_return_400_when_validation_error() throws Exception {
+        when(companyService.createCompany(any()))
+                .thenThrow(new CompanyValidationException("Company name already exists: Company 1"));
+
+        mockMvc.perform(post("/api/companies")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Company name already exists: Company 1"))
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+
+        verify(companyService).createCompany(any());
+    }
+
 
     // ---------------------------------------------------------
     // GET BY ID
@@ -111,15 +131,28 @@ class CompanyControllerTest {
     @Test
     @WithMockUser
     void getCompany_should_return_200_and_body() throws Exception {
-        Mockito.when(companyService.getCompany(1L)).thenReturn(company1);
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.getCompany(1L)).thenReturn(company1);
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(get("/api/companies/1").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Company 1"));
 
-        Mockito.verify(companyService).getCompany(1L);
-        Mockito.verify(companyMapper).toDto(company1);
+        verify(companyService).getCompany(1L);
+        verify(companyMapper).toDto(company1);
+    }
+
+    @Test
+    void getCompany_should_return_404_when_not_found() throws Exception {
+        when(companyService.getCompany(99L))
+                .thenThrow(new CompanyNotFoundException("Company not found with id: 99"));
+
+        mockMvc.perform(get("/api/companies/99").with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Company not found with id: 99"))
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+
+        verify(companyService).getCompany(99L);
     }
 
     // ---------------------------------------------------------
@@ -128,14 +161,14 @@ class CompanyControllerTest {
 
     @Test
     void listAllCompanies_should_return_200_and_list() throws Exception {
-        Mockito.when(companyService.listAllCompanies()).thenReturn(List.of(company1));
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.listAllCompanies()).thenReturn(List.of(company1));
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(get("/api/companies").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L));
 
-        Mockito.verify(companyService).listAllCompanies();
+        verify(companyService).listAllCompanies();
     }
 
     // ---------------------------------------------------------
@@ -144,14 +177,14 @@ class CompanyControllerTest {
 
     @Test
     void listActiveCompanies_should_return_200_and_list() throws Exception {
-        Mockito.when(companyService.listActiveCompanies()).thenReturn(List.of(company1));
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.listActiveCompanies()).thenReturn(List.of(company1));
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(get("/api/companies/active").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L));
 
-        Mockito.verify(companyService).listActiveCompanies();
+        verify(companyService).listActiveCompanies();
     }
 
     // ---------------------------------------------------------
@@ -160,14 +193,14 @@ class CompanyControllerTest {
 
     @Test
     void listInactiveCompanies_should_return_200_and_list() throws Exception {
-        Mockito.when(companyService.listInActiveCompanies()).thenReturn(List.of(company1));
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.listInActiveCompanies()).thenReturn(List.of(company1));
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(get("/api/companies/inactive").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L));
 
-        Mockito.verify(companyService).listInActiveCompanies();
+        verify(companyService).listInActiveCompanies();
     }
 
     // ---------------------------------------------------------
@@ -176,14 +209,14 @@ class CompanyControllerTest {
 
     @Test
     void searchActiveCompanies_should_return_200_and_list() throws Exception {
-        Mockito.when(companyService.searchActiveCompaniesByName("Comp")).thenReturn(List.of(company1));
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.searchActiveCompaniesByName("Comp")).thenReturn(List.of(company1));
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(get("/api/companies/active/search?name=Comp"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Company 1"));
 
-        Mockito.verify(companyService).searchActiveCompaniesByName("Comp");
+        verify(companyService).searchActiveCompaniesByName("Comp");
     }
 
     // ---------------------------------------------------------
@@ -192,14 +225,14 @@ class CompanyControllerTest {
 
     @Test
     void searchInactiveCompanies_should_return_200_and_list() throws Exception {
-        Mockito.when(companyService.searchInActiveCompaniesByName("Comp")).thenReturn(List.of(company1));
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.searchInActiveCompaniesByName("Comp")).thenReturn(List.of(company1));
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(get("/api/companies/inactive/search?name=Comp"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Company 1"));
 
-        Mockito.verify(companyService).searchInActiveCompaniesByName("Comp");
+        verify(companyService).searchInActiveCompaniesByName("Comp");
     }
 
     // ---------------------------------------------------------
@@ -208,14 +241,14 @@ class CompanyControllerTest {
 
     @Test
     void searchCompaniesByName_should_return_200_and_list() throws Exception {
-        Mockito.when(companyService.searchAllCompaniesByName("Comp")).thenReturn(List.of(company1));
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.searchAllCompaniesByName("Comp")).thenReturn(List.of(company1));
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(get("/api/companies/search?name=Comp"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Company 1"));
 
-        Mockito.verify(companyService).searchAllCompaniesByName("Comp");
+        verify(companyService).searchAllCompaniesByName("Comp");
     }
 
     // ---------------------------------------------------------
@@ -225,8 +258,8 @@ class CompanyControllerTest {
     @Test
     @WithMockUser
     void updateCompany_should_return_200_and_body() throws Exception {
-        Mockito.when(companyService.updateCompany(eq(1L), any())).thenReturn(company1);
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.updateCompany(eq(1L), any())).thenReturn(company1);
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(put("/api/companies/1")
                         .with(csrf())
@@ -235,8 +268,40 @@ class CompanyControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        Mockito.verify(companyService).updateCompany(eq(1L), any());
-        Mockito.verify(companyMapper).toDto(company1);
+        verify(companyService).updateCompany(eq(1L), any());
+        verify(companyMapper).toDto(company1);
+    }
+
+    @Test
+    void updateCompany_should_return_404_when_not_found() throws Exception {
+        when(companyService.updateCompany(eq(99L), any()))
+                .thenThrow(new CompanyNotFoundException("Company not found with id: 99"));
+
+        mockMvc.perform(put("/api/companies/99")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Company not found with id: 99"))
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+
+        verify(companyService).updateCompany(eq(99L), any());
+    }
+
+    @Test
+    void updateCompany_should_return_400_when_validation_error() throws Exception {
+        when(companyService.updateCompany(eq(1L), any()))
+                .thenThrow(new CompanyValidationException("Company email already exists: company1@company.com"));
+
+        mockMvc.perform(put("/api/companies/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Company email already exists: company1@company.com"))
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+
+        verify(companyService).updateCompany(eq(1L), any());
     }
 
     // ---------------------------------------------------------
@@ -246,14 +311,27 @@ class CompanyControllerTest {
     @Test
     @WithMockUser
     void activateCompany_should_return_200_and_body() throws Exception {
-        Mockito.when(companyService.activateCompany(1L)).thenReturn(company1);
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.activateCompany(1L)).thenReturn(company1);
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(patch("/api/companies/1/activate").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        Mockito.verify(companyService).activateCompany(1L);
+        verify(companyService).activateCompany(1L);
+    }
+
+    @Test
+    void activateCompany_should_return_404_when_not_found() throws Exception {
+        when(companyService.activateCompany(99L))
+                .thenThrow(new CompanyNotFoundException("Company not found with id: 99"));
+
+        mockMvc.perform(patch("/api/companies/99/activate").with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Company not found with id: 99"))
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+
+        verify(companyService).activateCompany(99L);
     }
 
     // ---------------------------------------------------------
@@ -263,14 +341,27 @@ class CompanyControllerTest {
     @Test
     @WithMockUser
     void deactivateCompany_should_return_200_and_body() throws Exception {
-        Mockito.when(companyService.deactivateCompany(1L)).thenReturn(company1);
-        Mockito.when(companyMapper.toDto(company1)).thenReturn(responseDto1);
+        when(companyService.deactivateCompany(1L)).thenReturn(company1);
+        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(patch("/api/companies/1/deactivate").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        Mockito.verify(companyService).deactivateCompany(1L);
+        verify(companyService).deactivateCompany(1L);
+    }
+
+    @Test
+    void deactivateCompany_should_return_404_when_not_found() throws Exception {
+        when(companyService.deactivateCompany(99L))
+                .thenThrow(new CompanyNotFoundException("Company not found with id: 99"));
+
+        mockMvc.perform(patch("/api/companies/99/deactivate").with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Company not found with id: 99"))
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+
+        verify(companyService).deactivateCompany(99L);
     }
 
     // ---------------------------------------------------------
@@ -283,7 +374,20 @@ class CompanyControllerTest {
         mockMvc.perform(delete("/api/companies/1").with(csrf()))
                 .andExpect(status().isNoContent());
 
-        Mockito.verify(companyService).deleteCompany(1L);
+        verify(companyService).deleteCompany(1L);
+    }
+
+    @Test
+    void deleteCompany_should_return_404_when_not_found() throws Exception {
+        doThrow(new CompanyNotFoundException("Company not found with id: 99"))
+                .when(companyService).deleteCompany(99L);
+
+        mockMvc.perform(delete("/api/companies/99").with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Company not found with id: 99"))
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+
+        verify(companyService).deleteCompany(99L);
     }
 
 }
