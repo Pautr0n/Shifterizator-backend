@@ -87,13 +87,12 @@ class CompanyServiceTest {
 
     @Test
     void createCompany_should_throw_CompanyValidationException_if_name_exist() {
-        when(companyRepository.findByName(any()))
-                .thenThrow(new CompanyValidationException("Company name already exists:"));
+        when(companyRepository.findByName(any())).thenReturn(Optional.ofNullable(company1));
 
         Exception exception = assertThrows(CompanyValidationException.class
                 , () -> companyService.createCompany(REQUEST_DTO));
 
-        assertEquals("Company name already exists:", exception.getMessage());
+        assertEquals("Company name already exists: Company 1", exception.getMessage());
         verify(companyRepository).findByName("Company 1");
 
     }
@@ -101,12 +100,12 @@ class CompanyServiceTest {
     @Test
     void createCompany_should_throw_CompanyValidationException_if_taxId_exist() {
         when(companyRepository.findByTaxId(any()))
-                .thenThrow(new CompanyValidationException("Company taxId already exists:"));
+                .thenReturn(Optional.ofNullable(company1));
 
         Exception exception = assertThrows(CompanyValidationException.class
                 , () -> companyService.createCompany(REQUEST_DTO));
 
-        assertEquals("Company taxId already exists:", exception.getMessage());
+        assertEquals("Company tax id already exists: 12345678A", exception.getMessage());
         verify(companyRepository).findByTaxId("12345678A");
 
     }
@@ -114,12 +113,12 @@ class CompanyServiceTest {
     @Test
     void createCompany_should_throw_CompanyValidationException_if_email_exist() {
         when(companyRepository.findByEmail(any()))
-                .thenThrow(new CompanyValidationException("Company email already exists:"));
+                .thenReturn(Optional.ofNullable(company1));
 
         Exception exception = assertThrows(CompanyValidationException.class
                 , () -> companyService.createCompany(REQUEST_DTO));
 
-        assertEquals("Company email already exists:", exception.getMessage());
+        assertEquals("Company email already exists: company1@company.com", exception.getMessage());
         verify(companyRepository).findByEmail("company1@company.com");
 
     }
