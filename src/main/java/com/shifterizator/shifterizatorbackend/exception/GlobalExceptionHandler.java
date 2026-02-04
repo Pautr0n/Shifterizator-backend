@@ -2,14 +2,50 @@ package com.shifterizator.shifterizatorbackend.exception;
 
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyValidationException;
+import com.shifterizator.shifterizatorbackend.user.exception.InvalidPasswordException;
+import com.shifterizator.shifterizatorbackend.user.exception.UserAlreadyExistsException;
+import com.shifterizator.shifterizatorbackend.user.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handleUserNotFound(UserNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorDto> handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "VALIDATION_ERROR",
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ResponseEntity<ApiErrorDto> handleInvalidPassword(InvalidPasswordException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "VALIDATION_ERROR",
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
     @ExceptionHandler(CompanyNotFoundException.class)
     public ResponseEntity<ApiErrorDto> handleCompanyNotFound(CompanyNotFoundException ex) {
         ApiErrorDto error = new ApiErrorDto(

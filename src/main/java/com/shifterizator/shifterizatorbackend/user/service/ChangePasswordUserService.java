@@ -2,6 +2,7 @@ package com.shifterizator.shifterizatorbackend.user.service;
 
 
 import com.shifterizator.shifterizatorbackend.user.dto.ChangePasswordRequestDto;
+import com.shifterizator.shifterizatorbackend.user.exception.InvalidPasswordException;
 import com.shifterizator.shifterizatorbackend.user.mapper.UserMapper;
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import com.shifterizator.shifterizatorbackend.user.repository.UserRepository;
@@ -30,7 +31,5 @@ public class ChangePasswordUserService {
 
         userRepository.save(authenticatedUser);
     }
-
-
 
 }
