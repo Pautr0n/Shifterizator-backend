@@ -7,10 +7,12 @@ import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
 import com.shifterizator.shifterizatorbackend.employee.repository.PositionRepository;
 import com.shifterizator.shifterizatorbackend.employee.service.domain.EmployeeDomainService;
+import com.shifterizator.shifterizatorbackend.employee.spec.EmployeeSpecs;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -97,7 +99,27 @@ public class EmployeeServiceImpl implements EmployeeService {
             String position,
             Pageable pageable
     ) {
-        return Page.empty(pageable);
+        Specification<Employee> spec = Specification.where(EmployeeSpecs.onlyActive());
+
+        if (companyId != null) {
+            spec = spec.and(EmployeeSpecs.byCompany(companyId));
+        }
+
+        if (locationId != null) {
+            spec = spec.and(EmployeeSpecs.byLocation(locationId));
+        }
+
+        if (nameContains != null && !nameContains.isBlank()) {
+            spec = spec.and(EmployeeSpecs.nameContains(nameContains));
+        }
+
+        if (position != null && !position.isBlank()) {
+            spec = spec.and(EmployeeSpecs.byPosition(position));
+        }
+
+        return employeeRepository.findAll(spec, pageable)
+                .map(employeeMapper::toResponse);
+
     }
 }
 
