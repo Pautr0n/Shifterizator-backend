@@ -1,0 +1,60 @@
+package com.shifterizator.shifterizatorbackend.user.service;
+
+import com.shifterizator.shifterizatorbackend.user.exception.ForbiddenOperationException;
+import com.shifterizator.shifterizatorbackend.user.model.Role;
+import com.shifterizator.shifterizatorbackend.user.model.User;
+import com.shifterizator.shifterizatorbackend.user.repository.UserRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class UserServiceSuperAdminProtectionTest {
+
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @InjectMocks
+    private UserService service;
+
+    @Test
+    void deleteUser_should_throw_when_user_is_system_user() {
+
+        User founder = new User("superadmin", "mail", "hash", Role.SUPERADMIN, null);
+        founder.setId(1L);
+        founder.setIsSystemUser(true);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(founder));
+
+        assertThatThrownBy(() -> service.deleteUser(1L))
+                .isInstanceOf(ForbiddenOperationException.class)
+                .hasMessage("System user cannot be deleted");
+
+        verify(userRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteUser_should_allow_deleting_non_system_superadmin() {
+
+        User otherSuperAdmin = new User("super2", "mail", "hash", Role.SUPERADMIN, null);
+        otherSuperAdmin.setId(2L);
+        otherSuperAdmin.setIsSystemUser(false);
+
+        when(userRepository.findById(2L)).thenReturn(Optional.of(otherSuperAdmin));
+
+        service.deleteUser(2L);
+
+        verify(userRepository).delete(otherSuperAdmin);
+    }
+
+}

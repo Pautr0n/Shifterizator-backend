@@ -29,7 +29,7 @@ public class UserSeeder implements CommandLineRunner {
                 "superadmin",
                 "superadmin@system.local",
                 passwordEncoder.encode("SuperAdmin1!"),
-                Role.SYSADMIN,
+                Role.SUPERADMIN,
                 null
         );
         superAdmin.setIsActive(true);

@@ -11,6 +11,61 @@
 | **MANAGER** | Generate/edit schedules, employee preferences |
 | **EMPLOYEE** | View calendars, request holidays |
 
+🚀 Initial Users (Seed Data)
+The application automatically seeds initial users when running in non‑production environments (dev, test).
+This allows developers to test authentication, roles, and permissions immediately.
+✔ Seeded Users
+|  |  |  |  |
+| superadmin |  | SuperAdmin1! |  |
+| admin |  | Admin123! |  |
+| manager |  | Manager123! |  |
+| employee |  | Employee123! |  |
+
+
+✔ Behavior
+- Users are created only if the database is empty.
+- Passwords are securely hashed using the configured PasswordEncoder.
+- The seeder runs only when the active profile is not prod.
+- The superadmin user is marked as a system user and cannot be deleted.
+- Additional SUPERADMIN users created later can be deleted normally.
+
+## 🚀 Initial Users (Seed Data)
+
+The application automatically seeds initial users when running in **non‑production environments** (`dev`, `test`).  
+This allows developers to test authentication, roles, and permissions immediately.
+
+### ✔ Seeded Users
+
+| Username     | Role        | Password        | Notes |
+|--------------|-------------|-----------------|-------|
+| `superadmin` | SUPERADMIN  | `SuperAdmin1!`  | **System user — cannot be deleted** |
+| `admin`      | ADMIN       | `Admin123!`     | Can be deleted |
+| `manager`    | MANAGER     | `Manager123!`   | Can be deleted |
+| `employee`   | EMPLOYEE    | `Employee123!`  | Can be deleted |
+
+### ✔ Behavior
+
+- Users are created **only if the database is empty**.
+- Passwords are **securely hashed** using the configured `PasswordEncoder`.
+- The seeder runs only when the active profile is **not** `prod`.
+- The `superadmin` user is marked as a **system user** and **cannot be deleted**.
+- Additional SUPERADMIN users created later **can** be deleted normally.
+
+### ✔ Production Safety
+
+The seeder is annotated with:
+
+```java
+@Profile("!prod")
+```
+
+This guarantees:
+
+- **No test users are ever created in production**
+- Production data remains clean and controlled
+
+---
+
 ## 🏗️ Tech Stack
 - **Backend**: Spring Boot **4.0.2** + Java 21 + Spring Security JWT + JPA/**MySQL** + **SpringDoc Swagger**
 - **Frontend**: Angular 18 + Angular Material + JWT Interceptor

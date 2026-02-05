@@ -4,6 +4,7 @@ import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundE
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.user.dto.UserRequestDto;
+import com.shifterizator.shifterizatorbackend.user.exception.ForbiddenOperationException;
 import com.shifterizator.shifterizatorbackend.user.exception.UserAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.user.exception.UserNotFoundException;
 import com.shifterizator.shifterizatorbackend.user.mapper.UserMapper;
