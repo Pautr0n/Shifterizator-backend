@@ -1,5 +1,6 @@
 package com.shifterizator.shifterizatorbackend.exception;
 
+import com.shifterizator.shifterizatorbackend.auth.exception.InvalidCredentialsException;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyValidationException;
 import com.shifterizator.shifterizatorbackend.user.exception.ForbiddenOperationException;
@@ -53,6 +54,18 @@ public class GlobalExceptionHandler {
                 "VALIDATION_ERROR",
                 HttpStatus.BAD_REQUEST.value()
         );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorDto> handleInvalidCredentials(InvalidCredentialsException ex) {
+
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "INVALID_CREDENTIALS",
+                HttpStatus.BAD_REQUEST.value()
+        );
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 

@@ -13,8 +13,10 @@ server:
     include-message: always
 
 jwt:
-  secret: ${JWT_SECRET:change-me-in-prod}
-  expiration: 86400000
+  secret: "63yYuYleXPvNFkojq6peEcbwFS8Kbb5NerVz5Sapqk+Q/rMdWm3PUDNb8siO/yh1UkQibSOhrPUDdIt1dCs5fQ=="
+  expiration: 900000          # 15 minutos en ms
+  refresh-expiration: 604800000  # 7 días en ms
+
 
 management:
   endpoints:

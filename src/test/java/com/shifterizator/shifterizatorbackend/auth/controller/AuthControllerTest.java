@@ -1,30 +1,29 @@
 package com.shifterizator.shifterizatorbackend.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shifterizator.shifterizatorbackend.auth.dto.LoginRequestDto;
+import com.shifterizator.shifterizatorbackend.auth.dto.TokenResponseDto;
+import com.shifterizator.shifterizatorbackend.auth.exception.InvalidCredentialsException;
 import com.shifterizator.shifterizatorbackend.auth.service.AuthService;
-import com.shifterizator.shifterizatorbackend.user.dto.ChangePasswordRequestDto;
-import com.shifterizator.shifterizatorbackend.user.exception.InvalidPasswordException;
-import com.shifterizator.shifterizatorbackend.user.model.Role;
-import com.shifterizator.shifterizatorbackend.user.model.User;
+import com.shifterizator.shifterizatorbackend.auth.service.CurrentUserService;
 import com.shifterizator.shifterizatorbackend.user.service.ChangePasswordUserService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
     @Autowired
@@ -34,7 +33,11 @@ class AuthControllerTest {
     private AuthService authService;
 
     @MockitoBean
+    private CurrentUserService currentUserService;
+
+    @MockitoBean
     private ChangePasswordUserService changePasswordUserService;
+
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -48,52 +51,42 @@ class AuthControllerTest {
     }
 
     @Test
-    @WithMockUser
-    void changePassword_should_return_200() throws Exception {
+    void login_should_return_tokens_when_credentials_valid() throws Exception {
 
-        ChangePasswordRequestDto dto = new ChangePasswordRequestDto(
-                "OldPass1!",
-                "NewPass1!"
+        TokenResponseDto response = new TokenResponseDto(
+                "access",
+                "refresh",
+                1L,
+                "john",
+                "EMPLOYEE",
+                null
         );
 
-        User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
-        user.setId(10L);
+        when(authService.login(any())).thenReturn(response);
 
-        when(authService.getAuthenticatedUser()).thenReturn(user);
+        LoginRequestDto request = new LoginRequestDto("john", "Password1!");
 
-        mockMvc.perform(patch("/api/auth/change-password")
-                        .with(csrf())
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk());
-
-        Mockito.verify(changePasswordUserService).changeOwnPassword(user, dto);
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("access"))
+                .andExpect(jsonPath("$.refreshToken").value("refresh"))
+                .andExpect(jsonPath("$.username").value("john"));
     }
 
     @Test
-    @WithMockUser
-    void changePassword_should_return_400_when_current_password_invalid() throws Exception {
+    void login_should_return_4xx_when_invalid_credentials() throws Exception {
 
-        ChangePasswordRequestDto dto = new ChangePasswordRequestDto(
-                "WrongPass1!",
-                "NewPass1!"
-        );
+        when(authService.login(any()))
+                .thenThrow(new InvalidCredentialsException("Invalid credentials"));
 
-        User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
-        user.setId(10L);
+        LoginRequestDto request = new LoginRequestDto("john", "wrong");
 
-        when(authService.getAuthenticatedUser()).thenReturn(user);
-
-        doThrow(new InvalidPasswordException("Current password is incorrect"))
-                .when(changePasswordUserService).changeOwnPassword(user, dto);
-
-        mockMvc.perform(patch("/api/auth/change-password")
-                        .with(csrf())
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.message").value("Current password is incorrect"));
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().is4xxClientError());
     }
 
 }
