@@ -2,6 +2,7 @@ package com.shifterizator.shifterizatorbackend.exception;
 
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyValidationException;
+import com.shifterizator.shifterizatorbackend.user.exception.ForbiddenOperationException;
 import com.shifterizator.shifterizatorbackend.user.exception.InvalidPasswordException;
 import com.shifterizator.shifterizatorbackend.user.exception.UserAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.user.exception.UserNotFoundException;
@@ -33,6 +34,16 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(ForbiddenOperationException.class)
+    public ResponseEntity<ApiErrorDto> handleForbidden(ForbiddenOperationException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "FORBIDDEN",
+                HttpStatus.FORBIDDEN.value()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler(InvalidPasswordException.class)

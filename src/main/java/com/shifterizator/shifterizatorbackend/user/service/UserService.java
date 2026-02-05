@@ -93,6 +93,11 @@ public class UserService {
     @Transactional
     public void deleteUser(Long id) {
         User user = validateUserExistsAndReturnUser(id);
+
+        if (Boolean.TRUE.equals(user.getIsSystemUser())) {
+            throw new ForbiddenOperationException("System user cannot be deleted");
+        }
+
         userRepository.delete(user);
     }
 
