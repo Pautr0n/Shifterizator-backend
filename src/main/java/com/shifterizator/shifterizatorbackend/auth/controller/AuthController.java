@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -38,6 +40,12 @@ public class AuthController {
         log.info("POST /api/auth/refresh");
         TokenResponseDto response = authService.refresh(dto);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me() {
+        User user = currentUserService.getCurrentUser();
+        return ResponseEntity.ok(Map.of("username", user.getUsername()));
     }
 
     @PatchMapping("/change-password")
