@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.exception;
 
+import com.shifterizator.shifterizatorbackend.auth.exception.AuthException;
 import com.shifterizator.shifterizatorbackend.auth.exception.InvalidCredentialsException;
+import com.shifterizator.shifterizatorbackend.auth.exception.InvalidRefreshTokenException;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyValidationException;
 import com.shifterizator.shifterizatorbackend.user.exception.ForbiddenOperationException;
@@ -69,6 +71,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ApiErrorDto> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
+
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "INVALID_REFRESH_TOKEN",
+                HttpStatus.UNAUTHORIZED.value()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ApiErrorDto> handleAuthException(AuthException ex) {
+
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "AUTH_ERROR",
+                HttpStatus.UNAUTHORIZED.value()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
 
     @ExceptionHandler(CompanyNotFoundException.class)
     public ResponseEntity<ApiErrorDto> handleCompanyNotFound(CompanyNotFoundException ex) {
