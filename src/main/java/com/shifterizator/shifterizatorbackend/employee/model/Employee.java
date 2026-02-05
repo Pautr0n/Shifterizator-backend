@@ -2,16 +2,100 @@ package com.shifterizator.shifterizatorbackend.employee.model;
 
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
+@Table(name = "employees")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @NotBlank
+    @Column(nullable = false)
+    private String name;
 
+    @NotBlank
+    @Column(nullable = false)
+    private String surname;
+
+    @Email
+    @Column
+    private String email;
+
+    @Column
+    private String phone;
+
+    @NotNull
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "position_id", nullable = false)
+    private Position position;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", unique = true)
+    private User user; // opcional
+
+    @OneToMany(
+            mappedBy = "employee",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private Set<EmployeeCompany> employeeCompanies = new HashSet<>();
+
+    @OneToMany(
+            mappedBy = "employee",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private Set<EmployeeLocation> employeeLocations = new HashSet<>();
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    private String createdBy;
+    private String updatedBy;
+
+    private LocalDateTime deletedAt;
+
+    public void addCompany(EmployeeCompany employeeCompany) {
+        employeeCompanies.add(employeeCompany);
+        employeeCompany.setEmployee(this);
+    }
+
+    public void removeCompany(EmployeeCompany employeeCompany) {
+        employeeCompanies.remove(employeeCompany);
+        employeeCompany.setEmployee(null);
+    }
+
+    public void addLocation(EmployeeLocation employeeLocation) {
+        employeeLocations.add(employeeLocation);
+        employeeLocation.setEmployee(this);
+    }
+
+    public void removeLocation(EmployeeLocation employeeLocation) {
+        employeeLocations.remove(employeeLocation);
+        employeeLocation.setEmployee(null);
+    }
 }
+
