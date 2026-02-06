@@ -6,6 +6,7 @@ import com.shifterizator.shifterizatorbackend.company.exception.CompanyValidatio
 import com.shifterizator.shifterizatorbackend.company.mapper.CompanyMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
+import com.shifterizator.shifterizatorbackend.company.service.CompanyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

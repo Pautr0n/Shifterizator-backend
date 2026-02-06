@@ -1,4 +1,5 @@
 package com.shifterizator.shifterizatorbackend.employee.service.domain;
+
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
@@ -9,7 +10,6 @@ import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeReposi
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.company.repository.LocationRepository;
 import com.shifterizator.shifterizatorbackend.user.exception.EmailAlreadyExistsException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

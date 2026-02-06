@@ -11,6 +11,7 @@ import com.shifterizator.shifterizatorbackend.employee.repository.PositionReposi
 import com.shifterizator.shifterizatorbackend.employee.service.domain.EmployeeDomainService;
 import com.shifterizator.shifterizatorbackend.employee.spec.EmployeeSpecs;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
