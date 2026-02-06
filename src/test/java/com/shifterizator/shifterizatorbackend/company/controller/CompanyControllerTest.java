@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.company.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shifterizator.shifterizatorbackend.auth.jwt.JwtAuthenticationFilter;
+import com.shifterizator.shifterizatorbackend.auth.jwt.JwtUtil;
 import com.shifterizator.shifterizatorbackend.company.dto.CompanyRequestDto;
 import com.shifterizator.shifterizatorbackend.company.dto.CompanyResponseDto;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
@@ -34,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WithMockUser
 @WebMvcTest(CompanyController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CompanyControllerTest {
 
     @Autowired
@@ -44,6 +48,12 @@ class CompanyControllerTest {
 
     @MockitoBean
     private CompanyMapper companyMapper;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     @Autowired
     private ObjectMapper objectMapper;

@@ -3,11 +3,15 @@ package com.shifterizator.shifterizatorbackend.employee.controller;
 
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
+import com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper;
+import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,37 +19,54 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class EmployeeController {
 
+
+    private final EmployeeMapper employeeMapper;
     private final EmployeeService employeeService;
 
     @PostMapping
-    public EmployeeResponseDto create(@Valid @RequestBody EmployeeRequestDto dto) {
-        return employeeService.create(dto);
+    public ResponseEntity<EmployeeResponseDto> create(@Valid @RequestBody EmployeeRequestDto dto) {
+
+        Employee employee = employeeService.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(employeeMapper.toResponse(employee));
     }
 
     @PutMapping("/{id}")
-    public EmployeeResponseDto update(@PathVariable Long id, @Valid @RequestBody EmployeeRequestDto dto) {
-        return employeeService.update(id, dto);
+    public ResponseEntity<EmployeeResponseDto> update(@PathVariable Long id, @Valid @RequestBody EmployeeRequestDto dto) {
+        Employee employee = employeeService.update(id, dto);
+        return ResponseEntity.ok((employeeMapper.toResponse(employee)));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id,
-                       @RequestParam(defaultValue = "false") boolean hardDelete) {
+    public ResponseEntity<Void> delete(@PathVariable Long id,
+                                       @RequestParam(defaultValue = "false") boolean hardDelete) {
         employeeService.delete(id, hardDelete);
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    public EmployeeResponseDto findById(@PathVariable Long id) {
-        return employeeService.findById(id);
+    public ResponseEntity<EmployeeResponseDto> findById(@PathVariable Long id) {
+
+        Employee employee = employeeService.findById(id);
+
+        return ResponseEntity.ok(employeeMapper.toResponse(employee));
+
     }
 
     @GetMapping
-    public Page<EmployeeResponseDto> search(
+    public ResponseEntity<Page<EmployeeResponseDto>> search(
             @RequestParam(required = false) Long companyId,
             @RequestParam(required = false) Long locationId,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String position,
             Pageable pageable
     ) {
-        return employeeService.search(companyId, locationId, name, position, pageable);
+        Page<EmployeeResponseDto> result = employeeService.search(companyId,
+                        locationId,
+                        name,
+                        position,
+                        pageable)
+                .map(employeeMapper::toResponse);
+        return ResponseEntity.ok(result);
     }
 }
