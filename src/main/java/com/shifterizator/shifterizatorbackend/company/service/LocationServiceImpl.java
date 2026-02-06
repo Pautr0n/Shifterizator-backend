@@ -2,13 +2,13 @@ package com.shifterizator.shifterizatorbackend.company.service;
 
 import com.shifterizator.shifterizatorbackend.company.dto.LocationRequestDto;
 import com.shifterizator.shifterizatorbackend.company.dto.LocationResponseDto;
+import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
+import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.mapper.LocationMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.company.repository.LocationRepository;
-import com.shifterizator.shifterizatorbackend.company.service.LocationService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +28,7 @@ public class LocationServiceImpl implements LocationService {
     public LocationResponseDto create(LocationRequestDto dto) {
 
         Company company = companyRepository.findById(dto.companyId())
-                .orElseThrow(() -> new EntityNotFoundException("Company not found"));
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
 
         Location location = Location.builder()
                 .name(dto.name())
@@ -45,7 +45,7 @@ public class LocationServiceImpl implements LocationService {
     public LocationResponseDto update(Long id, LocationRequestDto dto) {
 
         Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Location not found"));
+                .orElseThrow(() -> new LocationNotFoundException("Location not found"));
 
         location.setName(dto.name());
         location.setAddress(dto.address());
@@ -56,7 +56,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public void delete(Long id) {
         Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Location not found"));
+                .orElseThrow(() -> new LocationNotFoundException("Location not found"));
 
         locationRepository.delete(location);
     }
@@ -64,7 +64,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public LocationResponseDto findById(Long id) {
         Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Location not found"));
+                .orElseThrow(() -> new LocationNotFoundException("Location not found"));
 
         return locationMapper.toDto(location);
     }

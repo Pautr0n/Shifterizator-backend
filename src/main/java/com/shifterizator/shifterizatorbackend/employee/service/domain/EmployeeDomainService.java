@@ -1,4 +1,6 @@
 package com.shifterizator.shifterizatorbackend.employee.service.domain;
+import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
+import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
@@ -6,6 +8,7 @@ import com.shifterizator.shifterizatorbackend.employee.model.*;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.company.repository.LocationRepository;
+import com.shifterizator.shifterizatorbackend.user.exception.EmailAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +29,7 @@ public class EmployeeDomainService {
             boolean exists = employeeRepository.existsByEmailAndCompany(dto.email(), companyId);
 
             if (exists && !isSameEmployee(currentEmployeeId, dto.email())) {
-                throw new IllegalArgumentException("Email already exists for this company");
+                throw new EmailAlreadyExistsException("Email already exists for this company");
             }
         }
     }
@@ -51,7 +54,7 @@ public class EmployeeDomainService {
 
         for (Long companyId : dto.companyIds()) {
             Company company = companyRepository.findById(companyId)
-                    .orElseThrow(() -> new EntityNotFoundException("Company not found"));
+                    .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
 
             EmployeeCompany ec = EmployeeCompany.builder()
                     .employee(employee)
@@ -70,7 +73,7 @@ public class EmployeeDomainService {
 
         for (Long locationId : dto.locationIds()) {
             Location location = locationRepository.findById(locationId)
-                    .orElseThrow(() -> new EntityNotFoundException("Location not found"));
+                    .orElseThrow(() -> new LocationNotFoundException("Location not found"));
 
             EmployeeLocation el = EmployeeLocation.builder()
                     .employee(employee)

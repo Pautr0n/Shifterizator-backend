@@ -4,6 +4,7 @@ import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundE
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.user.dto.UserRequestDto;
+import com.shifterizator.shifterizatorbackend.user.exception.EmailAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.user.exception.ForbiddenOperationException;
 import com.shifterizator.shifterizatorbackend.user.exception.UserAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.user.exception.UserNotFoundException;
@@ -139,7 +140,7 @@ public class UserService {
 
     private void validateUniqueEmail(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new UserAlreadyExistsException("Email already exists: " + email);
+            throw new EmailAlreadyExistsException("Email already exists: " + email);
         }
     }
 
@@ -171,7 +172,7 @@ public class UserService {
 
         if (!requestDto.email().equalsIgnoreCase(user.getEmail())) {
             if (userRepository.existsByEmail(requestDto.email())) {
-                throw new UserAlreadyExistsException("Email already exists: " + requestDto.email());
+                throw new EmailAlreadyExistsException("Email already exists: " + requestDto.email());
             }
         }
     }

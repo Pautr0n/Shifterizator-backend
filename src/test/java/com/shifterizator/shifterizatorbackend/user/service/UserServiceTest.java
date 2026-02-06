@@ -5,6 +5,7 @@ import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundE
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.user.dto.UserRequestDto;
+import com.shifterizator.shifterizatorbackend.user.exception.EmailAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.user.exception.UserAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.user.exception.UserNotFoundException;
 import com.shifterizator.shifterizatorbackend.user.mapper.UserMapper;
@@ -133,7 +134,7 @@ class UserServiceTest {
         when(userRepository.existsByEmail("john@mail.com")).thenReturn(true);
 
         assertThatThrownBy(() -> service.createUser(dto))
-                .isInstanceOf(UserAlreadyExistsException.class)
+                .isInstanceOf(EmailAlreadyExistsException.class)
                 .hasMessage("Email already exists: john@mail.com");
 
         verify(userRepository, never()).save(any());
@@ -253,7 +254,7 @@ class UserServiceTest {
         when(userRepository.existsByEmail("new@mail.com")).thenReturn(true);
 
         assertThatThrownBy(() -> service.updateUser(10L, dto))
-                .isInstanceOf(UserAlreadyExistsException.class)
+                .isInstanceOf(EmailAlreadyExistsException.class)
                 .hasMessage("Email already exists: new@mail.com");
     }
 

@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.employee.service;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
+import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
+import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
@@ -32,7 +34,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponseDto create(EmployeeRequestDto dto) {
 
         Position position = positionRepository.findById(dto.positionId())
-                .orElseThrow(() -> new EntityNotFoundException("Position not found"));
+                .orElseThrow(() -> new PositionNotFoundException("Position not found"));
 
         employeeDomainService.validateEmailUniqueness(dto, null);
 
@@ -49,10 +51,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponseDto update(Long id, EmployeeRequestDto dto) {
 
         Employee employee = employeeRepository.findActiveById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
         Position position = positionRepository.findById(dto.positionId())
-                .orElseThrow(() -> new EntityNotFoundException("Position not found"));
+                .orElseThrow(() -> new PositionNotFoundException("Position not found"));
 
         employeeDomainService.validateEmailUniqueness(dto, id);
 
@@ -72,7 +74,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void delete(Long id, boolean hardDelete) {
 
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
         employeeDomainService.ensureEmployeeCanBeDeleted(id);
 
@@ -86,7 +88,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeResponseDto findById(Long id) {
         Employee employee = employeeRepository.findActiveById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
         return employeeMapper.toResponse(employee);
     }

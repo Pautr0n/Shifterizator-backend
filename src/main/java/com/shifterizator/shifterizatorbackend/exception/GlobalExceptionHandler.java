@@ -5,10 +5,11 @@ import com.shifterizator.shifterizatorbackend.auth.exception.InvalidCredentialsE
 import com.shifterizator.shifterizatorbackend.auth.exception.InvalidRefreshTokenException;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyValidationException;
-import com.shifterizator.shifterizatorbackend.user.exception.ForbiddenOperationException;
-import com.shifterizator.shifterizatorbackend.user.exception.InvalidPasswordException;
-import com.shifterizator.shifterizatorbackend.user.exception.UserAlreadyExistsException;
-import com.shifterizator.shifterizatorbackend.user.exception.UserNotFoundException;
+import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
+import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
+import com.shifterizator.shifterizatorbackend.employee.exception.PositionAlreadyExistsException;
+import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
+import com.shifterizator.shifterizatorbackend.user.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
@@ -29,8 +30,58 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(EmployeeNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handleEmployeeNotFound(EmployeeNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(LocationNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handleLocationNotFound(LocationNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(PositionNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handlePositionNotFound(PositionNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiErrorDto> handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "VALIDATION_ERROR",
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorDto> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "VALIDATION_ERROR",
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(PositionAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorDto> handlePositionAlreadyExists(PositionAlreadyExistsException ex) {
         ApiErrorDto error = new ApiErrorDto(
                 ex.getMessage(),
                 "VALIDATION_ERROR",

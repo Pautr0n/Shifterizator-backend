@@ -1,8 +1,11 @@
 package com.shifterizator.shifterizatorbackend.employee.service;
 
+import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.employee.dto.PositionDto;
+import com.shifterizator.shifterizatorbackend.employee.exception.PositionAlreadyExistsException;
+import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.mapper.PositionMapper;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import com.shifterizator.shifterizatorbackend.employee.repository.PositionRepository;
@@ -26,7 +29,7 @@ public class PositionServiceImpl implements PositionService {
     public PositionDto create(String name, Long companyId) {
 
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new EntityNotFoundException("Company not found"));
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
 
         ValidatePositionExistsByNameAndCompanyId(name, companyId);
 
@@ -44,7 +47,7 @@ public class PositionServiceImpl implements PositionService {
     public PositionDto update(Long id, String name) {
 
         Position position = positionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Position not found"));
+                .orElseThrow(() -> new PositionNotFoundException("Position not found"));
 
         ValidatePositionExistsByNameAndCompanyId(name, position.getCompany().getId());
 
@@ -56,7 +59,7 @@ public class PositionServiceImpl implements PositionService {
     @Override
     public void delete(Long id) {
         Position position = positionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Position not found"));
+                .orElseThrow(() -> new PositionNotFoundException("Position not found"));
 
         positionRepository.delete(position);
     }
@@ -64,7 +67,7 @@ public class PositionServiceImpl implements PositionService {
     @Override
     public PositionDto findById(Long id) {
         Position position = positionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Position not found"));
+                .orElseThrow(() -> new PositionNotFoundException("Position not found"));
 
         return positionMapper.toDto(position);
     }
@@ -79,7 +82,7 @@ public class PositionServiceImpl implements PositionService {
 
     private void ValidatePositionExistsByNameAndCompanyId (String name, Long companyId) {
         if (positionRepository.existsByNameAndCompany_Id(name, companyId)) {
-            throw new IllegalArgumentException("Position already exists for this company");
+            throw new PositionAlreadyExistsException("Position already exists for this company");
         }
     }
 
