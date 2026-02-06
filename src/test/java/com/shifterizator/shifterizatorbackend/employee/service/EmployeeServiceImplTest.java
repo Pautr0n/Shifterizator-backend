@@ -40,14 +40,10 @@ class EmployeeServiceImplTest {
     private PositionRepository positionRepository;
 
     @Mock
-    private EmployeeMapper employeeMapper;
-
-    @Mock
     private EmployeeDomainService employeeDomainService;
 
     @InjectMocks
     private  EmployeeServiceImpl employeeService;
-
 
     @Test
     void create_shouldCreateEmployeeSuccessfully() {
@@ -57,26 +53,27 @@ class EmployeeServiceImplTest {
         );
 
         Position position = Position.builder().id(1L).name("Waiter").build();
-        Employee employee = Employee.builder().id(99L).position(position).build();
-        EmployeeResponseDto responseDto = new EmployeeResponseDto(
-                99L, "John", "Connor", "john@example.com", "123",
-                "Waiter", Set.of("Skynet"), Set.of("HQ"),
-                LocalDateTime.now(), LocalDateTime.now()
-        );
+        Employee employee = Employee.builder()
+                .id(99L)
+                .name("John")
+                .surname("Connor")
+                .email("john@example.com")
+                .phone("123")
+                .position(position)
+                .build();
 
         when(positionRepository.findById(1L)).thenReturn(Optional.of(position));
-        when(employeeMapper.toEntity(dto, position)).thenReturn(employee);
-        when(employeeMapper.toResponse(employee)).thenReturn(responseDto);
+        when(employeeRepository.save(employee)).thenReturn(employee);
 
-        EmployeeResponseDto result = employeeService.create(dto);
+        Employee result = employeeService.create(dto);
 
         verify(employeeDomainService).validateEmailUniqueness(dto, null);
         verify(employeeRepository).save(employee);
         verify(employeeDomainService).assignCompanies(employee, dto);
         verify(employeeDomainService).assignLocations(employee, dto);
 
-        assertThat(result.id()).isEqualTo(99L);
-        assertThat(result.position()).isEqualTo("Waiter");
+        assertThat(result.getId()).isEqualTo(99L);
+        assertThat(result.getPosition().getName()).isEqualTo("Waiter");
     }
 
     @Test
@@ -101,24 +98,28 @@ class EmployeeServiceImplTest {
         );
 
         Position position = Position.builder().id(1L).name("Waiter").build();
-        Employee employee = Employee.builder().id(99L).position(position).build();
-        EmployeeResponseDto responseDto = new EmployeeResponseDto(
-                99L, "John", "Connor", "john@example.com", "123",
-                "Waiter", Set.of("Skynet"), Set.of("HQ"),
-                LocalDateTime.now(), LocalDateTime.now()
-        );
+        Employee employee = Employee.builder()
+                .id(99L)
+                .name("Old")
+                .surname("Name")
+                .email("old@example.com")
+                .phone("000")
+                .position(position)
+                .build();
 
         when(employeeRepository.findActiveById(99L)).thenReturn(Optional.of(employee));
         when(positionRepository.findById(1L)).thenReturn(Optional.of(position));
-        when(employeeMapper.toResponse(employee)).thenReturn(responseDto);
 
-        EmployeeResponseDto result = employeeService.update(99L, dto);
+        Employee result = employeeService.update(99L, dto);
 
         verify(employeeDomainService).validateEmailUniqueness(dto, 99L);
         verify(employeeDomainService).assignCompanies(employee, dto);
         verify(employeeDomainService).assignLocations(employee, dto);
 
-        assertThat(result.id()).isEqualTo(99L);
+        assertThat(result.getId()).isEqualTo(99L);
+        assertThat(result.getName()).isEqualTo("John");
+        assertThat(result.getEmail()).isEqualTo("john@example.com");
+        assertThat(result.getPosition().getName()).isEqualTo("Waiter");
     }
 
     @Test
@@ -157,7 +158,7 @@ class EmployeeServiceImplTest {
 
         verify(employeeDomainService).ensureEmployeeCanBeDeleted(99L);
         assertThat(employee.getDeletedAt()).isNotNull();
-        verify(employeeRepository, never()).delete((Employee) any());
+        verify(employeeRepository, never()).delete(any(Employee.class));
     }
 
     @Test
@@ -171,19 +172,17 @@ class EmployeeServiceImplTest {
 
     @Test
     void findById_shouldReturnEmployee() {
-        Employee employee = Employee.builder().id(99L).build();
-        EmployeeResponseDto responseDto = new EmployeeResponseDto(
-                99L, "John", "Connor", "john@example.com", "123",
-                "Waiter", Set.of("Skynet"), Set.of("HQ"),
-                LocalDateTime.now(), LocalDateTime.now()
-        );
+        Employee employee = Employee.builder()
+                .id(99L)
+                .name("John")
+                .build();
 
         when(employeeRepository.findActiveById(99L)).thenReturn(Optional.of(employee));
-        when(employeeMapper.toResponse(employee)).thenReturn(responseDto);
 
-        EmployeeResponseDto result = employeeService.findById(99L);
+        Employee result = employeeService.findById(99L);
 
-        assertThat(result.id()).isEqualTo(99L);
+        assertThat(result.getId()).isEqualTo(99L);
+        assertThat(result.getName()).isEqualTo("John");
     }
 
     @Test
@@ -196,25 +195,21 @@ class EmployeeServiceImplTest {
     }
 
     @Test
-    void search_shouldDelegateToRepositoryAndMapper() {
+    void search_shouldDelegateToRepository() {
         Employee employee = Employee.builder().id(99L).build();
-        EmployeeResponseDto responseDto = new EmployeeResponseDto(
-                99L, "John", "Connor", "john@example.com", "123",
-                "Waiter", Set.of("Skynet"), Set.of("HQ"),
-                LocalDateTime.now(), LocalDateTime.now()
-        );
 
         Pageable pageable = PageRequest.of(0, 10, Sort.by("id"));
         Page<Employee> page = new PageImpl<>(List.of(employee), pageable, 1);
 
         when(employeeRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-        when(employeeMapper.toResponse(employee)).thenReturn(responseDto);
 
-        Page<EmployeeResponseDto> result = employeeService.search(
+        Page<Employee> result = employeeService.search(
                 1L, 10L, "john", "Waiter", pageable
         );
 
         assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent().get(0).id()).isEqualTo(99L);
+        assertThat(result.getContent().get(0).getId()).isEqualTo(99L);
+        verify(employeeRepository).findAll(any(Specification.class), eq(pageable));
     }
+
 }

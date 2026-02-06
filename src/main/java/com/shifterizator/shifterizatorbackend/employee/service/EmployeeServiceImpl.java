@@ -10,8 +10,6 @@ import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeReposi
 import com.shifterizator.shifterizatorbackend.employee.repository.PositionRepository;
 import com.shifterizator.shifterizatorbackend.employee.service.domain.EmployeeDomainService;
 import com.shifterizator.shifterizatorbackend.employee.spec.EmployeeSpecs;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +30,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeDomainService employeeDomainService;
 
     @Override
-    public EmployeeResponseDto create(EmployeeRequestDto dto) {
+    public Employee create(EmployeeRequestDto dto) {
 
         Position position = positionRepository.findById(dto.positionId())
                 .orElseThrow(() -> new PositionNotFoundException("Position not found"));
@@ -45,11 +43,11 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDomainService.assignCompanies(employee, dto);
         employeeDomainService.assignLocations(employee, dto);
 
-        return employeeMapper.toResponse(employee);
+        return employee;
     }
 
     @Override
-    public EmployeeResponseDto update(Long id, EmployeeRequestDto dto) {
+    public Employee update(Long id, EmployeeRequestDto dto) {
 
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
@@ -68,7 +66,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDomainService.assignCompanies(employee, dto);
         employeeDomainService.assignLocations(employee, dto);
 
-        return employeeMapper.toResponse(employee);
+        return employee;
     }
 
     @Override
@@ -87,15 +85,15 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public EmployeeResponseDto findById(Long id) {
+    public Employee findById(Long id) {
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
-        return employeeMapper.toResponse(employee);
+        return employee;
     }
 
     @Override
-    public Page<EmployeeResponseDto> search(
+    public Page<Employee> search(
             Long companyId,
             Long locationId,
             String nameContains,
@@ -120,8 +118,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             spec = spec.and(EmployeeSpecs.byPosition(position));
         }
 
-        return employeeRepository.findAll(spec, pageable)
-                .map(employeeMapper::toResponse);
+        return employeeRepository.findAll(spec, pageable);
 
     }
 }
