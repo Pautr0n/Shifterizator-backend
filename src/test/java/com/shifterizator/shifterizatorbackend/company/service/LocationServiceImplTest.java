@@ -1,10 +1,8 @@
 package com.shifterizator.shifterizatorbackend.company.service;
 
 import com.shifterizator.shifterizatorbackend.company.dto.LocationRequestDto;
-import com.shifterizator.shifterizatorbackend.company.dto.LocationResponseDto;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
-import com.shifterizator.shifterizatorbackend.company.mapper.LocationMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
@@ -33,9 +31,6 @@ class LocationServiceImplTest {
     @Mock
     private CompanyRepository companyRepository;
 
-    @Mock
-    private LocationMapper locationMapper;
-
     @InjectMocks
     private LocationServiceImpl locationService;
 
@@ -50,19 +45,16 @@ class LocationServiceImplTest {
         company.setId(1L);
         company.setName("Skynet");
 
-        Location location = Location.builder().id(10L).name("HQ").address("Main Street 1").company(company).build();
-        LocationResponseDto responseDto = new LocationResponseDto(
-                10L, "HQ", "Main Street 1", 1L
-        );
+        Location savedLocation = Location.builder().id(10L).name("HQ").address("Main Street 1").company(company).build();
 
         when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(locationMapper.toDto(any(Location.class))).thenReturn(responseDto);
+        when(locationRepository.save(any(Location.class))).thenReturn(savedLocation);
 
-        LocationResponseDto result = locationService.create(dto);
+        Location result = locationService.create(dto);
 
-        assertThat(result.id()).isEqualTo(10L);
-        assertThat(result.name()).isEqualTo("HQ");
+        assertThat(result.getId()).isEqualTo(10L);
+        assertThat(result.getName()).isEqualTo("HQ");
+        assertThat(result.getAddress()).isEqualTo("Main Street 1");
     }
 
     @Test
@@ -89,16 +81,13 @@ class LocationServiceImplTest {
         company.setName("Skynet");
 
         Location location = Location.builder().id(10L).name("HQ").address("Old").company(company).build();
-        LocationResponseDto responseDto = new LocationResponseDto(
-                10L, "New HQ", "New Address", 1L
-        );
 
         when(locationRepository.findById(10L)).thenReturn(Optional.of(location));
-        when(locationMapper.toDto(location)).thenReturn(responseDto);
 
-        LocationResponseDto result = locationService.update(10L, dto);
+        Location result = locationService.update(10L, dto);
 
-        assertThat(result.name()).isEqualTo("New HQ");
+        assertThat(result.getName()).isEqualTo("New HQ");
+        assertThat(result.getAddress()).isEqualTo("New Address");
         assertThat(location.getName()).isEqualTo("New HQ");
         assertThat(location.getAddress()).isEqualTo("New Address");
     }
@@ -142,16 +131,13 @@ class LocationServiceImplTest {
         company.setId(1L);
 
         Location location = Location.builder().id(10L).name("HQ").address("Main").company(company).build();
-        LocationResponseDto responseDto = new LocationResponseDto(
-                10L, "HQ", "Main", 1L
-        );
 
         when(locationRepository.findById(10L)).thenReturn(Optional.of(location));
-        when(locationMapper.toDto(location)).thenReturn(responseDto);
 
-        LocationResponseDto result = locationService.findById(10L);
+        Location result = locationService.findById(10L);
 
-        assertThat(result.id()).isEqualTo(10L);
+        assertThat(result.getId()).isEqualTo(10L);
+        assertThat(result.getName()).isEqualTo("HQ");
     }
 
     @Test
@@ -169,23 +155,14 @@ class LocationServiceImplTest {
         company1.setId(1L);
         company1.setName("Skynet");
 
-        Company company2 = new Company();
-        company2.setId(2L);
-        company2.setName("Cyberdyne");
-
         Location loc1 = Location.builder().id(10L).name("HQ").company(company1).build();
-        Location loc2 = Location.builder().id(11L).name("Branch").company(company2).build();
 
-        LocationResponseDto dto1 = new LocationResponseDto(10L, "HQ", null, 1L);
-        LocationResponseDto dto2 = new LocationResponseDto(11L, "Branch", null, 2L);
+        when(locationRepository.findByCompany_Id(1L)).thenReturn(List.of(loc1));
 
-        when(locationRepository.findAll()).thenReturn(List.of(loc1, loc2));
-        when(locationMapper.toDto(loc1)).thenReturn(dto1);
-        lenient().when(locationMapper.toDto(loc2)).thenReturn(dto2);
-
-        List<LocationResponseDto> result = locationService.findByCompany(1L);
+        List<Location> result = locationService.findByCompany(1L);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).id()).isEqualTo(10L);
+        assertThat(result.get(0).getId()).isEqualTo(10L);
+        assertThat(result.get(0).getName()).isEqualTo("HQ");
     }
 }

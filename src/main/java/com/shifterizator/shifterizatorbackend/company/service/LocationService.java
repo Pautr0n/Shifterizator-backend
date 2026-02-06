@@ -1,20 +1,20 @@
 package com.shifterizator.shifterizatorbackend.company.service;
 
 import com.shifterizator.shifterizatorbackend.company.dto.LocationRequestDto;
-import com.shifterizator.shifterizatorbackend.company.dto.LocationResponseDto;
+import com.shifterizator.shifterizatorbackend.company.model.Location;
 
 import java.util.List;
 
 public interface LocationService {
 
-    LocationResponseDto create(LocationRequestDto dto);
+    Location create(LocationRequestDto dto);
 
-    LocationResponseDto update(Long id, LocationRequestDto dto);
+    Location update(Long id, LocationRequestDto dto);
 
     void delete(Long id);
 
-    LocationResponseDto findById(Long id);
+    Location findById(Long id);
 
-    List<LocationResponseDto> findByCompany(Long companyId);
+    List<Location> findByCompany(Long companyId);
 
 }

@@ -1,10 +1,8 @@
 package com.shifterizator.shifterizatorbackend.company.service;
 
 import com.shifterizator.shifterizatorbackend.company.dto.LocationRequestDto;
-import com.shifterizator.shifterizatorbackend.company.dto.LocationResponseDto;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
-import com.shifterizator.shifterizatorbackend.company.mapper.LocationMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
@@ -22,11 +20,9 @@ public class LocationServiceImpl implements LocationService {
 
     private final LocationRepository locationRepository;
     private final CompanyRepository companyRepository;
-    private final LocationMapper locationMapper;
 
     @Override
-    public LocationResponseDto create(LocationRequestDto dto) {
-
+    public Location create(LocationRequestDto dto) {
         Company company = companyRepository.findById(dto.companyId())
                 .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
 
@@ -36,21 +32,18 @@ public class LocationServiceImpl implements LocationService {
                 .company(company)
                 .build();
 
-        locationRepository.save(location);
-
-        return locationMapper.toDto(location);
+        return locationRepository.save(location);
     }
 
     @Override
-    public LocationResponseDto update(Long id, LocationRequestDto dto) {
-
+    public Location update(Long id, LocationRequestDto dto) {
         Location location = locationRepository.findById(id)
                 .orElseThrow(() -> new LocationNotFoundException("Location not found"));
 
         location.setName(dto.name());
         location.setAddress(dto.address());
 
-        return locationMapper.toDto(location);
+        return location;
     }
 
     @Override
@@ -62,18 +55,14 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public LocationResponseDto findById(Long id) {
+    public Location findById(Long id) {
         Location location = locationRepository.findById(id)
                 .orElseThrow(() -> new LocationNotFoundException("Location not found"));
-
-        return locationMapper.toDto(location);
+        return location;
     }
 
     @Override
-    public List<LocationResponseDto> findByCompany(Long companyId) {
-        return locationRepository.findAll().stream()
-                .filter(l -> l.getCompany().getId().equals(companyId))
-                .map(locationMapper::toDto)
-                .toList();
+    public List<Location> findByCompany(Long companyId) {
+        return locationRepository.findByCompany_Id(companyId);
     }
 }
