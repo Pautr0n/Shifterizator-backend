@@ -3,10 +3,8 @@ package com.shifterizator.shifterizatorbackend.employee.service;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
-import com.shifterizator.shifterizatorbackend.employee.dto.PositionDto;
 import com.shifterizator.shifterizatorbackend.employee.exception.PositionAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
-import com.shifterizator.shifterizatorbackend.employee.mapper.PositionMapper;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import com.shifterizator.shifterizatorbackend.employee.repository.PositionRepository;
 import org.junit.jupiter.api.Test;
@@ -31,9 +29,6 @@ class PositionServiceImplTest {
     @Mock
     private CompanyRepository companyRepository;
 
-    @Mock
-    private PositionMapper positionMapper;
-
     @InjectMocks
     private PositionServiceImpl positionService;
 
@@ -43,18 +38,16 @@ class PositionServiceImplTest {
         company.setId(1L);
         company.setName("Skynet");
 
-        Position position = Position.builder().id(10L).name("Waiter").company(company).build();
-        PositionDto dto = new PositionDto(10L, "Waiter", 1L);
+        Position savedPosition = Position.builder().id(10L).name("Waiter").company(company).build();
 
         when(positionRepository.existsByNameAndCompany_Id("Waiter", 1L)).thenReturn(false);
         when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
-        when(positionRepository.save(any(Position.class))).thenReturn(position);
-        when(positionMapper.toDto(any(Position.class))).thenReturn(dto);
+        when(positionRepository.save(any(Position.class))).thenReturn(savedPosition);
 
-        PositionDto result = positionService.create("Waiter", 1L);
+        Position result = positionService.create("Waiter", 1L);
 
-        assertThat(result.id()).isEqualTo(10L);
-        assertThat(result.name()).isEqualTo("Waiter");
+        assertThat(result.getId()).isEqualTo(10L);
+        assertThat(result.getName()).isEqualTo("Waiter");
     }
 
     @Test
@@ -87,15 +80,13 @@ class PositionServiceImplTest {
         company.setName("Skynet");
 
         Position position = Position.builder().id(10L).name("Old").company(company).build();
-        PositionDto dto = new PositionDto(10L, "New", 1L);
 
         when(positionRepository.findById(10L)).thenReturn(Optional.of(position));
         when(positionRepository.existsByNameAndCompany_Id("New", 1L)).thenReturn(false);
-        when(positionMapper.toDto(position)).thenReturn(dto);
 
-        PositionDto result = positionService.update(10L, "New");
+        Position result = positionService.update(10L, "New");
 
-        assertThat(result.name()).isEqualTo("New");
+        assertThat(result.getName()).isEqualTo("New");
         assertThat(position.getName()).isEqualTo("New");
     }
 
@@ -151,14 +142,13 @@ class PositionServiceImplTest {
         company.setName("Skynet");
 
         Position position = Position.builder().id(10L).name("Waiter").company(company).build();
-        PositionDto dto = new PositionDto(10L, "Waiter", 1L);
 
         when(positionRepository.findById(10L)).thenReturn(Optional.of(position));
-        when(positionMapper.toDto(position)).thenReturn(dto);
 
-        PositionDto result = positionService.findById(10L);
+        Position result = positionService.findById(10L);
 
-        assertThat(result.id()).isEqualTo(10L);
+        assertThat(result.getId()).isEqualTo(10L);
+        assertThat(result.getName()).isEqualTo("Waiter");
     }
 
     @Test
@@ -176,23 +166,14 @@ class PositionServiceImplTest {
         company1.setId(1L);
         company1.setName("Skynet");
 
-        Company company2 = new Company();
-        company2.setId(2L);
-        company2.setName("Cyberdyne");
-
         Position pos1 = Position.builder().id(10L).name("Waiter").company(company1).build();
-        Position pos2 = Position.builder().id(11L).name("Cook").company(company2).build();
 
-        PositionDto dto1 = new PositionDto(10L, "Waiter", 1L);
-        PositionDto dto2 = new PositionDto(11L, "Cook", 2L);
+        when(positionRepository.findByCompany_Id(1L)).thenReturn(List.of(pos1));
 
-        when(positionRepository.findAll()).thenReturn(List.of(pos1, pos2));
-        when(positionMapper.toDto(pos1)).thenReturn(dto1);
-        lenient().when(positionMapper.toDto(pos2)).thenReturn(dto2);
-
-        List<PositionDto> result = positionService.findByCompany(1L);
+        List<Position> result = positionService.findByCompany(1L);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).id()).isEqualTo(10L);
+        assertThat(result.get(0).getId()).isEqualTo(10L);
+        assertThat(result.get(0).getName()).isEqualTo("Waiter");
     }
 }
