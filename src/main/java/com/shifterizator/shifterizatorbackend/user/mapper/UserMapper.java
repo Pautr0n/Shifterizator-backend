@@ -11,14 +11,15 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
 
     public User toEntity(UserRequestDto dto, String hashedPassword, Company company) {
-
-        return new User(
+        User user = new User(
                 dto.username(),
                 dto.email(),
                 hashedPassword,
                 Role.valueOf(dto.role()),
                 company
         );
+        user.setPhone(dto.phone());
+        return user;
     }
 
     public UserResponseDto toDto(User user) {
@@ -26,10 +27,12 @@ public class UserMapper {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
+                user.getPhone(),
                 user.getRole().name(),
                 user.getCompany() != null ? user.getCompany().getId() : null,
-                user.getIsActive()
-
+                user.getIsActive(),
+                user.getCreatedBy(),
+                user.getUpdatedBy()
         );
     }
 }
