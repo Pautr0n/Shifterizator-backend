@@ -21,7 +21,8 @@ class CompanyRequestDtoTest {
                 , "Tron"
                 , "12345678T"
                 , "test@test.com"
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         violations = validator.validate(requestDto);
 
@@ -39,13 +40,15 @@ class CompanyRequestDtoTest {
                 , "Tron"
                 , "12345678T"
                 , "test@test.com"
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         CompanyRequestDto requestDto2 = new CompanyRequestDto("012345678901234567890"
                 , "Tron"
                 , "12345678T"
                 , "test@test.com"
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         violations = validator.validate(requestDto1);
 
@@ -68,13 +71,15 @@ class CompanyRequestDtoTest {
                 , "Als"
                 , "12345678T"
                 , "test@test.com"
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         CompanyRequestDto requestDto2 = new CompanyRequestDto("01234567890123456789"
                 , "0123456789012345678901234567890123456789012345678901234567890"
                 , "12345678T"
                 , "test@test.com"
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         violations = validator.validate(requestDto1);
 
@@ -98,13 +103,15 @@ class CompanyRequestDtoTest {
                 , "Tron"
                 , "123456789102T"
                 , "test@test.com"
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         CompanyRequestDto requestDto2 = new CompanyRequestDto("1234"
                 , "Tron"
                 , "123456T"
                 , "test@test.com"
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         violations = validator.validate(requestDto1);
 
@@ -128,13 +135,15 @@ class CompanyRequestDtoTest {
                 , "Tron"
                 , "123456789T"
                 , ""
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         CompanyRequestDto requestDto2 = new CompanyRequestDto("1234"
                 , "Tron"
                 , "123456123T"
                 , "test-test.com"
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         violations = validator.validate(requestDto1);
 
@@ -158,13 +167,15 @@ class CompanyRequestDtoTest {
                 , "Tron"
                 , "12345678T"
                 , "test@test.com"
-                , "+34999");
+                , "+34999"
+                , null);
 
         CompanyRequestDto requestDto2 = new CompanyRequestDto("1234"
                 , "Tron"
                 , "12345678T"
                 , "test@test.com"
-                , "+34999588988888888888888");
+                , "+34999588988888888888888"
+                , null);
 
         violations = validator.validate(requestDto1);
 
@@ -187,7 +198,8 @@ class CompanyRequestDtoTest {
                 , "Tron"
                 , "12345678T"
                 , "test@test.com"
-                , "+3499958898");
+                , "+3499958898"
+                , null);
 
         violations = validator.validate(requestDto);
         assertTrue(violations.isEmpty());

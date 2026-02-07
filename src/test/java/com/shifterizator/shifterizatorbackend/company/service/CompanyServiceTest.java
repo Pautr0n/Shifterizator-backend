@@ -7,6 +7,8 @@ import com.shifterizator.shifterizatorbackend.company.mapper.CompanyMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.company.service.CompanyService;
+import com.shifterizator.shifterizatorbackend.employee.service.EmployeeService;
+import com.shifterizator.shifterizatorbackend.company.service.LocationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +33,12 @@ class CompanyServiceTest {
     @Mock
     private CompanyMapper companyMapper;
 
+    @Mock
+    private EmployeeService employeeService;
+
+    @Mock
+    private LocationService locationService;
+
     @InjectMocks
     private CompanyService companyService;
 
@@ -39,13 +47,15 @@ class CompanyServiceTest {
             , "Legal Company 1"
             , "12345678A"
             , "company1@company.com"
-            , "+341111111");
+            , "+341111111"
+            , "ES");
 
     private final CompanyRequestDto UPDATE_REQUEST = new CompanyRequestDto("Company 4"
             , "Legal Company 4"
             , "444444444A"
             , "company4@company.com"
-            , "+344444444444");
+            , "+344444444444"
+            , "ES");
 
     private Company company1, company2, company3;
 

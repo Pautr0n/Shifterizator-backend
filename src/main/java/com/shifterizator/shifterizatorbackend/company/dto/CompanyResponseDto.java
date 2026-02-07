@@ -8,7 +8,10 @@ public record CompanyResponseDto(Long id,
                                  String taxId,
                                  String email,
                                  String phone,
+                                 String country,
                                  boolean isActive,
                                  LocalDateTime createdAt,
-                                 LocalDateTime updatedAt) {
+                                 LocalDateTime updatedAt,
+                                 String createdBy,
+                                 String updatedBy) {
 }

@@ -20,6 +20,8 @@ public record CompanyRequestDto(@NotBlank(message = "Company's name cannot be em
                                 String email,
 
                                 @Size(min = 9, max = 15, message = "Phone number must have between 9 and 15 characters")
-                                String phone
+                                String phone,
+
+                                String country
 ) {
 }

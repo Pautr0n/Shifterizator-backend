@@ -8,30 +8,31 @@ import org.springframework.stereotype.Component;
 @Component
 public class CompanyMapper {
 
-    public CompanyResponseDto toDto (Company company){
-        CompanyResponseDto responseDto = new CompanyResponseDto(
+    public CompanyResponseDto toDto(Company company) {
+        return new CompanyResponseDto(
                 company.getId(),
                 company.getName(),
                 company.getLegalName(),
                 company.getTaxId(),
                 company.getEmail(),
                 company.getPhone(),
+                company.getCountry(),
                 company.getIsActive(),
                 company.getCreatedAt(),
-                company.getUpdatedAt()
+                company.getUpdatedAt(),
+                company.getCreatedBy(),
+                company.getUpdatedBy()
         );
-
-        return responseDto;
     }
 
-    public Company toEntity (CompanyRequestDto requestDto){
+    public Company toEntity(CompanyRequestDto requestDto) {
         Company company = new Company();
         company.setName(requestDto.name());
         company.setLegalName(requestDto.legalName());
         company.setTaxId(requestDto.taxId());
         company.setEmail(requestDto.email());
         company.setPhone(requestDto.phone());
-
+        company.setCountry(requestDto.country());
         return company;
     }
 

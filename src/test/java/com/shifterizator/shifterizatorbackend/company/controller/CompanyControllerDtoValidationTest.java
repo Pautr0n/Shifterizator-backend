@@ -40,6 +40,12 @@ public class CompanyControllerDtoValidationTest {
     @MockitoBean
     private CompanyMapper companyMapper;
 
+    @MockitoBean
+    private com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper employeeMapper;
+
+    @MockitoBean
+    private com.shifterizator.shifterizatorbackend.company.mapper.LocationMapper locationMapper;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -70,15 +76,19 @@ public class CompanyControllerDtoValidationTest {
                 , "12345678A"
                 , "company1@company.com"
                 , "+341111111"
+                , "ES"
                 , true
                 , LocalDateTime.of(2025, 12, 1, 17, 25)
-                , LocalDateTime.of(2025, 12, 7, 14, 10));
+                , LocalDateTime.of(2025, 12, 7, 14, 10)
+                , null
+                , null);
 
         requestDto = new CompanyRequestDto("Company 1"
                 , "Legal Company 1"
                 , "12345678A"
                 , "company1@company.com"
-                , "+341111111");
+                , "+341111111"
+                , "ES");
     }
 
     @Test
@@ -88,7 +98,8 @@ public class CompanyControllerDtoValidationTest {
                 "Legal Company 1",
                 "12345678A",
                 "company1@company.com",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -109,7 +120,8 @@ public class CompanyControllerDtoValidationTest {
                 "Legal Company 1",
                 "12345678A",
                 "company1@company.com",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -130,7 +142,8 @@ public class CompanyControllerDtoValidationTest {
                 "Legal Company 1",
                 "12345678A",
                 "company1@company.com",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -151,7 +164,8 @@ public class CompanyControllerDtoValidationTest {
                 "",
                 "12345678A",
                 "company1@company.com",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -172,7 +186,8 @@ public class CompanyControllerDtoValidationTest {
                 "123",
                 "12345678A",
                 "company1@company.com",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -193,7 +208,8 @@ public class CompanyControllerDtoValidationTest {
                 "123456789012345678901234567890123456789012345678901234567890",
                 "12345678A",
                 "company1@company.com",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -214,7 +230,8 @@ public class CompanyControllerDtoValidationTest {
                 "Legal Company 1",
                 "12345678A",
                 "not-an-email",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -235,7 +252,8 @@ public class CompanyControllerDtoValidationTest {
                 "Legal Company 1",
                 "12345678A",
                 "",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -256,7 +274,8 @@ public class CompanyControllerDtoValidationTest {
                 "Legal Company 1",
                 "",
                 "company1@company.com",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -277,7 +296,8 @@ public class CompanyControllerDtoValidationTest {
                 "Legal Company 1",
                 "12345678",
                 "company1@company.com",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -298,7 +318,8 @@ public class CompanyControllerDtoValidationTest {
                 "Legal Company 1",
                 "1234567890123",
                 "company1@company.com",
-                "+341111111"
+                "+341111111",
+                null
         );
 
         mockMvc.perform(post("/api/companies")
@@ -319,7 +340,8 @@ public class CompanyControllerDtoValidationTest {
                 "Legal Company 1",
                 "12345678A",
                 "company1@company.com",
-                ""
+                "",
+                null
         );
 
         mockMvc.perform(post("/api/companies")

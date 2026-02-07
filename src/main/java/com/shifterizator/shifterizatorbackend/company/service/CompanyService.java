@@ -5,9 +5,16 @@ import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundE
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyValidationException;
 import com.shifterizator.shifterizatorbackend.company.mapper.CompanyMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
+import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
+import com.shifterizator.shifterizatorbackend.company.spec.CompanySpecs;
+import com.shifterizator.shifterizatorbackend.employee.model.Employee;
+import com.shifterizator.shifterizatorbackend.employee.service.EmployeeService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,8 +24,10 @@ import java.util.List;
 @Service
 public class CompanyService {
 
-    private CompanyRepository companyRepository;
-    private CompanyMapper companyMapper;
+    private final CompanyRepository companyRepository;
+    private final CompanyMapper companyMapper;
+    private final EmployeeService employeeService;
+    private final LocationService locationService;
 
 
     public Company createCompany(CompanyRequestDto requestDto) {
@@ -45,6 +54,7 @@ public class CompanyService {
         company.setTaxId(requestDto.taxId());
         company.setEmail(requestDto.email());
         company.setPhone(requestDto.phone());
+        company.setCountry(requestDto.country());
 
         return companyRepository.save(company);
 
@@ -82,15 +92,52 @@ public class CompanyService {
     }
 
     public Company getCompany(Long id) {
-
         return validateCompanyExistsAndReturnCompany(id);
-
     }
 
-    public List<Company> listAllCompanies(){
+    /**
+     * Returns all employees belonging to the given company. Throws if company does not exist.
+     */
+    public List<Employee> getCompanyEmployees(Long companyId) {
+        validateCompanyExistsAndReturnCompany(companyId);
+        return employeeService.search(companyId, null, null, null, Pageable.unpaged()).getContent();
+    }
 
+    /**
+     * Returns all locations of the given company. Throws if company does not exist.
+     */
+    public List<Location> getCompanyLocations(Long companyId) {
+        validateCompanyExistsAndReturnCompany(companyId);
+        return locationService.findByCompany(companyId);
+    }
+
+    public List<Company> listAllCompanies() {
         return companyRepository.findAll();
+    }
 
+    /**
+     * Paginated search with optional filters: name, country, email, taxId, isActive.
+     */
+    public Page<Company> search(String name, String country, String email, String taxId, Boolean isActive, Pageable pageable) {
+        Specification<Company> spec = (root, query, cb) -> cb.conjunction();
+
+        if (name != null && !name.isBlank()) {
+            spec = spec.and(CompanySpecs.nameContains(name));
+        }
+        if (country != null && !country.isBlank()) {
+            spec = spec.and(CompanySpecs.byCountry(country));
+        }
+        if (email != null && !email.isBlank()) {
+            spec = spec.and(CompanySpecs.byEmail(email));
+        }
+        if (taxId != null && !taxId.isBlank()) {
+            spec = spec.and(CompanySpecs.byTaxId(taxId));
+        }
+        if (isActive != null) {
+            spec = spec.and(CompanySpecs.byIsActive(isActive));
+        }
+
+        return companyRepository.findAll(spec, pageable);
     }
 
     public List<Company> listActiveCompanies() {

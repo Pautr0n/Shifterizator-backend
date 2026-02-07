@@ -23,6 +23,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -48,6 +52,12 @@ class CompanyControllerTest {
 
     @MockitoBean
     private CompanyMapper companyMapper;
+
+    @MockitoBean
+    private com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper employeeMapper;
+
+    @MockitoBean
+    private com.shifterizator.shifterizatorbackend.company.mapper.LocationMapper locationMapper;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -86,15 +96,19 @@ class CompanyControllerTest {
                 , "12345678A"
                 , "company1@company.com"
                 , "+341111111"
+                , "ES"
                 , true
                 , LocalDateTime.of(2025, 12, 1, 17, 25)
-                , LocalDateTime.of(2025, 12, 7, 14, 10));
+                , LocalDateTime.of(2025, 12, 7, 14, 10)
+                , null
+                , null);
 
         requestDto = new CompanyRequestDto("Company 1"
                 , "Legal Company 1"
                 , "12345678A"
                 , "company1@company.com"
-                , "+341111111");
+                , "+341111111"
+                , "ES");
     }
 
     // ---------------------------------------------------------
@@ -170,15 +184,18 @@ class CompanyControllerTest {
     // ---------------------------------------------------------
 
     @Test
-    void listAllCompanies_should_return_200_and_list() throws Exception {
-        when(companyService.listAllCompanies()).thenReturn(List.of(company1));
+    void listCompanies_should_return_200_and_paginated_content() throws Exception {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(companyService.search(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(company1), pageable, 1));
         when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
         mockMvc.perform(get("/api/companies").with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.totalElements").value(1));
 
-        verify(companyService).listAllCompanies();
+        verify(companyService).search(any(), any(), any(), any(), any(), any());
     }
 
     // ---------------------------------------------------------

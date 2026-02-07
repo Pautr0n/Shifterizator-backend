@@ -35,6 +35,8 @@ public class Company {
 
     private String phone;
 
+    private String country;
+
     @Column(nullable = false)
     private Boolean isActive = true;
 
@@ -44,6 +46,8 @@ public class Company {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    private String createdBy;
+    private String updatedBy;
 
     public Company(String name,
                    String legalName,

@@ -39,7 +39,7 @@ class CompanyMapperTest {
         company.setIsActive(true);
         company.setCreatedAt(createdAt);
         company.setUpdatedAt(updatedAt);
-
+        company.setCountry("ES");
 
         CompanyResponseDto responseDto = companyMapper.toDto(company);
 
@@ -49,18 +49,24 @@ class CompanyMapperTest {
                         , "taxId"
                         , "email"
                         , "phone"
+                        , "country"
                         , "isActive"
                         , "createdAt"
-                        , "updatedAt")
+                        , "updatedAt"
+                        , "createdBy"
+                        , "updatedBy")
                 .containsExactly(company.getId()
                         , company.getName()
                         , company.getLegalName()
                         , company.getTaxId()
                         , company.getEmail()
                         , company.getPhone()
+                        , company.getCountry()
                         , company.getIsActive()
                         , company.getCreatedAt()
-                        , company.getUpdatedAt());
+                        , company.getUpdatedAt()
+                        , company.getCreatedBy()
+                        , company.getUpdatedBy());
 
 
     }
@@ -71,7 +77,8 @@ class CompanyMapperTest {
                 , "Test Legal Name"
                 , "12345678N"
                 , "test@test.com"
-                , "+34123456789");
+                , "+34123456789"
+                , "ES");
 
         Company company = companyMapper.toEntity(requestDto);
 
@@ -81,6 +88,7 @@ class CompanyMapperTest {
                         , "taxId"
                         , "email"
                         , "phone"
+                        , "country"
                         , "isActive"
                         , "createdAt"
                         , "updatedAt")
@@ -90,6 +98,7 @@ class CompanyMapperTest {
                         , requestDto.taxId()
                         , requestDto.email()
                         , requestDto.phone()
+                        , requestDto.country()
                         , true
                         , null
                         , null);
