@@ -32,6 +32,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    private String phone;
 
     @Column(nullable = false)
     private String password;
@@ -45,7 +46,7 @@ public class User {
     private Company company;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-    private Employee employee; // optional
+    private Employee employee;
 
     @Column(nullable = false)
     private Boolean isActive = true;
@@ -55,6 +56,10 @@ public class User {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    private String createdBy;
+    private String updatedBy;
+    private LocalDateTime deletedAt;
 
     public User(String username
             , String email

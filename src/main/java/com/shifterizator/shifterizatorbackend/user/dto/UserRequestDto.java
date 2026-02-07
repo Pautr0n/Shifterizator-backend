@@ -26,7 +26,9 @@ public record UserRequestDto(
         @NotBlank(message = "Role is required")
         String role,
 
-        Long companyId
+        Long companyId,
+
+        String phone
 
 ) {
 }
