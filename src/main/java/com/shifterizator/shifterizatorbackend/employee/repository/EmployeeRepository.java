@@ -40,13 +40,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
 
     /**
      * Check if an employee is assigned to any shift.
-     * (Shift entity will be added in Sprint 6, but we prepare the repository now.)
+     * Returns false until Shift entity is added (Sprint 6). Replace with JPQL when Shift exists.
      */
-    @Query("""
-            SELECT CASE WHEN COUNT(s) > 0 THEN TRUE ELSE FALSE END
-            FROM Shift s
-            JOIN s.employees emp
-            WHERE emp.id = :employeeId
-            """)
-    boolean isEmployeeAssignedToAnyShift(Long employeeId);
+    default boolean isEmployeeAssignedToAnyShift(Long employeeId) {
+        return false;
+    }
 }
