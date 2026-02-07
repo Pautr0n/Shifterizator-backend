@@ -12,11 +12,16 @@ import com.shifterizator.shifterizatorbackend.user.mapper.UserMapper;
 import com.shifterizator.shifterizatorbackend.user.model.Role;
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import com.shifterizator.shifterizatorbackend.user.repository.UserRepository;
+import com.shifterizator.shifterizatorbackend.user.spec.UserSpecs;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
@@ -30,9 +35,8 @@ public class UserService {
 
 
     public User createUser(UserRequestDto requestDto) {
-
         validateUniqueUsername(requestDto.username());
-        validateUniqueEmail(requestDto.email());
+        validateUniqueEmailOnCreate(requestDto.email());
 
         Company company = resolveCompanyForUser(requestDto);
 
@@ -53,6 +57,7 @@ public class UserService {
 
         user.setUsername(requestDto.username());
         user.setEmail(requestDto.email());
+        user.setPhone(requestDto.phone());
         user.setRole(Role.valueOf(requestDto.role()));
 
         if (!passwordEncoder.matches(requestDto.password(), user.getPassword())) {
@@ -92,31 +97,86 @@ public class UserService {
     }
 
 
+    /**
+     * Delete user (logical delete by default). Use {@link #deleteUser(Long, boolean)} for physical delete.
+     */
     @Transactional
     public void deleteUser(Long id) {
-        User user = validateUserExistsAndReturnUser(id);
+        deleteUser(id, false);
+    }
+
+    /**
+     * Delete user: logical (set deletedAt) when physicalDelete is false, physical when true.
+     * Only SUPERADMIN should call with physicalDelete=true; COMPANYADMIN uses logical delete.
+     */
+    @Transactional
+    public void deleteUser(Long id, boolean physicalDelete) {
+        User user = findByIdOrThrow(id);
 
         if (Boolean.TRUE.equals(user.getIsSystemUser())) {
             throw new ForbiddenOperationException("System user cannot be deleted");
         }
 
-        userRepository.delete(user);
+        if (physicalDelete) {
+            userRepository.delete(user);
+        } else {
+            user.setDeletedAt(LocalDateTime.now());
+            userRepository.save(user);
+        }
     }
 
     public User getUser(Long id) {
-        return validateUserExistsAndReturnUser(id);
+        return userRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    }
+
+    /**
+     * Paginated search with optional filters: role, companyId, email, isActive. Excludes logically deleted users.
+     */
+    public Page<User> search(String role, Long companyId, String email, Boolean isActive, Pageable pageable) {
+        Specification<User> spec = UserSpecs.notDeleted();
+        if (role != null && !role.isBlank()) {
+            spec = spec.and(UserSpecs.byRole(role));
+        }
+        if (companyId != null) {
+            spec = spec.and(UserSpecs.byCompany(companyId));
+        }
+        if (email != null && !email.isBlank()) {
+            spec = spec.and(UserSpecs.emailContains(email));
+        }
+        if (isActive != null) {
+            spec = spec.and(UserSpecs.byIsActive(isActive));
+        }
+        return userRepository.findAll(spec, pageable);
+    }
+
+    public List<User> listByCompany(Long companyId) {
+        return userRepository.findByCompany_IdAndDeletedAtIsNull(companyId);
+    }
+
+    public List<User> searchUsersByEmail(String email) {
+        return userRepository.findByEmailContainingIgnoreCaseAndDeletedAtIsNull(email);
+    }
+
+    @Transactional
+    public User resetPassword(Long id, String newPassword) {
+        User user = findByIdOrThrow(id);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        return userRepository.save(user);
     }
 
     public List<User> listAllUsers() {
-        return userRepository.findAll();
+        return userRepository.findAll(UserSpecs.notDeleted());
     }
 
     public List<User> listActiveUsers() {
-        return userRepository.findByIsActive(true);
+        Specification<User> spec = UserSpecs.notDeleted().and(UserSpecs.byIsActive(true));
+        return userRepository.findAll(spec);
     }
 
     public List<User> listInactiveUsers() {
-        return userRepository.findByIsActive(false);
+        Specification<User> spec = UserSpecs.notDeleted().and(UserSpecs.byIsActive(false));
+        return userRepository.findAll(spec);
     }
 
     public List<User> searchUsersByUsername(String username) {
@@ -131,23 +191,25 @@ public class UserService {
         return userRepository.findByUsernameContainingIgnoreCaseAndIsActive(username, false);
     }
 
-
     private void validateUniqueUsername(String username) {
         if (userRepository.existsByUsername(username)) {
             throw new UserAlreadyExistsException("Username already exists: " + username);
         }
     }
 
-    private void validateUniqueEmail(String email) {
-        if (userRepository.existsByEmail(email)) {
+    private void validateUniqueEmailOnCreate(String email) {
+        if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
             throw new EmailAlreadyExistsException("Email already exists: " + email);
         }
     }
 
+    private User findByIdOrThrow(Long id) {
+        return userRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    }
+
     private User validateUserExistsAndReturnUser(Long id) {
-        return userRepository.findById(id).orElseThrow(
-                () -> new UserNotFoundException("User not found with id: " + id)
-        );
+        return findByIdOrThrow(id);
     }
 
     private Company resolveCompanyForUser(UserRequestDto requestDto) {
@@ -171,7 +233,7 @@ public class UserService {
         }
 
         if (!requestDto.email().equalsIgnoreCase(user.getEmail())) {
-            if (userRepository.existsByEmail(requestDto.email())) {
+            if (userRepository.existsByEmailAndDeletedAtIsNullAndIdNot(requestDto.email(), user.getId())) {
                 throw new EmailAlreadyExistsException("Email already exists: " + requestDto.email());
             }
         }
