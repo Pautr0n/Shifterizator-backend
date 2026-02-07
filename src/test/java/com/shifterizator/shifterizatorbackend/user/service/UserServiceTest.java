@@ -19,10 +19,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import org.springframework.data.jpa.domain.Specification;
+
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 
@@ -51,7 +54,8 @@ class UserServiceTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                5L
+                5L,
+                null
         );
 
         Company company = new Company();
@@ -60,7 +64,7 @@ class UserServiceTest {
         User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, company);
 
         when(userRepository.existsByUsername("john")).thenReturn(false);
-        when(userRepository.existsByEmail("john@mail.com")).thenReturn(false);
+        when(userRepository.existsByEmailAndDeletedAtIsNull("john@mail.com")).thenReturn(false);
         when(companyRepository.findById(5L)).thenReturn(Optional.of(company));
         when(passwordEncoder.encode("Password1!")).thenReturn("hashed");
         when(userMapper.toEntity(dto, "hashed", company)).thenReturn(user);
@@ -80,6 +84,7 @@ class UserServiceTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
+                null,
                 null
         );
 
@@ -87,7 +92,7 @@ class UserServiceTest {
         User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
 
         when(userRepository.existsByUsername("john")).thenReturn(false);
-        when(userRepository.existsByEmail("john@mail.com")).thenReturn(false);
+        when(userRepository.existsByEmailAndDeletedAtIsNull("john@mail.com")).thenReturn(false);
         when(passwordEncoder.encode("Password1!")).thenReturn("hashed");
         when(userMapper.toEntity(dto, "hashed", null)).thenReturn(user);
         when(userRepository.save(user)).thenReturn(user);
@@ -107,7 +112,8 @@ class UserServiceTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                5L
+                5L,
+                null
         );
 
         when(userRepository.existsByUsername("john")).thenReturn(true);
@@ -127,11 +133,12 @@ class UserServiceTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                5L
+                5L,
+                null
         );
 
         when(userRepository.existsByUsername("john")).thenReturn(false);
-        when(userRepository.existsByEmail("john@mail.com")).thenReturn(true);
+        when(userRepository.existsByEmailAndDeletedAtIsNull("john@mail.com")).thenReturn(true);
 
         assertThatThrownBy(() -> service.createUser(dto))
                 .isInstanceOf(EmailAlreadyExistsException.class)
@@ -148,11 +155,12 @@ class UserServiceTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                99L
+                99L,
+                null
         );
 
         when(userRepository.existsByUsername("john")).thenReturn(false);
-        when(userRepository.existsByEmail("john@mail.com")).thenReturn(false);
+        when(userRepository.existsByEmailAndDeletedAtIsNull("john@mail.com")).thenReturn(false);
         when(companyRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.createUser(dto))
@@ -173,7 +181,8 @@ class UserServiceTest {
                 "updated@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                5L
+                5L,
+                null
         );
 
         Company company = new Company();
@@ -182,9 +191,9 @@ class UserServiceTest {
         User existing = new User("john", "john@mail.com", "oldHash", Role.EMPLOYEE, null);
         existing.setId(10L);
 
-        when(userRepository.findById(10L)).thenReturn(Optional.of(existing));
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(existing));
         when(userRepository.existsByUsername("johnUpdated")).thenReturn(false);
-        when(userRepository.existsByEmail("updated@mail.com")).thenReturn(false);
+        when(userRepository.existsByEmailAndDeletedAtIsNullAndIdNot("updated@mail.com", 10L)).thenReturn(false);
         when(companyRepository.findById(5L)).thenReturn(Optional.of(company));
         when(passwordEncoder.matches("Password1!", "oldHash")).thenReturn(false);
         when(passwordEncoder.encode("Password1!")).thenReturn("newHash");
@@ -206,10 +215,11 @@ class UserServiceTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
+                null,
                 null
         );
 
-        when(userRepository.findById(10L)).thenReturn(Optional.empty());
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.updateUser(10L, dto))
                 .isInstanceOf(UserNotFoundException.class)
@@ -224,12 +234,14 @@ class UserServiceTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
+                null,
                 null
         );
 
         User existing = new User("oldName", "john@mail.com", "hash", Role.EMPLOYEE, null);
+        existing.setId(10L);
 
-        when(userRepository.findById(10L)).thenReturn(Optional.of(existing));
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(existing));
         when(userRepository.existsByUsername("newName")).thenReturn(true);
 
         assertThatThrownBy(() -> service.updateUser(10L, dto))
@@ -245,13 +257,15 @@ class UserServiceTest {
                 "new@mail.com",
                 "Password1!",
                 "EMPLOYEE",
+                null,
                 null
         );
 
         User existing = new User("john", "old@mail.com", "hash", Role.EMPLOYEE, null);
+        existing.setId(10L);
 
-        when(userRepository.findById(10L)).thenReturn(Optional.of(existing));
-        when(userRepository.existsByEmail("new@mail.com")).thenReturn(true);
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(existing));
+        when(userRepository.existsByEmailAndDeletedAtIsNullAndIdNot("new@mail.com", 10L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.updateUser(10L, dto))
                 .isInstanceOf(EmailAlreadyExistsException.class)
@@ -266,12 +280,14 @@ class UserServiceTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                99L
+                99L,
+                null
         );
 
         User existing = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
+        existing.setId(10L);
 
-        when(userRepository.findById(10L)).thenReturn(Optional.of(existing));
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(existing));
         when(companyRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.updateUser(10L, dto))
@@ -288,7 +304,7 @@ class UserServiceTest {
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
         user.setId(10L);
 
-        when(userRepository.findById(10L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
 
         User result = service.deactivateUser(10L);
@@ -303,7 +319,7 @@ class UserServiceTest {
         user.setId(10L);
         user.setIsActive(false);
 
-        when(userRepository.findById(10L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
 
         User result = service.activateUser(10L);
@@ -315,21 +331,24 @@ class UserServiceTest {
     // DELETE
     // ---------------------------------------------------------
     @Test
-    void deleteUser_should_delete_when_exists() {
+    void deleteUser_should_logical_delete_when_exists() {
 
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
+        user.setId(10L);
 
-        when(userRepository.findById(10L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
 
         service.deleteUser(10L);
 
-        verify(userRepository).delete(user);
+        verify(userRepository).save(user);
+        assertThat(user.getDeletedAt()).isNotNull();
     }
 
     @Test
     void deleteUser_should_throw_when_not_found() {
 
-        when(userRepository.findById(10L)).thenReturn(Optional.empty());
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.deleteUser(10L))
                 .isInstanceOf(UserNotFoundException.class)
@@ -344,7 +363,7 @@ class UserServiceTest {
 
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
 
-        when(userRepository.findById(10L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(user));
 
         User result = service.getUser(10L);
 
@@ -354,7 +373,7 @@ class UserServiceTest {
     @Test
     void getUser_should_throw_when_not_found() {
 
-        when(userRepository.findById(10L)).thenReturn(Optional.empty());
+        when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getUser(10L))
                 .isInstanceOf(UserNotFoundException.class)
@@ -369,7 +388,7 @@ class UserServiceTest {
 
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
 
-        when(userRepository.findAll()).thenReturn(List.of(user));
+        when(userRepository.findAll(any(Specification.class))).thenReturn(List.of(user));
 
         List<User> result = service.listAllUsers();
 
@@ -381,7 +400,7 @@ class UserServiceTest {
 
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
 
-        when(userRepository.findByIsActive(true)).thenReturn(List.of(user));
+        when(userRepository.findAll(any(Specification.class))).thenReturn(List.of(user));
 
         List<User> result = service.listActiveUsers();
 
@@ -393,7 +412,7 @@ class UserServiceTest {
 
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
 
-        when(userRepository.findByIsActive(false)).thenReturn(List.of(user));
+        when(userRepository.findAll(any(Specification.class))).thenReturn(List.of(user));
 
         List<User> result = service.listInactiveUsers();
 

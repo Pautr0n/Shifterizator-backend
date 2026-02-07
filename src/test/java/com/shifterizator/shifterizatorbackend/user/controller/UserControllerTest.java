@@ -28,6 +28,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 
@@ -67,14 +71,15 @@ class UserControllerTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                1L
+                1L,
+                null
         );
 
         User user = new User("john123", "john@mail.com", "hashed", Role.EMPLOYEE, null);
         user.setId(10L);
 
         UserResponseDto responseDto = new UserResponseDto(
-                10L, "john123", "john@mail.com", "EMPLOYEE", null, true
+                10L, "john123", "john@mail.com", null, "EMPLOYEE", null, true, null, null
         );
 
         when(userService.createUser(any())).thenReturn(user);
@@ -101,7 +106,8 @@ class UserControllerTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                1L
+                1L,
+                null
         );
 
         when(userService.createUser(any()))
@@ -129,14 +135,15 @@ class UserControllerTest {
                 "johnUpdated@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                1L
+                1L,
+                null
         );
 
         User user = new User("johnUpdated", "johnUpdated@mail.com", "hashed", Role.EMPLOYEE, null);
         user.setId(10L);
 
         UserResponseDto responseDto = new UserResponseDto(
-                10L, "johnUpdated", "johnUpdated@mail.com", "EMPLOYEE", null, true
+                10L, "johnUpdated", "johnUpdated@mail.com", null, "EMPLOYEE", null, true, null, null
         );
 
         when(userService.updateUser(eq(10L), any())).thenReturn(user);
@@ -160,7 +167,8 @@ class UserControllerTest {
                 "duplicate@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                1L
+                1L,
+                null
         );
 
         Mockito.when(userService.updateUser(eq(10L), any()))
@@ -187,7 +195,7 @@ class UserControllerTest {
         user.setIsActive(true);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", "EMPLOYEE", null, true
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
         );
 
         when(userService.activateUser(10L)).thenReturn(user);
@@ -208,7 +216,7 @@ class UserControllerTest {
         user.setIsActive(false);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", "EMPLOYEE", null, false
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, false, null, null
         );
 
         when(userService.deactivateUser(10L)).thenReturn(user);
@@ -231,7 +239,7 @@ class UserControllerTest {
                         .with(csrf()))
                 .andExpect(status().isNoContent());
 
-        verify(userService).deleteUser(10L);
+        verify(userService).deleteUser(10L, false);
     }
 
     @Test
@@ -239,7 +247,7 @@ class UserControllerTest {
     void deleteUser_should_return_404_when_not_found() throws Exception {
 
         Mockito.doThrow(new UserNotFoundException("User not found with id: 10"))
-                .when(userService).deleteUser(10L);
+                .when(userService).deleteUser(10L, false);
 
         mockMvc.perform(delete("/api/users/10").with(csrf()))
                 .andExpect(status().isNotFound())
@@ -259,7 +267,7 @@ class UserControllerTest {
         user.setId(10L);
 
         UserResponseDto responseDto = new UserResponseDto(
-                10L, "john", "john@mail.com", "EMPLOYEE", null, true
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
         );
 
         when(userService.getUser(10L)).thenReturn(user);
@@ -289,21 +297,24 @@ class UserControllerTest {
     // ---------------------------------------------------------
     @Test
     @WithMockUser
-    void listUsers_should_return_200_and_list() throws Exception {
+    void listUsers_should_return_200_and_paginated_content() throws Exception {
 
         User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
         user.setId(10L);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", "EMPLOYEE", null, true
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
         );
 
-        when(userService.listAllUsers()).thenReturn(List.of(user));
+        Pageable pageable = PageRequest.of(0, 10);
+        when(userService.search(any(), any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
         when(userMapper.toDto(user)).thenReturn(dto);
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(10));
+                .andExpect(jsonPath("$.content[0].id").value(10))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     // ---------------------------------------------------------
@@ -317,7 +328,7 @@ class UserControllerTest {
         user.setId(10L);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", "EMPLOYEE", null, true
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
         );
 
         when(userService.listActiveUsers()).thenReturn(List.of(user));
@@ -340,7 +351,7 @@ class UserControllerTest {
         user.setIsActive(false);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", "EMPLOYEE", null, false
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, false, null, null
         );
 
         when(userService.listInactiveUsers()).thenReturn(List.of(user));
@@ -362,7 +373,7 @@ class UserControllerTest {
         user.setId(10L);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", "EMPLOYEE", null, true
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
         );
 
         when(userService.searchUsersByUsername("john")).thenReturn(List.of(user));
@@ -382,7 +393,7 @@ class UserControllerTest {
         user.setIsActive(true);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", "EMPLOYEE", null, true
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
         );
 
         when(userService.searchActiveUsersByUsername("john"))
@@ -405,7 +416,7 @@ class UserControllerTest {
         user.setIsActive(false);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", "EMPLOYEE", null, false
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, false, null, null
         );
 
         when(userService.searchInactiveUsersByUsername("john"))

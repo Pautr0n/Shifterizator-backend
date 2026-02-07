@@ -21,7 +21,8 @@ class UserMapperTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                5L
+                5L,
+                null
         );
 
         Company company = new Company();
@@ -51,6 +52,7 @@ class UserMapperTest {
         assertThat(dto.id()).isEqualTo(10L);
         assertThat(dto.username()).isEqualTo("john");
         assertThat(dto.email()).isEqualTo("john@mail.com");
+        assertThat(dto.phone()).isNull();
         assertThat(dto.role()).isEqualTo("EMPLOYEE");
         assertThat(dto.companyId()).isEqualTo(5L);
         assertThat(dto.isActive()).isTrue();

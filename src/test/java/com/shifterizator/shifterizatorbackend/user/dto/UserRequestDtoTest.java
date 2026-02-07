@@ -28,7 +28,8 @@ class UserRequestDtoTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                1L
+                1L,
+                null
         );
 
         Set violations = validator.validate(dto);
@@ -42,7 +43,8 @@ class UserRequestDtoTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                1L
+                1L,
+                null
         );
 
         Set violations = validator.validate(dto);
@@ -56,7 +58,8 @@ class UserRequestDtoTest {
                 "john@mail.com",
                 "Password1!",
                 "EMPLOYEE",
-                1L
+                1L,
+                null
         );
 
         Set violations = validator.validate(dto);
@@ -70,7 +73,8 @@ class UserRequestDtoTest {
                 "not-an-email",
                 "Password1!",
                 "EMPLOYEE",
-                1L
+                1L,
+                null
         );
 
         Set violations = validator.validate(dto);
@@ -84,7 +88,8 @@ class UserRequestDtoTest {
                 "john@mail.com",
                 "password",
                 "EMPLOYEE",
-                1L
+                1L,
+                null
         );
 
         Set violations = validator.validate(dto);
@@ -98,7 +103,8 @@ class UserRequestDtoTest {
                 "john@mail.com",
                 "Password1!",
                 "",
-                1L
+                1L,
+                null
         );
 
         Set violations = validator.validate(dto);
