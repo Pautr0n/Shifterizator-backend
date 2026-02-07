@@ -40,10 +40,13 @@ class EmployeeServiceImplTest {
     private PositionRepository positionRepository;
 
     @Mock
+    private EmployeeMapper employeeMapper;
+
+    @Mock
     private EmployeeDomainService employeeDomainService;
 
     @InjectMocks
-    private  EmployeeServiceImpl employeeService;
+    private EmployeeServiceImpl employeeService;
 
     @Test
     void create_shouldCreateEmployeeSuccessfully() {
@@ -63,14 +66,16 @@ class EmployeeServiceImplTest {
                 .build();
 
         when(positionRepository.findById(1L)).thenReturn(Optional.of(position));
-        when(employeeRepository.save(employee)).thenReturn(employee);
+        when(employeeMapper.toEntity(dto, position)).thenReturn(employee);
+        when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
 
         Employee result = employeeService.create(dto);
 
         verify(employeeDomainService).validateEmailUniqueness(dto, null);
-        verify(employeeRepository).save(employee);
-        verify(employeeDomainService).assignCompanies(employee, dto);
-        verify(employeeDomainService).assignLocations(employee, dto);
+        verify(employeeMapper).toEntity(dto, position);
+        verify(employeeRepository).save(any(Employee.class));
+        verify(employeeDomainService).assignCompanies(any(Employee.class), eq(dto));
+        verify(employeeDomainService).assignLocations(any(Employee.class), eq(dto));
 
         assertThat(result.getId()).isEqualTo(99L);
         assertThat(result.getPosition().getName()).isEqualTo("Waiter");

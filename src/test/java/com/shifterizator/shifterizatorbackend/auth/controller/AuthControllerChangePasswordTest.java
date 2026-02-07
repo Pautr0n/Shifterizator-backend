@@ -1,6 +1,7 @@
 package com.shifterizator.shifterizatorbackend.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shifterizator.shifterizatorbackend.auth.jwt.JwtUtil;
 import com.shifterizator.shifterizatorbackend.user.dto.ChangePasswordRequestDto;
 import com.shifterizator.shifterizatorbackend.auth.service.AuthService;
 import com.shifterizator.shifterizatorbackend.user.service.ChangePasswordUserService;
@@ -8,9 +9,10 @@ import com.shifterizator.shifterizatorbackend.auth.service.CurrentUserService;
 import com.shifterizator.shifterizatorbackend.user.exception.InvalidPasswordException;
 import com.shifterizator.shifterizatorbackend.user.model.Role;
 import com.shifterizator.shifterizatorbackend.user.model.User;
+import com.shifterizator.shifterizatorbackend.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -23,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class AuthControllerChangePasswordTest {
 
     @Autowired
@@ -36,6 +39,12 @@ public class AuthControllerChangePasswordTest {
 
     @MockitoBean
     private ChangePasswordUserService changePasswordUserService;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

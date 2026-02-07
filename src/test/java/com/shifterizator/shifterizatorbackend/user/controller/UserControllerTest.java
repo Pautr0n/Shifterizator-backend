@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shifterizator.shifterizatorbackend.auth.jwt.JwtAuthenticationFilter;
+import com.shifterizator.shifterizatorbackend.auth.jwt.JwtUtil;
 import com.shifterizator.shifterizatorbackend.user.dto.UserRequestDto;
 import com.shifterizator.shifterizatorbackend.user.dto.UserResponseDto;
 import com.shifterizator.shifterizatorbackend.user.exception.UserAlreadyExistsException;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
@@ -37,6 +40,7 @@ import java.util.List;
 
 @WithMockUser
 @WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
     @Autowired
@@ -44,6 +48,12 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     @MockitoBean
     private UserMapper userMapper;

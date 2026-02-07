@@ -36,13 +36,10 @@ class EmployeeSpecsTest {
 
     @Test
     void specs_shouldFilterByCompanyLocationNamePositionAndActive() {
-        Company company1 = new Company();
-        company1.setId(1L);
-        company1.setName("Skynet");
-
-        Company company2 = new Company();
-        company2.setId(2L);
-        company2.setName("Cyberdyne");
+        Company company1 = new Company("Skynet", "Skynet Inc", "111111111", "skynet@test.com", "+111");
+        Company company2 = new Company("Cyberdyne", "Cyberdyne Inc", "222222222", "cyber@test.com", "+222");
+        company1 = companyRepository.save(company1);
+        company2 = companyRepository.save(company2);
 
         Location loc1 = locationRepository.save(Location.builder().name("HQ").address("A").company(company1).build());
         Location loc2 = locationRepository.save(Location.builder().name("Branch").address("B").company(company2).build());

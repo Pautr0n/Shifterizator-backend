@@ -13,21 +13,21 @@ public final class UserSpecs {
 
     public static Specification<User> byRole(String role) {
         if (role == null || role.isBlank()) {
-            return Specification.where(null);
+            return Specification.where((Specification<User>) null);
         }
         return (root, query, cb) -> cb.equal(cb.upper(root.get("role")), role.toUpperCase());
     }
 
     public static Specification<User> byCompany(Long companyId) {
         if (companyId == null) {
-            return Specification.where(null);
+            return Specification.where((Specification<User>) null);
         }
         return (root, query, cb) -> cb.equal(root.get("company").get("id"), companyId);
     }
 
     public static Specification<User> emailContains(String email) {
         if (email == null || email.isBlank()) {
-            return Specification.where(null);
+            return Specification.where((Specification<User>) null);
         }
         String pattern = "%" + email.toLowerCase() + "%";
         return (root, query, cb) -> cb.like(cb.lower(root.get("email")), pattern);
@@ -35,7 +35,7 @@ public final class UserSpecs {
 
     public static Specification<User> byIsActive(Boolean isActive) {
         if (isActive == null) {
-            return Specification.where(null);
+            return Specification.where((Specification<User>) null);
         }
         return (root, query, cb) -> cb.equal(root.get("isActive"), isActive);
     }

@@ -1,16 +1,21 @@
 package com.shifterizator.shifterizatorbackend.company.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shifterizator.shifterizatorbackend.auth.jwt.JwtAuthenticationFilter;
+import com.shifterizator.shifterizatorbackend.auth.jwt.JwtUtil;
 import com.shifterizator.shifterizatorbackend.company.dto.CompanyRequestDto;
 import com.shifterizator.shifterizatorbackend.company.dto.CompanyResponseDto;
 import com.shifterizator.shifterizatorbackend.company.mapper.CompanyMapper;
+import com.shifterizator.shifterizatorbackend.company.mapper.LocationMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.service.CompanyService;
+import com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
@@ -28,6 +33,7 @@ import java.time.LocalDateTime;
 
 @WithMockUser
 @WebMvcTest(CompanyController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class CompanyControllerDtoValidationTest {
 
 
@@ -38,13 +44,19 @@ public class CompanyControllerDtoValidationTest {
     private CompanyService companyService;
 
     @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
     private CompanyMapper companyMapper;
 
     @MockitoBean
-    private com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper employeeMapper;
+    private EmployeeMapper employeeMapper;
 
     @MockitoBean
-    private com.shifterizator.shifterizatorbackend.company.mapper.LocationMapper locationMapper;
+    private LocationMapper locationMapper;
 
     @Autowired
     private ObjectMapper objectMapper;
