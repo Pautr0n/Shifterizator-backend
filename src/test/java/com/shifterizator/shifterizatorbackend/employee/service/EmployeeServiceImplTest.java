@@ -52,7 +52,7 @@ class EmployeeServiceImplTest {
     void create_shouldCreateEmployeeSuccessfully() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L)
+                1L, Set.of(1L), Set.of(10L), Set.of(1L)
         );
 
         Position position = Position.builder().id(1L).name("Waiter").build();
@@ -76,6 +76,7 @@ class EmployeeServiceImplTest {
         verify(employeeRepository).save(any(Employee.class));
         verify(employeeDomainService).assignCompanies(any(Employee.class), eq(dto));
         verify(employeeDomainService).assignLocations(any(Employee.class), eq(dto));
+        verify(employeeDomainService).assignLanguages(any(Employee.class), eq(dto));
 
         assertThat(result.getId()).isEqualTo(99L);
         assertThat(result.getPosition().getName()).isEqualTo("Waiter");
@@ -85,7 +86,7 @@ class EmployeeServiceImplTest {
     void create_shouldThrowWhenPositionNotFound() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L)
+                1L, Set.of(1L), Set.of(10L), Set.of(1L)
         );
 
         when(positionRepository.findById(1L)).thenReturn(Optional.empty());
@@ -99,7 +100,7 @@ class EmployeeServiceImplTest {
     void update_shouldUpdateEmployeeSuccessfully() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L)
+                1L, Set.of(1L), Set.of(10L), Set.of(1L)
         );
 
         Position position = Position.builder().id(1L).name("Waiter").build();
@@ -120,6 +121,7 @@ class EmployeeServiceImplTest {
         verify(employeeDomainService).validateEmailUniqueness(dto, 99L);
         verify(employeeDomainService).assignCompanies(employee, dto);
         verify(employeeDomainService).assignLocations(employee, dto);
+        verify(employeeDomainService).assignLanguages(employee, dto);
 
         assertThat(result.getId()).isEqualTo(99L);
         assertThat(result.getName()).isEqualTo("John");
@@ -131,7 +133,7 @@ class EmployeeServiceImplTest {
     void update_shouldThrowWhenEmployeeNotFound() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L)
+                1L, Set.of(1L), Set.of(10L), Set.of(1L)
         );
 
         when(employeeRepository.findActiveById(99L)).thenReturn(Optional.empty());

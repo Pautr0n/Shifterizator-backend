@@ -4,6 +4,7 @@ import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.model.*;
+import com.shifterizator.shifterizatorbackend.language.model.Language;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -29,7 +30,8 @@ class EmployeeMapperTest {
                 "123456789",
                 5L,
                 Set.of(1L),
-                Set.of(2L)
+                Set.of(2L),
+                Set.of(1L)
         );
 
         Employee employee = mapper.toEntity(dto, position);
@@ -76,6 +78,13 @@ class EmployeeMapperTest {
         employee.addLocation(el1);
         employee.addLocation(el2);
 
+        Language lang1 = Language.builder().id(1L).code("EN").name("English").build();
+        Language lang2 = Language.builder().id(2L).code("ES").name("Spanish").build();
+        EmployeeLanguage eLang1 = EmployeeLanguage.builder().employee(employee).language(lang1).build();
+        EmployeeLanguage eLang2 = EmployeeLanguage.builder().employee(employee).language(lang2).build();
+        employee.addLanguage(eLang1);
+        employee.addLanguage(eLang2);
+
         EmployeeResponseDto dto = mapper.toResponse(employee);
 
         assertThat(dto.id()).isEqualTo(99L);
@@ -86,7 +95,25 @@ class EmployeeMapperTest {
         assertThat(dto.position()).isEqualTo("Waiter");
         assertThat(dto.companies()).containsExactlyInAnyOrder("Skynet", "Cyberdyne");
         assertThat(dto.locations()).containsExactlyInAnyOrder("HQ", "Branch");
+        assertThat(dto.languages()).containsExactlyInAnyOrder("English", "Spanish");
         assertThat(dto.createdAt()).isNotNull();
         assertThat(dto.updatedAt()).isNotNull();
+    }
+
+    @Test
+    void toResponse_shouldMapEmptyLanguagesWhenNone() {
+        Position position = Position.builder().id(5L).name("Waiter").build();
+        Employee employee = Employee.builder()
+                .id(99L)
+                .name("John")
+                .surname("Connor")
+                .position(position)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        EmployeeResponseDto dto = mapper.toResponse(employee);
+
+        assertThat(dto.languages()).isEmpty();
     }
 }
