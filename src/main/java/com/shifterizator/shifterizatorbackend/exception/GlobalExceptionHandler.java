@@ -9,6 +9,7 @@ import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFound
 import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.exception.PositionAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
+import com.shifterizator.shifterizatorbackend.language.exception.LanguageNotFoundException;
 import com.shifterizator.shifterizatorbackend.user.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PositionNotFoundException.class)
     public ResponseEntity<ApiErrorDto> handlePositionNotFound(PositionNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(LanguageNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handleLanguageNotFound(LanguageNotFoundException ex) {
         ApiErrorDto error = new ApiErrorDto(
                 ex.getMessage(),
                 "NOT_FOUND",

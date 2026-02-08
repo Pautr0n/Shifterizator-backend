@@ -4,6 +4,7 @@ import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.model.EmployeeCompany;
+import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLanguage;
 import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLocation;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ public class EmployeeMapper {
                 employee.getPosition().getName(),
                 extractCompanyNames(employee.getEmployeeCompanies()),
                 extractLocationNames(employee.getEmployeeLocations()),
+                extractLanguageNames(employee.getEmployeeLanguages()),
                 employee.getCreatedAt(),
                 employee.getUpdatedAt()
         );
@@ -48,6 +50,12 @@ public class EmployeeMapper {
     private Set<String> extractLocationNames(Set<EmployeeLocation> employeeLocations) {
         return employeeLocations.stream()
                 .map(el -> el.getLocation().getName())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> extractLanguageNames(Set<EmployeeLanguage> employeeLanguages) {
+        return employeeLanguages.stream()
+                .map(el -> el.getLanguage().getName())
                 .collect(Collectors.toSet());
     }
 }

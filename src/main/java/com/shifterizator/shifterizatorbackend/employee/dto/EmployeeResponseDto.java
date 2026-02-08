@@ -12,6 +12,7 @@ public record EmployeeResponseDto(
         String position,
         Set<String> companies,
         Set<String> locations,
+        Set<String> languages,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 

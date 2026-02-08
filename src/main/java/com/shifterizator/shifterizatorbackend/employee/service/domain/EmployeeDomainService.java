@@ -9,6 +9,9 @@ import com.shifterizator.shifterizatorbackend.employee.model.*;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.company.repository.LocationRepository;
+import com.shifterizator.shifterizatorbackend.language.exception.LanguageNotFoundException;
+import com.shifterizator.shifterizatorbackend.language.model.Language;
+import com.shifterizator.shifterizatorbackend.language.repository.LanguageRepository;
 import com.shifterizator.shifterizatorbackend.user.exception.EmailAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ public class EmployeeDomainService {
     private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final LocationRepository locationRepository;
+    private final LanguageRepository languageRepository;
 
     public void validateEmailUniqueness(EmployeeRequestDto dto, Long currentEmployeeId) {
 
@@ -81,6 +85,24 @@ public class EmployeeDomainService {
                     .build();
 
             employee.addLocation(el);
+        }
+    }
+
+    public void assignLanguages(Employee employee, EmployeeRequestDto dto) {
+        employee.getEmployeeLanguages().clear();
+
+        if (dto.languageIds() == null) return;
+
+        for (Long languageId : dto.languageIds()) {
+            Language language = languageRepository.findById(languageId)
+                    .orElseThrow(() -> new LanguageNotFoundException("Language not found"));
+
+            EmployeeLanguage el = EmployeeLanguage.builder()
+                    .employee(employee)
+                    .language(language)
+                    .build();
+
+            employee.addLanguage(el);
         }
     }
 }

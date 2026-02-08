@@ -66,6 +66,14 @@ public class Employee {
     @Builder.Default
     private Set<EmployeeLocation> employeeLocations = new HashSet<>();
 
+    @OneToMany(
+            mappedBy = "employee",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private Set<EmployeeLanguage> employeeLanguages = new HashSet<>();
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -96,6 +104,16 @@ public class Employee {
     public void removeLocation(EmployeeLocation employeeLocation) {
         employeeLocations.remove(employeeLocation);
         employeeLocation.setEmployee(null);
+    }
+
+    public void addLanguage(EmployeeLanguage employeeLanguage) {
+        employeeLanguages.add(employeeLanguage);
+        employeeLanguage.setEmployee(this);
+    }
+
+    public void removeLanguage(EmployeeLanguage employeeLanguage) {
+        employeeLanguages.remove(employeeLanguage);
+        employeeLanguage.setEmployee(null);
     }
 }
 

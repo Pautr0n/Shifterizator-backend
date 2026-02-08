@@ -25,7 +25,9 @@ public record EmployeeRequestDto(
         @NotEmpty(message = "At least one company must be assigned")
         Set<Long> companyIds,
 
-        Set<Long> locationIds
+        Set<Long> locationIds,
+
+        Set<Long> languageIds
 
 ) {
 }
