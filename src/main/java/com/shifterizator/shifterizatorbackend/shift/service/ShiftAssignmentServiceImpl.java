@@ -63,11 +63,8 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
         // Check for overlapping shifts
         validateNoOverlappingShifts(employee.getId(), shiftInstance);
 
-        // Check capacity
-        int assignedCount = shiftInstanceRepository.countActiveAssignments(shiftInstance.getId());
-        if (assignedCount >= shiftInstance.getRequiredEmployees()) {
-            throw new ShiftValidationException("Shift is already at full capacity");
-        }
+        // Check capacity per position
+        validatePositionCapacity(employee, shiftInstance);
 
         ShiftAssignment assignment = ShiftAssignment.builder()
                 .shiftInstance(shiftInstance)
@@ -112,7 +109,8 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
     @Override
     @Transactional(readOnly = true)
     public List<ShiftAssignment> findByEmployee(Long employeeId) {
-        return shiftAssignmentRepository.findByEmployee_IdAndDeletedAtIsNullOrderByShiftInstance_DateAscShiftInstance_StartTimeAsc(employeeId);
+        return shiftAssignmentRepository
+                .findByEmployee_IdAndDeletedAtIsNullOrderByShiftInstance_DateAscShiftInstance_StartTimeAsc(employeeId);
     }
 
     private void validateEmployeeAvailability(Long employeeId, java.time.LocalDate date) {
@@ -132,8 +130,12 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
     }
 
     private void validatePositionMatch(Employee employee, ShiftInstance shiftInstance) {
-        if (!employee.getPosition().getId().equals(shiftInstance.getShiftTemplate().getPosition().getId())) {
-            throw new ShiftValidationException("Employee position does not match shift template position");
+        Long employeePositionId = employee.getPosition().getId();
+        boolean positionMatches = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
+                .anyMatch(stp -> stp.getPosition().getId().equals(employeePositionId));
+        
+        if (!positionMatches) {
+            throw new ShiftValidationException("Employee position does not match any required position for this shift template");
         }
     }
 
@@ -177,9 +179,47 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
                 && !shift1.getStartTime().isAfter(shift2.getEndTime());
     }
 
+    private void validatePositionCapacity(Employee employee, ShiftInstance shiftInstance) {
+        Long employeePositionId = employee.getPosition().getId();
+        
+        // Find required count for this position
+        Integer requiredCount = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
+                .filter(stp -> stp.getPosition().getId().equals(employeePositionId))
+                .map(stp -> stp.getRequiredCount())
+                .findFirst()
+                .orElse(0);
+        
+        if (requiredCount == 0) {
+            throw new ShiftValidationException("Position not required for this shift");
+        }
+        
+        // Count how many employees of this position are already assigned
+        List<ShiftAssignment> assignments = shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(
+                shiftInstance.getId());
+        long assignedCountForPosition = assignments.stream()
+                .filter(a -> a.getEmployee().getPosition().getId().equals(employeePositionId))
+                .count();
+        
+        if (assignedCountForPosition >= requiredCount) {
+            throw new ShiftValidationException(
+                    String.format("Position capacity reached: %d employees already assigned (required: %d)",
+                            assignedCountForPosition, requiredCount));
+        }
+    }
+
     private void updateShiftInstanceCompleteness(ShiftInstance shiftInstance) {
-        int assignedCount = shiftInstanceRepository.countActiveAssignments(shiftInstance.getId());
-        boolean isComplete = assignedCount >= shiftInstance.getRequiredEmployees();
+        List<ShiftAssignment> assignments = shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(
+                shiftInstance.getId());
+        
+        // Check if all position requirements are met
+        boolean isComplete = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
+                .allMatch(stp -> {
+                    long assignedCount = assignments.stream()
+                            .filter(a -> a.getEmployee().getPosition().getId().equals(stp.getPosition().getId()))
+                            .count();
+                    return assignedCount >= stp.getRequiredCount();
+                });
+        
         shiftInstance.setIsComplete(isComplete);
     }
 }

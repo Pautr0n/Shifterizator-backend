@@ -16,7 +16,10 @@ public final class ShiftTemplateSpecs {
     }
 
     public static Specification<ShiftTemplate> byPosition(Long positionId) {
-        return (root, query, cb) -> cb.equal(root.get("position").get("id"), positionId);
+        return (root, query, cb) -> {
+            var positionsJoin = root.join("requiredPositions");
+            return cb.equal(positionsJoin.get("position").get("id"), positionId);
+        };
     }
 
     public static Specification<ShiftTemplate> isActive() {

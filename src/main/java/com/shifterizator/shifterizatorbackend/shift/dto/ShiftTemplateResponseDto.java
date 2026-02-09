@@ -2,17 +2,17 @@ package com.shifterizator.shifterizatorbackend.shift.dto;
 
 import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 public record ShiftTemplateResponseDto(
         Long id,
         Long locationId,
         String locationName,
-        Long positionId,
-        String positionName,
+        List<PositionRequirementResponseDto> requiredPositions,
         LocalTime startTime,
         LocalTime endTime,
-        Integer requiredEmployees,
+        Integer totalRequiredEmployees,
         String description,
         Set<String> requiredLanguages,
         Boolean isActive,

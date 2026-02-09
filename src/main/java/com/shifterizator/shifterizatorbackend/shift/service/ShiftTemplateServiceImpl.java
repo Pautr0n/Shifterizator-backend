@@ -9,11 +9,13 @@ import com.shifterizator.shifterizatorbackend.employee.repository.PositionReposi
 import com.shifterizator.shifterizatorbackend.language.exception.LanguageNotFoundException;
 import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.language.repository.LanguageRepository;
+import com.shifterizator.shifterizatorbackend.shift.dto.PositionRequirementDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftTemplateNotFoundException;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftTemplateMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
+import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
 import com.shifterizator.shifterizatorbackend.shift.spec.ShiftTemplateSpecs;
 import lombok.RequiredArgsConstructor;
@@ -44,8 +46,6 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
     public ShiftTemplate create(ShiftTemplateRequestDto dto) {
         Location location = locationRepository.findById(dto.locationId())
                 .orElseThrow(() -> new LocationNotFoundException("Location not found"));
-        Position position = positionRepository.findById(dto.positionId())
-                .orElseThrow(() -> new PositionNotFoundException("Position not found"));
 
         validateTimes(dto.startTime(), dto.endTime());
 
@@ -57,7 +57,23 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
                     .collect(Collectors.toSet());
         }
 
-        ShiftTemplate template = shiftTemplateMapper.toEntity(dto, location, position, languages);
+        ShiftTemplate template = shiftTemplateMapper.toEntity(dto, location, languages);
+
+        // Create position requirements
+        Set<ShiftTemplatePosition> positions = new HashSet<>();
+        for (PositionRequirementDto req : dto.requiredPositions()) {
+            Position position = positionRepository.findById(req.positionId())
+                    .orElseThrow(() -> new PositionNotFoundException("Position not found: " + req.positionId()));
+            
+            ShiftTemplatePosition templatePosition = ShiftTemplatePosition.builder()
+                    .shiftTemplate(template)
+                    .position(position)
+                    .requiredCount(req.requiredCount())
+                    .build();
+            positions.add(templatePosition);
+        }
+        template.setRequiredPositions(positions);
+
         return shiftTemplateRepository.save(template);
     }
 
@@ -73,12 +89,6 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
                     .orElseThrow(() -> new LocationNotFoundException("Location not found"));
         }
 
-        Position position = existing.getPosition();
-        if (!position.getId().equals(dto.positionId())) {
-            position = positionRepository.findById(dto.positionId())
-                    .orElseThrow(() -> new PositionNotFoundException("Position not found"));
-        }
-
         validateTimes(dto.startTime(), dto.endTime());
 
         Set<Language> languages = new HashSet<>();
@@ -90,13 +100,25 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         }
 
         existing.setLocation(location);
-        existing.setPosition(position);
         existing.setStartTime(dto.startTime());
         existing.setEndTime(dto.endTime());
-        existing.setRequiredEmployees(dto.requiredEmployees());
         existing.setDescription(dto.description());
         existing.setRequiredLanguages(languages);
         existing.setIsActive(dto.isActive() != null ? dto.isActive() : true);
+
+        // Update position requirements - clear existing and add new ones
+        existing.getRequiredPositions().clear();
+        for (PositionRequirementDto req : dto.requiredPositions()) {
+            Position position = positionRepository.findById(req.positionId())
+                    .orElseThrow(() -> new PositionNotFoundException("Position not found: " + req.positionId()));
+            
+            ShiftTemplatePosition templatePosition = ShiftTemplatePosition.builder()
+                    .shiftTemplate(existing)
+                    .position(position)
+                    .requiredCount(req.requiredCount())
+                    .build();
+            existing.getRequiredPositions().add(templatePosition);
+        }
 
         return existing;
     }

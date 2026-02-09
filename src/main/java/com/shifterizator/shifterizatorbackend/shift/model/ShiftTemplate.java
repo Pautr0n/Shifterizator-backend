@@ -1,7 +1,6 @@
 package com.shifterizator.shifterizatorbackend.shift.model;
 
 import com.shifterizator.shifterizatorbackend.company.model.Location;
-import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -29,9 +28,13 @@ public class ShiftTemplate {
     @JoinColumn(name = "location_id", nullable = false)
     private Location location;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "position_id", nullable = false)
-    private Position position;
+    @OneToMany(
+            mappedBy = "shiftTemplate",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private Set<ShiftTemplatePosition> requiredPositions = new HashSet<>();
 
     @Column(nullable = false)
     private LocalTime startTime;
