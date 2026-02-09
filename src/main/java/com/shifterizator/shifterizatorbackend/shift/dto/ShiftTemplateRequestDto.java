@@ -29,6 +29,9 @@ public record ShiftTemplateRequestDto(
 
         Set<Long> requiredLanguageIds,
 
+        /** Target headcount when enough staff available; must be >= required if set. */
+        Integer idealEmployees,
+
         @NotNull(message = "Is active flag is required")
         Boolean isActive
 ) {

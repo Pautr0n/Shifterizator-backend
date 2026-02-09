@@ -73,6 +73,7 @@ class ShiftTemplateMapperTest {
                 LocalTime.of(17, 0),
                 "Morning shift",
                 Set.of(),
+                null,
                 true
         );
 

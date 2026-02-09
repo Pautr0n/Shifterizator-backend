@@ -35,6 +35,7 @@ class ShiftTemplateRequestDtoTest {
                 anyEndTime(),
                 "Morning shift",
                 Set.of(),
+                null,
                 true
         );
 
@@ -52,6 +53,7 @@ class ShiftTemplateRequestDtoTest {
                 anyEndTime(),
                 "Test",
                 Set.of(),
+                null,
                 true
         );
 
@@ -70,6 +72,7 @@ class ShiftTemplateRequestDtoTest {
                 anyEndTime(),
                 "Test",
                 Set.of(),
+                null,
                 true
         );
 
@@ -88,6 +91,7 @@ class ShiftTemplateRequestDtoTest {
                 anyEndTime(),
                 "Test",
                 Set.of(),
+                null,
                 true
         );
 
@@ -106,6 +110,7 @@ class ShiftTemplateRequestDtoTest {
                 anyEndTime(),
                 "Test",
                 Set.of(),
+                null,
                 true
         );
 
@@ -124,6 +129,7 @@ class ShiftTemplateRequestDtoTest {
                 anyEndTime(),
                 "Test",
                 Set.of(),
+                null,
                 null
         );
 

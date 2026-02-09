@@ -36,6 +36,7 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         ShiftTemplate template = shiftTemplateMapper.toEntity(dto, location, languages);
         
         shiftTemplateDomainService.buildPositionRequirements(template, dto.requiredPositions());
+        shiftTemplateDomainService.validateIdealEmployees(template.getRequiredEmployees(), template.getIdealEmployees());
 
         return shiftTemplateRepository.save(template);
     }
@@ -58,10 +59,12 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         existing.setStartTime(dto.startTime());
         existing.setEndTime(dto.endTime());
         existing.setDescription(dto.description());
+        existing.setIdealEmployees(dto.idealEmployees());
         existing.setRequiredLanguages(languages);
         existing.setIsActive(dto.isActive() != null ? dto.isActive() : true);
 
         shiftTemplateDomainService.buildPositionRequirements(existing, dto.requiredPositions());
+        shiftTemplateDomainService.validateIdealEmployees(existing.getRequiredEmployees(), existing.getIdealEmployees());
 
         return existing;
     }

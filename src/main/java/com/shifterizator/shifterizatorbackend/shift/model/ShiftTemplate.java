@@ -46,6 +46,10 @@ public class ShiftTemplate {
     @Builder.Default
     private Integer requiredEmployees = 1;
 
+    /** Target headcount when enough staff available; must be >= requiredEmployees if set. */
+    @Column(name = "ideal_employees")
+    private Integer idealEmployees;
+
     @Column(length = 200)
     private String description;
 

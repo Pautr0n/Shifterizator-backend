@@ -13,6 +13,7 @@ public record ShiftTemplateResponseDto(
         LocalTime startTime,
         LocalTime endTime,
         Integer totalRequiredEmployees,
+        Integer idealEmployees,
         String description,
         Set<String> requiredLanguages,
         Boolean isActive,

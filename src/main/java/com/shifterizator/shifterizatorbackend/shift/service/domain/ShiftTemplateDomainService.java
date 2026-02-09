@@ -97,4 +97,18 @@ public class ShiftTemplateDomainService {
             throw new ShiftValidationException("End time must be after start time");
         }
     }
+
+    /**
+     * Validates that ideal employees is not less than required employees when both are set.
+     *
+     * @param requiredEmployees minimum required (must be non-null when ideal is set)
+     * @param idealEmployees    target when enough staff available
+     * @throws ShiftValidationException if ideal is set and ideal &lt; required
+     */
+    public void validateIdealEmployees(Integer requiredEmployees, Integer idealEmployees) {
+        if (idealEmployees != null && requiredEmployees != null && idealEmployees < requiredEmployees) {
+            throw new ShiftValidationException(
+                    "Ideal employees must be greater than or equal to required employees");
+        }
+    }
 }

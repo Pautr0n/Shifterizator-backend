@@ -49,6 +49,7 @@ public class ShiftTemplateMapper {
                 template.getStartTime(),
                 template.getEndTime(),
                 totalRequiredEmployees,
+                template.getIdealEmployees(),
                 template.getDescription(),
                 languages,
                 template.getIsActive(),
@@ -65,6 +66,7 @@ public class ShiftTemplateMapper {
                 .startTime(dto.startTime())
                 .endTime(dto.endTime())
                 .description(dto.description())
+                .idealEmployees(dto.idealEmployees())
                 .requiredLanguages(languages != null ? languages : Set.of())
                 .isActive(dto.isActive() != null ? dto.isActive() : true)
                 .build();

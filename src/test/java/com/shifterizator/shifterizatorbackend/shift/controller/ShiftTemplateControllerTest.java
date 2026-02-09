@@ -105,6 +105,7 @@ class ShiftTemplateControllerTest {
                 START_TIME,
                 END_TIME,
                 3,
+                null,
                 "Morning shift",
                 Set.of(),
                 true,
