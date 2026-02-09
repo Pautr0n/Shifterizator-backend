@@ -15,6 +15,8 @@ import com.shifterizator.shifterizatorbackend.availability.exception.Availabilit
 import com.shifterizator.shifterizatorbackend.availability.exception.OverlappingAvailabilityException;
 import com.shifterizator.shifterizatorbackend.openinghours.exception.SpecialOpeningHoursNotFoundException;
 import com.shifterizator.shifterizatorbackend.openinghours.exception.SpecialOpeningHoursValidationException;
+import com.shifterizator.shifterizatorbackend.blackoutdays.exception.BlackoutDayNotFoundException;
+import com.shifterizator.shifterizatorbackend.blackoutdays.exception.BlackoutDayValidationException;
 import com.shifterizator.shifterizatorbackend.user.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -118,6 +120,26 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SpecialOpeningHoursValidationException.class)
     public ResponseEntity<ApiErrorDto> handleSpecialOpeningHoursValidation(SpecialOpeningHoursValidationException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "VALIDATION_ERROR",
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(BlackoutDayNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handleBlackoutDayNotFound(BlackoutDayNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(BlackoutDayValidationException.class)
+    public ResponseEntity<ApiErrorDto> handleBlackoutDayValidation(BlackoutDayValidationException ex) {
         ApiErrorDto error = new ApiErrorDto(
                 ex.getMessage(),
                 "VALIDATION_ERROR",
