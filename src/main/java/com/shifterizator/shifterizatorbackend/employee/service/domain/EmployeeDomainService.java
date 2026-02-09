@@ -12,9 +12,14 @@ import com.shifterizator.shifterizatorbackend.company.repository.LocationReposit
 import com.shifterizator.shifterizatorbackend.language.exception.LanguageNotFoundException;
 import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.language.repository.LanguageRepository;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftTemplateNotFoundException;
+import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
+import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
 import com.shifterizator.shifterizatorbackend.user.exception.EmailAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +29,7 @@ public class EmployeeDomainService {
     private final CompanyRepository companyRepository;
     private final LocationRepository locationRepository;
     private final LanguageRepository languageRepository;
+    private final ShiftTemplateRepository shiftTemplateRepository;
 
     public void validateEmailUniqueness(EmployeeRequestDto dto, Long currentEmployeeId) {
 
@@ -103,6 +109,29 @@ public class EmployeeDomainService {
                     .build();
 
             employee.addLanguage(el);
+        }
+    }
+
+    public void assignShiftPreferences(Employee employee, EmployeeRequestDto dto) {
+        employee.getShiftPreferences().clear();
+
+        if (dto.preferredShiftTemplateIds() == null || dto.preferredShiftTemplateIds().isEmpty()) {
+            return;
+        }
+
+        int order = 1;
+        for (Long templateId : dto.preferredShiftTemplateIds()) {
+            ShiftTemplate template = shiftTemplateRepository.findById(templateId)
+                    .filter(t -> t.getDeletedAt() == null)
+                    .orElseThrow(() -> new ShiftTemplateNotFoundException("Shift template not found: " + templateId));
+
+            EmployeeShiftPreference preference = EmployeeShiftPreference.builder()
+                    .employee(employee)
+                    .shiftTemplate(template)
+                    .priorityOrder(order++)
+                    .build();
+
+            employee.addShiftPreference(preference);
         }
     }
 }

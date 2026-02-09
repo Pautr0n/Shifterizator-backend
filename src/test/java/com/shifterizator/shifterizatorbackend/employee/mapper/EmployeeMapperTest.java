@@ -32,6 +32,7 @@ class EmployeeMapperTest {
                 Set.of(1L),
                 Set.of(2L),
                 Set.of(1L),
+                null,
                 null
         );
 
@@ -50,7 +51,7 @@ class EmployeeMapperTest {
         Position position = Position.builder().id(5L).name("Waiter").build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                5L, Set.of(1L), Set.of(2L), Set.of(1L), "WEDNESDAY"
+                5L, Set.of(1L), Set.of(2L), Set.of(1L), "WEDNESDAY", null
         );
 
         Employee employee = mapper.toEntity(dto, position);

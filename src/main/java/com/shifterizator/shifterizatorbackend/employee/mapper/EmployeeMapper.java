@@ -6,10 +6,13 @@ import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.model.EmployeeCompany;
 import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLanguage;
 import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLocation;
+import com.shifterizator.shifterizatorbackend.employee.model.EmployeeShiftPreference;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,9 +57,20 @@ public class EmployeeMapper {
                 extractLocationNames(employee.getEmployeeLocations()),
                 extractLanguageNames(employee.getEmployeeLanguages()),
                 employee.getPreferredDayOff() != null ? employee.getPreferredDayOff().name() : null,
+                extractPreferredShiftTemplateIds(employee.getShiftPreferences()),
                 employee.getCreatedAt(),
                 employee.getUpdatedAt()
         );
+    }
+
+    private List<Long> extractPreferredShiftTemplateIds(Set<EmployeeShiftPreference> shiftPreferences) {
+        if (shiftPreferences == null || shiftPreferences.isEmpty()) {
+            return List.of();
+        }
+        return shiftPreferences.stream()
+                .sorted(Comparator.comparing(EmployeeShiftPreference::getPriorityOrder, Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(esp -> esp.getShiftTemplate().getId())
+                .collect(Collectors.toList());
     }
 
     private Set<String> extractCompanyNames(Set<EmployeeCompany> employeeCompanies) {

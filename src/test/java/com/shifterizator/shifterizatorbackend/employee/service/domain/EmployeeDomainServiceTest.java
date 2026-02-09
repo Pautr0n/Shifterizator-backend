@@ -15,6 +15,9 @@ import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeReposi
 import com.shifterizator.shifterizatorbackend.language.exception.LanguageNotFoundException;
 import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.language.repository.LanguageRepository;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftTemplateNotFoundException;
+import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
+import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
 import com.shifterizator.shifterizatorbackend.user.exception.EmailAlreadyExistsException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -40,6 +44,8 @@ class EmployeeDomainServiceTest {
     private LocationRepository locationRepository;
     @Mock
     private LanguageRepository languageRepository;
+    @Mock
+    private ShiftTemplateRepository shiftTemplateRepository;
 
     @InjectMocks
     private EmployeeDomainService service;
@@ -47,7 +53,7 @@ class EmployeeDomainServiceTest {
     @Test
     void validateEmailUniqueness_shouldDoNothingWhenEmailIsNull() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", null, "123", 1L, Set.of(1L), null, null, null
+                "John", "Connor", null, "123", 1L, Set.of(1L), null, null, null, null
         );
 
         service.validateEmailUniqueness(dto, null);
@@ -58,7 +64,7 @@ class EmployeeDomainServiceTest {
     @Test
     void validateEmailUniqueness_shouldThrowWhenEmailExistsForAnotherEmployee() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null
         );
 
         when(employeeRepository.existsByEmailAndCompany("john@example.com", 1L))
@@ -74,7 +80,7 @@ class EmployeeDomainServiceTest {
     @Test
     void validateEmailUniqueness_shouldNotThrowWhenSameEmployeeKeepsSameEmail() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null
         );
 
         when(employeeRepository.existsByEmailAndCompany("john@example.com", 1L))
@@ -109,7 +115,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeCompanies().add(EmployeeCompany.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L, 2L), null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L, 2L), null, null, null, null
         );
 
         Company company1 = new Company();
@@ -134,7 +140,7 @@ class EmployeeDomainServiceTest {
     void assignCompanies_shouldThrowWhenCompanyNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null
         );
 
         when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
@@ -150,7 +156,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLocations().add(EmployeeLocation.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L, 11L), null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L, 11L), null, null, null
         );
 
         Location loc1 = Location.builder().id(10L).name("HQ").build();
@@ -173,7 +179,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLocations().add(EmployeeLocation.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null
         );
 
         service.assignLocations(employee, dto);
@@ -185,7 +191,7 @@ class EmployeeDomainServiceTest {
     void assignLocations_shouldThrowWhenLocationNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L), null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L), null, null, null
         );
 
         when(locationRepository.findById(10L)).thenReturn(Optional.empty());
@@ -201,7 +207,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLanguages().add(EmployeeLanguage.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L, 2L), null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L, 2L), null, null
         );
 
         Language lang1 = Language.builder().id(1L).code("EN").name("English").build();
@@ -224,7 +230,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLanguages().add(EmployeeLanguage.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null
         );
 
         service.assignLanguages(employee, dto);
@@ -236,7 +242,7 @@ class EmployeeDomainServiceTest {
     void assignLanguages_shouldThrowWhenLanguageNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L), null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L), null, null
         );
 
         when(languageRepository.findById(1L)).thenReturn(Optional.empty());
@@ -244,5 +250,45 @@ class EmployeeDomainServiceTest {
         assertThatThrownBy(() -> service.assignLanguages(employee, dto))
                 .isInstanceOf(LanguageNotFoundException.class)
                 .hasMessage("Language not found");
+    }
+
+    @Test
+    void assignShiftPreferences_shouldClearAndAssignFromDto() {
+        Employee employee = Employee.builder().build();
+        employee.getShiftPreferences().add(com.shifterizator.shifterizatorbackend.employee.model.EmployeeShiftPreference.builder().id(99L).build());
+
+        EmployeeRequestDto dto = new EmployeeRequestDto(
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, List.of(10L, 20L)
+        );
+
+        ShiftTemplate t1 = ShiftTemplate.builder().id(10L).build();
+        ShiftTemplate t2 = ShiftTemplate.builder().id(20L).build();
+
+        when(shiftTemplateRepository.findById(10L)).thenReturn(Optional.of(t1));
+        when(shiftTemplateRepository.findById(20L)).thenReturn(Optional.of(t2));
+
+        service.assignShiftPreferences(employee, dto);
+
+        assertThat(employee.getShiftPreferences()).hasSize(2);
+        assertThat(employee.getShiftPreferences())
+                .extracting(esp -> esp.getShiftTemplate().getId())
+                .containsExactlyInAnyOrder(10L, 20L);
+        assertThat(employee.getShiftPreferences())
+                .extracting(com.shifterizator.shifterizatorbackend.employee.model.EmployeeShiftPreference::getPriorityOrder)
+                .containsExactlyInAnyOrder(1, 2);
+    }
+
+    @Test
+    void assignShiftPreferences_shouldThrowWhenTemplateNotFound() {
+        Employee employee = Employee.builder().build();
+        EmployeeRequestDto dto = new EmployeeRequestDto(
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, List.of(10L)
+        );
+
+        when(shiftTemplateRepository.findById(10L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.assignShiftPreferences(employee, dto))
+                .isInstanceOf(ShiftTemplateNotFoundException.class)
+                .hasMessageContaining("Shift template not found");
     }
 }

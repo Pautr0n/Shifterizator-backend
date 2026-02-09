@@ -23,6 +23,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.util.List;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -85,6 +87,7 @@ class EmployeeControllerTest {
                 Set.of(10L),
                 Set.of(20L),
                 Set.of(1L),
+                null,
                 null
         );
 
@@ -111,6 +114,7 @@ class EmployeeControllerTest {
                 Set.of("Barcelona", "Madrid"),
                 Set.of("English", "Spanish"),
                 null,
+                List.of(),
                 LocalDateTime.of(2024, 1, 1, 10, 0),
                 LocalDateTime.of(2024, 1, 2, 12, 0)
         );
@@ -149,7 +153,7 @@ class EmployeeControllerTest {
     void create_shouldReturn400_whenInvalidDto() throws Exception {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "", "", "invalid", "123",
-                null, Set.of(), null, null, null
+                null, Set.of(), null, null, null, null
         );
 
         mvc.perform(post("/api/employees")
@@ -165,7 +169,7 @@ class EmployeeControllerTest {
     void createEmployee_should_return_400_when_validation_error() throws Exception {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), null, null
+                1L, Set.of(1L), Set.of(10L), null, null, null
         );
 
         when(employeeService.create(any()))

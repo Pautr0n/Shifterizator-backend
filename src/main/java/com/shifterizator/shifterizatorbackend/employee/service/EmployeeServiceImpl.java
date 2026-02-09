@@ -43,6 +43,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDomainService.assignCompanies(employee, dto);
         employeeDomainService.assignLocations(employee, dto);
         employeeDomainService.assignLanguages(employee, dto);
+        employeeDomainService.assignShiftPreferences(employee, dto);
 
         return employee;
     }
@@ -68,6 +69,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDomainService.assignCompanies(employee, dto);
         employeeDomainService.assignLocations(employee, dto);
         employeeDomainService.assignLanguages(employee, dto);
+        employeeDomainService.assignShiftPreferences(employee, dto);
 
         return employee;
     }

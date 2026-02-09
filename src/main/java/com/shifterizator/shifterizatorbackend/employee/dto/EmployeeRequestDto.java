@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
 import java.util.Set;
 
 public record EmployeeRequestDto(
@@ -30,7 +31,10 @@ public record EmployeeRequestDto(
         Set<Long> languageIds,
 
         /** Optional. Preferred weekday off (e.g. WEDNESDAY, FRIDAY). Must be a valid DayOfWeek name. */
-        String preferredDayOff
+        String preferredDayOff,
+
+        /** Optional. Ordered list of shift template IDs (first = highest preference). */
+        List<Long> preferredShiftTemplateIds
 
 ) {
 }
