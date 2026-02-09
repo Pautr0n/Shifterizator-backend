@@ -15,7 +15,7 @@ class PositionRequirementDtoTest {
 
     @Test
     void validDto_shouldHaveNoViolations() {
-        PositionRequirementDto dto = new PositionRequirementDto(1L, 2);
+        PositionRequirementDto dto = new PositionRequirementDto(1L, 2, null);
 
         Set<ConstraintViolation<PositionRequirementDto>> violations = validator.validate(dto);
 
@@ -24,7 +24,7 @@ class PositionRequirementDtoTest {
 
     @Test
     void nullPositionId_shouldFailValidation() {
-        PositionRequirementDto dto = new PositionRequirementDto(null, 2);
+        PositionRequirementDto dto = new PositionRequirementDto(null, 2, null);
 
         Set<ConstraintViolation<PositionRequirementDto>> violations = validator.validate(dto);
 
@@ -34,7 +34,7 @@ class PositionRequirementDtoTest {
 
     @Test
     void nullRequiredCount_shouldFailValidation() {
-        PositionRequirementDto dto = new PositionRequirementDto(1L, null);
+        PositionRequirementDto dto = new PositionRequirementDto(1L, null, null);
 
         Set<ConstraintViolation<PositionRequirementDto>> violations = validator.validate(dto);
 
@@ -44,7 +44,7 @@ class PositionRequirementDtoTest {
 
     @Test
     void zeroRequiredCount_shouldFailValidation() {
-        PositionRequirementDto dto = new PositionRequirementDto(1L, 0);
+        PositionRequirementDto dto = new PositionRequirementDto(1L, 0, null);
 
         Set<ConstraintViolation<PositionRequirementDto>> violations = validator.validate(dto);
 
@@ -54,7 +54,7 @@ class PositionRequirementDtoTest {
 
     @Test
     void negativeRequiredCount_shouldFailValidation() {
-        PositionRequirementDto dto = new PositionRequirementDto(1L, -1);
+        PositionRequirementDto dto = new PositionRequirementDto(1L, -1, null);
 
         Set<ConstraintViolation<PositionRequirementDto>> violations = validator.validate(dto);
 

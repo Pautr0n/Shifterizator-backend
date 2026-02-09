@@ -30,6 +30,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,8 +53,8 @@ class ShiftTemplateServiceImplTest {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 1L,
                 List.of(
-                        new PositionRequirementDto(1L, 2),
-                        new PositionRequirementDto(2L, 1)
+                        new PositionRequirementDto(1L, 2, null),
+                        new PositionRequirementDto(2L, 1, null)
                 ),
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
@@ -107,7 +108,7 @@ class ShiftTemplateServiceImplTest {
     void create_shouldThrowWhenLocationNotFound() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 999L,
-                List.of(new PositionRequirementDto(1L, 1)),
+                List.of(new PositionRequirementDto(1L, 1, null)),
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 "Test",
@@ -128,7 +129,7 @@ class ShiftTemplateServiceImplTest {
     void create_shouldThrowWhenPositionNotFound() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 1L,
-                List.of(new PositionRequirementDto(999L, 1)),
+                List.of(new PositionRequirementDto(999L, 1, null)),
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 "Test",
@@ -156,7 +157,7 @@ class ShiftTemplateServiceImplTest {
     void create_shouldThrowWhenEndTimeBeforeStartTime() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 1L,
-                List.of(new PositionRequirementDto(1L, 1)),
+                List.of(new PositionRequirementDto(1L, 1, null)),
                 LocalTime.of(17, 0),
                 LocalTime.of(9, 0),
                 "Test",
@@ -182,7 +183,7 @@ class ShiftTemplateServiceImplTest {
     void create_shouldThrowWhenIdealEmployeesLessThanRequired() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 1L,
-                List.of(new PositionRequirementDto(1L, 1)),
+                List.of(new PositionRequirementDto(1L, 1, null)),
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 "Test",
@@ -212,12 +213,41 @@ class ShiftTemplateServiceImplTest {
     }
 
     @Test
+    void create_shouldThrowWhenPositionIdealCountLessThanRequiredCount() {
+        ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
+                1L,
+                List.of(new PositionRequirementDto(1L, 2, 1)), // ideal 1 < required 2
+                LocalTime.of(9, 0),
+                LocalTime.of(17, 0),
+                "Test",
+                Set.of(),
+                null,
+                true
+        );
+
+        Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
+        company.setId(1L);
+        Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
+
+        when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
+        when(shiftTemplateDomainService.resolveLanguages(Set.of())).thenReturn(Set.of());
+        doThrow(new ShiftValidationException("Ideal count per position must be greater than or equal to required count"))
+                .when(shiftTemplateDomainService).buildPositionRequirements(any(), argThat(
+                        list -> list != null && list.size() == 1
+                                && list.get(0).requiredCount() == 2 && Integer.valueOf(1).equals(list.get(0).idealCount())));
+
+        assertThatThrownBy(() -> service.create(dto))
+                .isInstanceOf(ShiftValidationException.class)
+                .hasMessageContaining("Ideal count per position must be greater than or equal to required count");
+    }
+
+    @Test
     void update_shouldUpdateTemplateWithNewPositions() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 1L,
                 List.of(
-                        new PositionRequirementDto(1L, 3),
-                        new PositionRequirementDto(2L, 2)
+                        new PositionRequirementDto(1L, 3, null),
+                        new PositionRequirementDto(2L, 2, null)
                 ),
                 LocalTime.of(10, 0),
                 LocalTime.of(18, 0),
@@ -278,7 +308,7 @@ class ShiftTemplateServiceImplTest {
     void update_shouldThrowWhenNotFound() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 1L,
-                List.of(new PositionRequirementDto(1L, 1)),
+                List.of(new PositionRequirementDto(1L, 1, null)),
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 "Test",

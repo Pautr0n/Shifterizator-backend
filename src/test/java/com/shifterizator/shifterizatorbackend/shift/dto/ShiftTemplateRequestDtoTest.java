@@ -28,8 +28,8 @@ class ShiftTemplateRequestDtoTest {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 10L,
                 List.of(
-                        new PositionRequirementDto(1L, 2),
-                        new PositionRequirementDto(2L, 1)
+                        new PositionRequirementDto(1L, 2, null),
+                        new PositionRequirementDto(2L, 1, null)
                 ),
                 anyStartTime(),
                 anyEndTime(),
@@ -48,7 +48,7 @@ class ShiftTemplateRequestDtoTest {
     void nullLocationId_shouldFailValidation() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 null,
-                List.of(new PositionRequirementDto(1L, 1)),
+                List.of(new PositionRequirementDto(1L, 1, null)),
                 anyStartTime(),
                 anyEndTime(),
                 "Test",
@@ -105,7 +105,7 @@ class ShiftTemplateRequestDtoTest {
     void nullStartTime_shouldFailValidation() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 10L,
-                List.of(new PositionRequirementDto(1L, 1)),
+                List.of(new PositionRequirementDto(1L, 1, null)),
                 null,
                 anyEndTime(),
                 "Test",
@@ -124,7 +124,7 @@ class ShiftTemplateRequestDtoTest {
     void nullIsActive_shouldFailValidation() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 10L,
-                List.of(new PositionRequirementDto(1L, 1)),
+                List.of(new PositionRequirementDto(1L, 1, null)),
                 anyStartTime(),
                 anyEndTime(),
                 "Test",

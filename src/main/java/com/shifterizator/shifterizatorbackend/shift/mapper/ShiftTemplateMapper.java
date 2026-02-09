@@ -24,7 +24,8 @@ public class ShiftTemplateMapper {
                 .map(stp -> new PositionRequirementResponseDto(
                         stp.getPosition().getId(),
                         stp.getPosition().getName(),
-                        stp.getRequiredCount()
+                        stp.getRequiredCount(),
+                        stp.getIdealCount()
                 ))
                 .collect(Collectors.toList())
                 : List.of();

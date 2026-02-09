@@ -69,20 +69,32 @@ public class ShiftTemplateDomainService {
      */
     public void buildPositionRequirements(ShiftTemplate template, List<PositionRequirementDto> requirements) {
         Set<ShiftTemplatePosition> positions = new HashSet<>();
-        
+
         for (PositionRequirementDto req : requirements) {
+            validateIdealCount(req.requiredCount(), req.idealCount());
             Position position = positionRepository.findById(req.positionId())
                     .orElseThrow(() -> new PositionNotFoundException("Position not found: " + req.positionId()));
-            
+
             ShiftTemplatePosition templatePosition = ShiftTemplatePosition.builder()
                     .shiftTemplate(template)
                     .position(position)
                     .requiredCount(req.requiredCount())
+                    .idealCount(req.idealCount())
                     .build();
             positions.add(templatePosition);
         }
-        
+
         template.setRequiredPositions(positions);
+    }
+
+    /**
+     * Validates that ideal count is not less than required count when both are set.
+     */
+    public void validateIdealCount(Integer requiredCount, Integer idealCount) {
+        if (idealCount != null && requiredCount != null && idealCount < requiredCount) {
+            throw new ShiftValidationException(
+                    "Ideal count per position must be greater than or equal to required count");
+        }
     }
 
     /**

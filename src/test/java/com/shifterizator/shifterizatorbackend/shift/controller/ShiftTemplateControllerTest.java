@@ -99,8 +99,8 @@ class ShiftTemplateControllerTest {
                 10L,
                 "HQ",
                 List.of(
-                        new PositionRequirementResponseDto(1L, "Sales Assistant", 2),
-                        new PositionRequirementResponseDto(2L, "Manager", 1)
+                        new PositionRequirementResponseDto(1L, "Sales Assistant", 2, null),
+                        new PositionRequirementResponseDto(2L, "Manager", 1, null)
                 ),
                 START_TIME,
                 END_TIME,
