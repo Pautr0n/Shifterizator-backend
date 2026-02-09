@@ -14,6 +14,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftInstanceService;
+import com.shifterizator.shifterizatorbackend.shift.service.ShiftSchedulerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,9 @@ class ShiftInstanceControllerTest {
 
     @MockitoBean
     private ShiftGenerationService shiftGenerationService;
+
+    @MockitoBean
+    private ShiftSchedulerService shiftSchedulerService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -185,5 +189,27 @@ class ShiftInstanceControllerTest {
                 .andExpect(jsonPath("$[0].locationId").value(10));
 
         verify(shiftGenerationService).generateMonth(10L, YearMonth.of(2025, 2));
+    }
+
+    @Test
+    void scheduleDay_shouldReturn202Accepted() throws Exception {
+        mockMvc.perform(post("/api/shift-instances/schedule-day")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"locationId\":10,\"date\":\"2025-02-10\"}"))
+                .andExpect(status().isAccepted());
+
+        verify(shiftSchedulerService).scheduleDay(10L, LocalDate.of(2025, 2, 10));
+    }
+
+    @Test
+    void scheduleMonth_shouldReturn202Accepted() throws Exception {
+        mockMvc.perform(post("/api/shift-instances/schedule-month")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"locationId\":10,\"year\":2025,\"month\":2}"))
+                .andExpect(status().isAccepted());
+
+        verify(shiftSchedulerService).scheduleMonth(10L, YearMonth.of(2025, 2));
     }
 }

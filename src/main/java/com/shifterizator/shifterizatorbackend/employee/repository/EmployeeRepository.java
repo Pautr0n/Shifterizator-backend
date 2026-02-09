@@ -4,8 +4,10 @@ import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -45,4 +47,16 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
     default boolean isEmployeeAssignedToAnyShift(Long employeeId) {
         return false;
     }
+
+    /**
+     * Employees that work at the given location and are not soft-deleted.
+     * Used by the scheduler to build the candidate pool.
+     */
+    @Query("""
+            SELECT DISTINCT e FROM Employee e
+            JOIN e.employeeLocations el
+            WHERE el.location.id = :locationId
+              AND e.deletedAt IS NULL
+            """)
+    List<Employee> findActiveByLocationId(@Param("locationId") Long locationId);
 }

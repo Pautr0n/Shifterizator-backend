@@ -1,6 +1,7 @@
 package com.shifterizator.shifterizatorbackend.shift.controller;
 
 import com.shifterizator.shifterizatorbackend.shift.dto.GenerateMonthRequestDto;
+import com.shifterizator.shifterizatorbackend.shift.dto.ScheduleDayRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftInstanceMapper;
@@ -8,6 +9,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftGenerationService;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftInstanceService;
+import com.shifterizator.shifterizatorbackend.shift.service.ShiftSchedulerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,6 +32,7 @@ public class ShiftInstanceController {
     private final ShiftInstanceMapper shiftInstanceMapper;
     private final ShiftInstanceRepository shiftInstanceRepository;
     private final ShiftGenerationService shiftGenerationService;
+    private final ShiftSchedulerService shiftSchedulerService;
 
     @PostMapping("/generate-month")
     public ResponseEntity<List<ShiftInstanceResponseDto>> generateMonth(@Valid @RequestBody GenerateMonthRequestDto dto) {
@@ -39,6 +42,18 @@ public class ShiftInstanceController {
                 .map(i -> shiftInstanceMapper.toDto(i, shiftInstanceRepository.countActiveAssignments(i.getId())))
                 .toList();
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+
+    @PostMapping("/schedule-day")
+    public ResponseEntity<Void> scheduleDay(@Valid @RequestBody ScheduleDayRequestDto dto) {
+        shiftSchedulerService.scheduleDay(dto.locationId(), dto.date());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/schedule-month")
+    public ResponseEntity<Void> scheduleMonth(@Valid @RequestBody GenerateMonthRequestDto dto) {
+        shiftSchedulerService.scheduleMonth(dto.locationId(), YearMonth.of(dto.year(), dto.month()));
+        return ResponseEntity.accepted().build();
     }
 
     @PostMapping
