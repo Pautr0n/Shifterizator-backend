@@ -36,60 +36,97 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
 
     @Override
     public List<ShiftInstance> generateMonth(Long locationId, YearMonth yearMonth) {
+        GenerationContext ctx = loadContext(locationId, yearMonth);
+        List<ShiftInstance> created = new ArrayList<>();
+
+        for (LocalDate date = ctx.firstDay(); !date.isAfter(ctx.lastDay()); date = date.plusDays(1)) {
+            shiftInstanceRepository.softDeleteByLocationAndDate(ctx.locationId(), date, ctx.deletedAt());
+
+            if (ctx.blackoutDates().contains(date)) {
+                continue;
+            }
+
+            SpecialOpeningHours special = ctx.specialByDate().get(date);
+            if (special != null) {
+                createInstancesForSpecialDay(ctx, date, special, created);
+            } else {
+                createInstancesForNormalDay(ctx, date, created);
+            }
+        }
+
+        return created;
+    }
+
+    private GenerationContext loadContext(Long locationId, YearMonth yearMonth) {
         Location location = shiftInstanceDomainService.resolveLocation(locationId);
 
         List<BlackoutDay> blackoutDays = blackoutDayService.findByLocationAndMonth(locationId, yearMonth);
         Set<LocalDate> blackoutDates = blackoutDays.stream().map(BlackoutDay::getDate).collect(Collectors.toSet());
 
         List<SpecialOpeningHours> specialHoursList = specialOpeningHoursService.findByLocationAndMonth(locationId, yearMonth);
-        Map<LocalDate, SpecialOpeningHours> specialHoursByDate = specialHoursList.stream()
+        Map<LocalDate, SpecialOpeningHours> specialByDate = specialHoursList.stream()
                 .collect(Collectors.toMap(SpecialOpeningHours::getDate, soh -> soh, (a, b) -> a));
 
-        List<ShiftTemplate> templates = shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(locationId);
+        List<ShiftTemplate> templates = shiftTemplateRepository
+                .findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(locationId);
         LocalDate firstDay = yearMonth.atDay(1);
         LocalDate lastDay = yearMonth.atEndOfMonth();
-        List<ShiftInstance> created = new ArrayList<>();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime deletedAt = LocalDateTime.now();
 
-        for (LocalDate date = firstDay; !date.isAfter(lastDay); date = date.plusDays(1)) {
-            shiftInstanceRepository.softDeleteByLocationAndDate(locationId, date, now);
+        return new GenerationContext(
+                locationId,
+                location,
+                blackoutDates,
+                specialByDate,
+                templates,
+                firstDay,
+                lastDay,
+                deletedAt
+        );
+    }
 
-            if (blackoutDates.contains(date)) {
-                continue;
-            }
-
-            SpecialOpeningHours special = specialHoursByDate.get(date);
-            if (special != null) {
-                if (templates.isEmpty()) {
-                    continue;
-                }
-                ShiftTemplate template = templates.get(0);
-                ShiftInstance instance = ShiftInstance.builder()
-                        .shiftTemplate(template)
-                        .location(location)
-                        .date(date)
-                        .startTime(special.getOpenTime())
-                        .endTime(special.getCloseTime())
-                        .requiredEmployees(template.getRequiredEmployees())
-                        .isComplete(false)
-                        .build();
-                created.add(shiftInstanceRepository.save(instance));
-            } else {
-                for (ShiftTemplate template : templates) {
-                    ShiftInstance instance = ShiftInstance.builder()
-                            .shiftTemplate(template)
-                            .location(location)
-                            .date(date)
-                            .startTime(template.getStartTime())
-                            .endTime(template.getEndTime())
-                            .requiredEmployees(template.getRequiredEmployees())
-                            .isComplete(false)
-                            .build();
-                    created.add(shiftInstanceRepository.save(instance));
-                }
-            }
+    private void createInstancesForSpecialDay(GenerationContext ctx, LocalDate date, SpecialOpeningHours special,
+                                              List<ShiftInstance> created) {
+        if (ctx.templates().isEmpty()) {
+            return;
         }
+        ShiftTemplate template = ctx.templates().get(0);
+        ShiftInstance instance = ShiftInstance.builder()
+                .shiftTemplate(template)
+                .location(ctx.location())
+                .date(date)
+                .startTime(special.getOpenTime())
+                .endTime(special.getCloseTime())
+                .requiredEmployees(template.getRequiredEmployees())
+                .isComplete(false)
+                .build();
+        created.add(shiftInstanceRepository.save(instance));
+    }
 
-        return created;
+    private void createInstancesForNormalDay(GenerationContext ctx, LocalDate date, List<ShiftInstance> created) {
+        for (ShiftTemplate template : ctx.templates()) {
+            ShiftInstance instance = ShiftInstance.builder()
+                    .shiftTemplate(template)
+                    .location(ctx.location())
+                    .date(date)
+                    .startTime(template.getStartTime())
+                    .endTime(template.getEndTime())
+                    .requiredEmployees(template.getRequiredEmployees())
+                    .isComplete(false)
+                    .build();
+            created.add(shiftInstanceRepository.save(instance));
+        }
+    }
+
+    private record GenerationContext(
+            Long locationId,
+            Location location,
+            Set<LocalDate> blackoutDates,
+            Map<LocalDate, SpecialOpeningHours> specialByDate,
+            List<ShiftTemplate> templates,
+            LocalDate firstDay,
+            LocalDate lastDay,
+            LocalDateTime deletedAt
+    ) {
     }
 }
