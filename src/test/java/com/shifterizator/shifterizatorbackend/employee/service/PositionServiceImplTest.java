@@ -41,7 +41,7 @@ class PositionServiceImplTest {
         Position savedPosition = Position.builder().id(10L).name("Waiter").company(company).build();
 
         when(positionRepository.existsByNameAndCompany_Id("Waiter", 1L)).thenReturn(false);
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
+        when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(company));
         when(positionRepository.save(any(Position.class))).thenReturn(savedPosition);
 
         Position result = positionService.create("Waiter", 1L);
@@ -56,7 +56,7 @@ class PositionServiceImplTest {
         company.setId(1L);
         company.setName("Skynet");
 
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
+        when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(company));
         when(positionRepository.existsByNameAndCompany_Id("Waiter", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> positionService.create("Waiter", 1L))
@@ -66,7 +66,7 @@ class PositionServiceImplTest {
 
     @Test
     void create_shouldThrowWhenCompanyNotFound() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.empty());
+        when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> positionService.create("Waiter", 1L))
                 .isInstanceOf(CompanyNotFoundException.class)

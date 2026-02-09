@@ -42,4 +42,8 @@ public final class CompanySpecs {
         }
         return (root, query, cb) -> cb.equal(root.get("isActive"), isActive);
     }
+
+    public static Specification<Company> deletedAtIsNull() {
+        return (root, query, cb) -> cb.isNull(root.get("deletedAt"));
+    }
 }

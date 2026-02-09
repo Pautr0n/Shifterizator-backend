@@ -11,22 +11,25 @@ import java.util.Optional;
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, Long>, JpaSpecificationExecutor<Company> {
 
-    Optional<Company> findByName(String name);
+    Optional<Company> findByIdAndDeletedAtIsNull(Long id);
 
-    Optional<Company> findByTaxId(String taxId);
+    Optional<Company> findByNameAndDeletedAtIsNull(String name);
 
-    Optional<Company> findByEmail(String email);
+    Optional<Company> findByTaxIdAndDeletedAtIsNull(String taxId);
 
-    List<Company> findByIsActive(Boolean isActive);
+    Optional<Company> findByEmailAndDeletedAtIsNull(String email);
 
-    List<Company> findByNameContainingIgnoreCase(String name);
+    List<Company> findByDeletedAtIsNull();
 
-    List<Company> findByNameContainingIgnoreCaseAndIsActive(String name, boolean isActive);
+    List<Company> findByIsActiveAndDeletedAtIsNull(Boolean isActive);
 
-    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
+    List<Company> findByNameContainingIgnoreCaseAndDeletedAtIsNull(String name);
 
-    boolean existsByEmailIgnoreCaseAndIdNot(String email, Long id);
+    List<Company> findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull(String name, boolean isActive);
 
-    boolean existsByTaxIdIgnoreCaseAndIdNot(String taxId, Long id);
+    boolean existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull(String name, Long id);
 
+    boolean existsByEmailIgnoreCaseAndIdNotAndDeletedAtIsNull(String email, Long id);
+
+    boolean existsByTaxIdIgnoreCaseAndIdNotAndDeletedAtIsNull(String taxId, Long id);
 }

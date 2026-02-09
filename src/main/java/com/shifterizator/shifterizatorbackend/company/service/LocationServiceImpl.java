@@ -23,7 +23,7 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     public Location create(LocationRequestDto dto) {
-        Company company = companyRepository.findById(dto.companyId())
+        Company company = companyRepository.findByIdAndDeletedAtIsNull(dto.companyId())
                 .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
 
         Location location = Location.builder()

@@ -65,7 +65,7 @@ class UserServiceTest {
 
         when(userRepository.existsByUsername("john")).thenReturn(false);
         when(userRepository.existsByEmailAndDeletedAtIsNull("john@mail.com")).thenReturn(false);
-        when(companyRepository.findById(5L)).thenReturn(Optional.of(company));
+        when(companyRepository.findByIdAndDeletedAtIsNull(5L)).thenReturn(Optional.of(company));
         when(passwordEncoder.encode("Password1!")).thenReturn("hashed");
         when(userMapper.toEntity(dto, "hashed", company)).thenReturn(user);
         when(userRepository.save(user)).thenReturn(user);
@@ -161,7 +161,7 @@ class UserServiceTest {
 
         when(userRepository.existsByUsername("john")).thenReturn(false);
         when(userRepository.existsByEmailAndDeletedAtIsNull("john@mail.com")).thenReturn(false);
-        when(companyRepository.findById(99L)).thenReturn(Optional.empty());
+        when(companyRepository.findByIdAndDeletedAtIsNull(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.createUser(dto))
                 .isInstanceOf(CompanyNotFoundException.class)
@@ -194,7 +194,7 @@ class UserServiceTest {
         when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(existing));
         when(userRepository.existsByUsername("johnUpdated")).thenReturn(false);
         when(userRepository.existsByEmailAndDeletedAtIsNullAndIdNot("updated@mail.com", 10L)).thenReturn(false);
-        when(companyRepository.findById(5L)).thenReturn(Optional.of(company));
+        when(companyRepository.findByIdAndDeletedAtIsNull(5L)).thenReturn(Optional.of(company));
         when(passwordEncoder.matches("Password1!", "oldHash")).thenReturn(false);
         when(passwordEncoder.encode("Password1!")).thenReturn("newHash");
         when(userRepository.save(existing)).thenReturn(existing);
@@ -288,7 +288,7 @@ class UserServiceTest {
         existing.setId(10L);
 
         when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(existing));
-        when(companyRepository.findById(99L)).thenReturn(Optional.empty());
+        when(companyRepository.findByIdAndDeletedAtIsNull(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.updateUser(10L, dto))
                 .isInstanceOf(CompanyNotFoundException.class)

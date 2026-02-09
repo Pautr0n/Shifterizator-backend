@@ -47,7 +47,7 @@ class LocationServiceImplTest {
 
         Location savedLocation = Location.builder().id(10L).name("HQ").address("Main Street 1").company(company).build();
 
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
+        when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(company));
         when(locationRepository.save(any(Location.class))).thenReturn(savedLocation);
 
         Location result = locationService.create(dto);
@@ -63,7 +63,7 @@ class LocationServiceImplTest {
                 "HQ", "Main Street 1", 1L
         );
 
-        when(companyRepository.findById(1L)).thenReturn(Optional.empty());
+        when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> locationService.create(dto))
                 .isInstanceOf(CompanyNotFoundException.class)

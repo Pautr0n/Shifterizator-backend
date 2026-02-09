@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -70,7 +71,8 @@ public class CompanyService {
     @Transactional
     public void deleteCompany(Long id) {
         Company company = companyDomainService.validateCompanyExistsAndReturn(id);
-        companyRepository.delete(company);
+        company.setDeletedAt(LocalDateTime.now());
+        companyRepository.save(company);
     }
 
     public Company getCompany(Long id) {
@@ -94,14 +96,15 @@ public class CompanyService {
     }
 
     public List<Company> listAllCompanies() {
-        return companyRepository.findAll();
+        return companyRepository.findByDeletedAtIsNull();
     }
 
     /**
      * Paginated search with optional filters: name, country, email, taxId, isActive.
+     * Excludes soft-deleted companies.
      */
     public Page<Company> search(String name, String country, String email, String taxId, Boolean isActive, Pageable pageable) {
-        Specification<Company> spec = (root, query, cb) -> cb.conjunction();
+        Specification<Company> spec = CompanySpecs.deletedAtIsNull();
 
         if (name != null && !name.isBlank()) {
             spec = spec.and(CompanySpecs.nameContains(name));
@@ -123,31 +126,23 @@ public class CompanyService {
     }
 
     public List<Company> listActiveCompanies() {
-
-        return companyRepository.findByIsActive(true);
-
+        return companyRepository.findByIsActiveAndDeletedAtIsNull(true);
     }
 
     public List<Company> listInActiveCompanies() {
-
-        return companyRepository.findByIsActive(false);
-
+        return companyRepository.findByIsActiveAndDeletedAtIsNull(false);
     }
 
     public List<Company> searchActiveCompaniesByName(String name) {
-
-        return companyRepository.findByNameContainingIgnoreCaseAndIsActive(name, true);
-
+        return companyRepository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull(name, true);
     }
 
     public List<Company> searchInActiveCompaniesByName(String name) {
-
-        return companyRepository.findByNameContainingIgnoreCaseAndIsActive(name, false);
-
+        return companyRepository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull(name, false);
     }
 
     public List<Company> searchAllCompaniesByName(String name) {
-        return companyRepository.findByNameContainingIgnoreCase(name);
+        return companyRepository.findByNameContainingIgnoreCaseAndDeletedAtIsNull(name);
     }
 }
 

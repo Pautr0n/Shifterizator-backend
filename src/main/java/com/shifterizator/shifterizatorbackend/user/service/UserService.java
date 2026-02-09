@@ -66,7 +66,7 @@ public class UserService {
 
         // Opcional: permitir cambiar company solo para SUPERADMIN (lo haremos cuando tengamos seguridad)
         if (requestDto.companyId() != null) {
-            Company company = companyRepository.findById(requestDto.companyId())
+            Company company = companyRepository.findByIdAndDeletedAtIsNull(requestDto.companyId())
                     .orElseThrow(() -> new CompanyNotFoundException("Company not found with id: " + requestDto.companyId()));
             user.setCompany(company);
         }
@@ -217,7 +217,7 @@ public class UserService {
             return null; // SUPERADMIN or system-level user
         }
 
-        return companyRepository.findById(requestDto.companyId())
+        return companyRepository.findByIdAndDeletedAtIsNull(requestDto.companyId())
                 .orElseThrow(() ->
                         new CompanyNotFoundException("Company not found with id: " + requestDto.companyId())
                 );

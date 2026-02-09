@@ -119,8 +119,8 @@ class EmployeeDomainServiceTest {
         company2.setId(2L);
         company2.setName("Cyberdyne");
 
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company1));
-        when(companyRepository.findById(2L)).thenReturn(Optional.of(company2));
+        when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(company1));
+        when(companyRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(company2));
 
         service.assignCompanies(employee, dto);
 
@@ -137,7 +137,7 @@ class EmployeeDomainServiceTest {
                 "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null
         );
 
-        when(companyRepository.findById(1L)).thenReturn(Optional.empty());
+        when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.assignCompanies(employee, dto))
                 .isInstanceOf(CompanyNotFoundException.class)

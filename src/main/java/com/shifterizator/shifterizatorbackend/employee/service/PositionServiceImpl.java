@@ -24,7 +24,7 @@ public class PositionServiceImpl implements PositionService {
     @Override
     public Position create(String name, Long companyId) {
 
-        Company company = companyRepository.findById(companyId)
+        Company company = companyRepository.findByIdAndDeletedAtIsNull(companyId)
                 .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
 
         validatePositionExistsByNameAndCompanyId(name, companyId);

@@ -22,42 +22,42 @@ public class CompanyDomainService {
      * @throws CompanyNotFoundException if company is not found
      */
     public Company validateCompanyExistsAndReturn(Long id) {
-        return companyRepository.findById(id)
+        return companyRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new CompanyNotFoundException("Company not found with id: " + id));
     }
 
     /**
-     * Validates that company name is unique.
+     * Validates that company name is unique (among non-deleted companies).
      *
      * @param name the company name to validate
      * @throws CompanyValidationException if name already exists
      */
     public void validateUniqueName(String name) {
-        if (companyRepository.findByName(name).isPresent()) {
+        if (companyRepository.findByNameAndDeletedAtIsNull(name).isPresent()) {
             throw new CompanyValidationException("Company name already exists: " + name);
         }
     }
 
     /**
-     * Validates that company tax ID is unique.
+     * Validates that company tax ID is unique (among non-deleted companies).
      *
      * @param taxId the tax ID to validate
      * @throws CompanyValidationException if tax ID already exists
      */
     public void validateUniqueTaxId(String taxId) {
-        if (companyRepository.findByTaxId(taxId).isPresent()) {
+        if (companyRepository.findByTaxIdAndDeletedAtIsNull(taxId).isPresent()) {
             throw new CompanyValidationException("Company tax id already exists: " + taxId);
         }
     }
 
     /**
-     * Validates that company email is unique.
+     * Validates that company email is unique (among non-deleted companies).
      *
      * @param email the email to validate
      * @throws CompanyValidationException if email already exists
      */
     public void validateUniqueEmail(String email) {
-        if (companyRepository.findByEmail(email).isPresent()) {
+        if (companyRepository.findByEmailAndDeletedAtIsNull(email).isPresent()) {
             throw new CompanyValidationException("Company email already exists: " + email);
         }
     }
@@ -72,19 +72,19 @@ public class CompanyDomainService {
      */
     public void validateUpdateConstraints(CompanyRequestDto requestDto, Company company) {
         if (!requestDto.name().equalsIgnoreCase(company.getName())) {
-            if (companyRepository.existsByNameIgnoreCaseAndIdNot(requestDto.name(), company.getId())) {
+            if (companyRepository.existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull(requestDto.name(), company.getId())) {
                 throw new CompanyValidationException("Company name already exists: " + requestDto.name());
             }
         }
 
         if (!requestDto.email().equalsIgnoreCase(company.getEmail())) {
-            if (companyRepository.existsByEmailIgnoreCaseAndIdNot(requestDto.email(), company.getId())) {
+            if (companyRepository.existsByEmailIgnoreCaseAndIdNotAndDeletedAtIsNull(requestDto.email(), company.getId())) {
                 throw new CompanyValidationException("Company email already exists: " + requestDto.email());
             }
         }
 
         if (!requestDto.taxId().equalsIgnoreCase(company.getTaxId())) {
-            if (companyRepository.existsByTaxIdIgnoreCaseAndIdNot(requestDto.taxId(), company.getId())) {
+            if (companyRepository.existsByTaxIdIgnoreCaseAndIdNotAndDeletedAtIsNull(requestDto.taxId(), company.getId())) {
                 throw new CompanyValidationException("Company taxId already exists: " + requestDto.taxId());
             }
         }

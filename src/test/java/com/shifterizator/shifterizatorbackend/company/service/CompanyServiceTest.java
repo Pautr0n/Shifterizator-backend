@@ -268,13 +268,15 @@ class CompanyServiceTest {
     }
 
     @Test
-    void deleteCompany_should_delete_if_exists() {
+    void deleteCompany_should_soft_delete_if_exists() {
         when(companyDomainService.validateCompanyExistsAndReturn(1L)).thenReturn(company1);
+        when(companyRepository.save(any())).thenReturn(company1);
 
         companyService.deleteCompany(1L);
 
         verify(companyDomainService).validateCompanyExistsAndReturn(1L);
-        verify(companyRepository).delete(company1);
+        verify(companyRepository).save(company1);
+        assertNotNull(company1.getDeletedAt());
     }
 
     @Test
@@ -313,70 +315,70 @@ class CompanyServiceTest {
 
 
     @Test
-    void listAllCompanies_should_return_all_companies() {
-        when(companyRepository.findAll()).thenReturn(List.of(company1, company2, company3));
+    void listAllCompanies_should_return_all_non_deleted_companies() {
+        when(companyRepository.findByDeletedAtIsNull()).thenReturn(List.of(company1, company2, company3));
 
         List<Company> result = companyService.listAllCompanies();
 
         assertEquals(3, result.size());
-        verify(companyRepository).findAll();
+        verify(companyRepository).findByDeletedAtIsNull();
     }
 
     @Test
     void listActiveCompanies_should_return_only_active_companies() {
-        when(companyRepository.findByIsActive(true)).thenReturn(List.of(company1, company2));
+        when(companyRepository.findByIsActiveAndDeletedAtIsNull(true)).thenReturn(List.of(company1, company2));
 
         List<Company> result = companyService.listActiveCompanies();
 
         assertEquals(2, result.size());
-        verify(companyRepository).findByIsActive(true);
+        verify(companyRepository).findByIsActiveAndDeletedAtIsNull(true);
     }
 
 
     @Test
     void listInActiveCompanies_should_return_only_inactive_companies() {
-        when(companyRepository.findByIsActive(false)).thenReturn(List.of(company3));
+        when(companyRepository.findByIsActiveAndDeletedAtIsNull(false)).thenReturn(List.of(company3));
 
         List<Company> result = companyService.listInActiveCompanies();
 
         assertEquals(1, result.size());
-        verify(companyRepository).findByIsActive(false);
+        verify(companyRepository).findByIsActiveAndDeletedAtIsNull(false);
     }
 
 
     @Test
     void searchActiveCompaniesByName_should_return_matches() {
-        when(companyRepository.findByNameContainingIgnoreCaseAndIsActive("Comp", true))
+        when(companyRepository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Comp", true))
                 .thenReturn(List.of(company1, company2));
 
         List<Company> result = companyService.searchActiveCompaniesByName("Comp");
 
         assertEquals(2, result.size());
-        verify(companyRepository).findByNameContainingIgnoreCaseAndIsActive("Comp", true);
+        verify(companyRepository).findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Comp", true);
     }
 
 
     @Test
     void searchInActiveCompaniesByName_should_return_matches() {
-        when(companyRepository.findByNameContainingIgnoreCaseAndIsActive("Comp", false))
+        when(companyRepository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Comp", false))
                 .thenReturn(List.of(company3));
 
         List<Company> result = companyService.searchInActiveCompaniesByName("Comp");
 
         assertEquals(1, result.size());
-        verify(companyRepository).findByNameContainingIgnoreCaseAndIsActive("Comp", false);
+        verify(companyRepository).findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Comp", false);
     }
 
 
     @Test
     void searchAllCompaniesByName_should_return_matches() {
-        when(companyRepository.findByNameContainingIgnoreCase("Comp"))
+        when(companyRepository.findByNameContainingIgnoreCaseAndDeletedAtIsNull("Comp"))
                 .thenReturn(List.of(company1, company2, company3));
 
         List<Company> result = companyService.searchAllCompaniesByName("Comp");
 
         assertEquals(3, result.size());
-        verify(companyRepository).findByNameContainingIgnoreCase("Comp");
+        verify(companyRepository).findByNameContainingIgnoreCaseAndDeletedAtIsNull("Comp");
     }
 
 }

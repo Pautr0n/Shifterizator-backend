@@ -57,7 +57,7 @@ public class EmployeeDomainService {
         employee.getEmployeeCompanies().clear();
 
         for (Long companyId : dto.companyIds()) {
-            Company company = companyRepository.findById(companyId)
+            Company company = companyRepository.findByIdAndDeletedAtIsNull(companyId)
                     .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
 
             EmployeeCompany ec = EmployeeCompany.builder()

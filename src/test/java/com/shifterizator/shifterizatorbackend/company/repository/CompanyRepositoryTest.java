@@ -39,7 +39,7 @@ class CompanyRepositoryTest {
     @Test
     void findByName_should_return_entity_when_name_exists() {
 
-        result = repository.findByName("Sample Company");
+        result = repository.findByNameAndDeletedAtIsNull("Sample Company");
 
         assertTrue(result.isPresent());
         assertEquals("Sample Company", result.get().getName());
@@ -50,7 +50,7 @@ class CompanyRepositoryTest {
     @Test
     void findByName_should_return_empty_when_name_does_not_exists() {
 
-        result = repository.findByName("Name that does  not exist");
+        result = repository.findByNameAndDeletedAtIsNull("Name that does  not exist");
 
         assertTrue(result.isEmpty());
 
@@ -59,7 +59,7 @@ class CompanyRepositoryTest {
     @Test
     void findByTaxId_should_return_entity_when_taxid_exists() {
 
-        result = repository.findByTaxId("12345678T");
+        result = repository.findByTaxIdAndDeletedAtIsNull("12345678T");
 
         assertTrue(result.isPresent());
         assertEquals("12345678T", result.get().getTaxId());
@@ -69,7 +69,7 @@ class CompanyRepositoryTest {
     @Test
     void findByTaxId_should_return_empty_when_taxid_does_not_exists() {
 
-        result = repository.findByName("00000000t");
+        result = repository.findByTaxIdAndDeletedAtIsNull("00000000t");
 
         assertTrue(result.isEmpty());
 
@@ -78,7 +78,7 @@ class CompanyRepositoryTest {
     @Test
     void findByEmail_should_return_entity_when_mail_exists() {
 
-        result = repository.findByEmail("sample@sample.com");
+        result = repository.findByEmailAndDeletedAtIsNull("sample@sample.com");
 
         assertTrue(result.isPresent());
         assertEquals("sample@sample.com", result.get().getEmail());
@@ -88,7 +88,7 @@ class CompanyRepositoryTest {
     @Test
     void findByEmail_should_return_empty_when_mail_does_not_exists() {
 
-        result = repository.findByEmail("00000000t");
+        result = repository.findByEmailAndDeletedAtIsNull("00000000t");
 
         assertTrue(result.isEmpty());
 
@@ -105,7 +105,7 @@ class CompanyRepositoryTest {
 
         repository.save(sampleCompany2);
 
-        resultSet = repository.findByIsActive(true);
+        resultSet = repository.findByIsActiveAndDeletedAtIsNull(true);
 
         assertFalse(resultSet.isEmpty());
         assertEquals(2, resultSet.size());
@@ -125,7 +125,7 @@ class CompanyRepositoryTest {
 
         repository.save(sampleCompany2);
 
-        resultSet = repository.findByIsActive(false);
+        resultSet = repository.findByIsActiveAndDeletedAtIsNull(false);
 
         assertTrue(resultSet.isEmpty());
 
@@ -142,7 +142,7 @@ class CompanyRepositoryTest {
 
         repository.save(sampleCompany2);
 
-        resultSet = repository.findByNameContainingIgnoreCase("Mple");
+        resultSet = repository.findByNameContainingIgnoreCaseAndDeletedAtIsNull("Mple");
 
         assertFalse(resultSet.isEmpty());
         assertEquals(2, resultSet.size());
@@ -162,7 +162,7 @@ class CompanyRepositoryTest {
 
         repository.save(sampleCompany2);
 
-        resultSet = repository.findByNameContainingIgnoreCase("aMpz");
+        resultSet = repository.findByNameContainingIgnoreCaseAndDeletedAtIsNull("aMpz");
 
         assertTrue(resultSet.isEmpty());
 
@@ -179,7 +179,7 @@ class CompanyRepositoryTest {
 
         repository.save(sampleCompany2);
 
-        resultSet = repository.findByNameContainingIgnoreCaseAndIsActive("Mple", true);
+        resultSet = repository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Mple", true);
 
         assertFalse(resultSet.isEmpty());
         assertEquals(2, resultSet.size());
@@ -199,13 +199,13 @@ class CompanyRepositoryTest {
 
         repository.save(sampleCompany2);
 
-        resultSet = repository.findByNameContainingIgnoreCaseAndIsActive("aMpz", true);
+        resultSet = repository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("aMpz", true);
         assertTrue(resultSet.isEmpty());
 
-        resultSet = repository.findByNameContainingIgnoreCaseAndIsActive("Mple", false);
+        resultSet = repository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Mple", false);
         assertTrue(resultSet.isEmpty());
 
-        resultSet = repository.findByNameContainingIgnoreCaseAndIsActive("aMpz", false);
+        resultSet = repository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("aMpz", false);
         assertTrue(resultSet.isEmpty());
 
 
@@ -214,7 +214,7 @@ class CompanyRepositoryTest {
     @Test
     void existsByNameIgnoreCaseAndIdNot_returns_true_when_different_id_and_name_exists() {
 
-        boolean exist = repository.existsByNameIgnoreCaseAndIdNot("Sample Company", 985878L);
+        boolean exist = repository.existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull("Sample Company", 985878L);
 
         assertTrue(exist);
 
@@ -223,7 +223,7 @@ class CompanyRepositoryTest {
     @Test
     void existsByNameIgnoreCaseAndIdNot_returns_false_when_different_id_and_name_does_not_exist() {
 
-        boolean exist = repository.existsByNameIgnoreCaseAndIdNot("Sample Company2", 985878L);
+        boolean exist = repository.existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull("Sample Company2", 985878L);
 
         assertFalse(exist);
 
@@ -233,7 +233,7 @@ class CompanyRepositoryTest {
     @Test
     void existsByEmailIgnoreCaseAndIdNot_returns_true_when_different_id_and_email_exists() {
 
-        boolean exist = repository.existsByEmailIgnoreCaseAndIdNot("sample@sample.com", 985878L);
+        boolean exist = repository.existsByEmailIgnoreCaseAndIdNotAndDeletedAtIsNull("sample@sample.com", 985878L);
 
         assertTrue(exist);
 
@@ -242,7 +242,7 @@ class CompanyRepositoryTest {
     @Test
     void existsByEmailIgnoreCaseAndIdNot_returns_false_when_different_id_and_email_does_not_exist() {
 
-        boolean exist = repository.existsByEmailIgnoreCaseAndIdNot("sample@sample.com2", 985878L);
+        boolean exist = repository.existsByEmailIgnoreCaseAndIdNotAndDeletedAtIsNull("sample@sample.com2", 985878L);
 
         assertFalse(exist);
 
@@ -252,7 +252,7 @@ class CompanyRepositoryTest {
     @Test
     void existsByTaxIdIgnoreCaseAndIdNot_returns_true_when_different_id_and_taxid_exists() {
 
-        boolean exist = repository.existsByTaxIdIgnoreCaseAndIdNot("12345678T", 985878L);
+        boolean exist = repository.existsByTaxIdIgnoreCaseAndIdNotAndDeletedAtIsNull("12345678T", 985878L);
 
         assertTrue(exist);
 
@@ -261,7 +261,7 @@ class CompanyRepositoryTest {
     @Test
     void existsByTaxIdIgnoreCaseAndIdNot_returns_false_when_different_id_and_taxid_does_not_exist() {
 
-        boolean exist = repository.existsByTaxIdIgnoreCaseAndIdNot("00000000T", 985878L);
+        boolean exist = repository.existsByTaxIdIgnoreCaseAndIdNotAndDeletedAtIsNull("00000000T", 985878L);
 
         assertFalse(exist);
 
