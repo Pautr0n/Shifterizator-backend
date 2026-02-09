@@ -7,6 +7,7 @@ import com.shifterizator.shifterizatorbackend.company.mapper.CompanyMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.company.service.CompanyService;
+import com.shifterizator.shifterizatorbackend.company.service.domain.CompanyDomainService;
 import com.shifterizator.shifterizatorbackend.employee.service.EmployeeService;
 import com.shifterizator.shifterizatorbackend.company.service.LocationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +22,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +40,9 @@ class CompanyServiceTest {
 
     @Mock
     private LocationService locationService;
+
+    @Mock
+    private CompanyDomainService companyDomainService;
 
     @InjectMocks
     private CompanyService companyService;
@@ -86,206 +91,224 @@ class CompanyServiceTest {
 
     @Test
     void createCompany_should_return_company_if_validations_ok() {
+        doNothing().when(companyDomainService).validateUniqueName(any());
+        doNothing().when(companyDomainService).validateUniqueTaxId(any());
+        doNothing().when(companyDomainService).validateUniqueEmail(any());
         when(companyMapper.toEntity(any())).thenReturn(company1);
         when(companyRepository.save(any())).thenReturn(company1);
 
         Company result = companyService.createCompany(REQUEST_DTO);
 
         assertEquals("Company 1", result.getName());
+        verify(companyDomainService).validateUniqueName("Company 1");
+        verify(companyDomainService).validateUniqueTaxId("12345678A");
+        verify(companyDomainService).validateUniqueEmail("company1@company.com");
         verify(companyRepository).save(company1);
-
     }
 
     @Test
     void createCompany_should_throw_CompanyValidationException_if_name_exist() {
-        when(companyRepository.findByName(any())).thenReturn(Optional.ofNullable(company1));
+        doThrow(new CompanyValidationException("Company name already exists: Company 1"))
+                .when(companyDomainService).validateUniqueName("Company 1");
 
         Exception exception = assertThrows(CompanyValidationException.class
                 , () -> companyService.createCompany(REQUEST_DTO));
 
         assertEquals("Company name already exists: Company 1", exception.getMessage());
-        verify(companyRepository).findByName("Company 1");
-
+        verify(companyDomainService).validateUniqueName("Company 1");
     }
 
     @Test
     void createCompany_should_throw_CompanyValidationException_if_taxId_exist() {
-        when(companyRepository.findByTaxId(any()))
-                .thenReturn(Optional.ofNullable(company1));
+        doNothing().when(companyDomainService).validateUniqueName(any());
+        doThrow(new CompanyValidationException("Company tax id already exists: 12345678A"))
+                .when(companyDomainService).validateUniqueTaxId("12345678A");
 
         Exception exception = assertThrows(CompanyValidationException.class
                 , () -> companyService.createCompany(REQUEST_DTO));
 
         assertEquals("Company tax id already exists: 12345678A", exception.getMessage());
-        verify(companyRepository).findByTaxId("12345678A");
-
+        verify(companyDomainService).validateUniqueName("Company 1");
+        verify(companyDomainService).validateUniqueTaxId("12345678A");
     }
 
     @Test
     void createCompany_should_throw_CompanyValidationException_if_email_exist() {
-        when(companyRepository.findByEmail(any()))
-                .thenReturn(Optional.ofNullable(company1));
+        doNothing().when(companyDomainService).validateUniqueName(any());
+        doNothing().when(companyDomainService).validateUniqueTaxId(any());
+        doThrow(new CompanyValidationException("Company email already exists: company1@company.com"))
+                .when(companyDomainService).validateUniqueEmail("company1@company.com");
 
         Exception exception = assertThrows(CompanyValidationException.class
                 , () -> companyService.createCompany(REQUEST_DTO));
 
         assertEquals("Company email already exists: company1@company.com", exception.getMessage());
-        verify(companyRepository).findByEmail("company1@company.com");
-
+        verify(companyDomainService).validateUniqueName("Company 1");
+        verify(companyDomainService).validateUniqueTaxId("12345678A");
+        verify(companyDomainService).validateUniqueEmail("company1@company.com");
     }
 
     @Test
     void updateCompany_should_return_updated_company_if_validations_ok() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company1));
-        when(companyRepository.existsByNameIgnoreCaseAndIdNot("Company 4", 1L)).thenReturn(false);
-        when(companyRepository.existsByEmailIgnoreCaseAndIdNot("company4@company.com", 1L)).thenReturn(false);
-        when(companyRepository.existsByTaxIdIgnoreCaseAndIdNot("444444444A", 1L)).thenReturn(false);
+        when(companyDomainService.validateCompanyExistsAndReturn(1L)).thenReturn(company1);
+        doNothing().when(companyDomainService).validateUpdateConstraints(any(), any());
         when(companyRepository.save(any())).thenReturn(company1);
 
         Company result = companyService.updateCompany(1L, UPDATE_REQUEST);
 
         assertEquals("Company 4", result.getName());
-        verify(companyRepository).findById(1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
+        verify(companyDomainService).validateUpdateConstraints(UPDATE_REQUEST, company1);
         verify(companyRepository).save(company1);
     }
 
     @Test
     void updateCompany_should_throw_CompanyValidationException_if_name_exists() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company1));
-        when(companyRepository.existsByNameIgnoreCaseAndIdNot("Company 4", 1L)).thenReturn(true);
+        when(companyDomainService.validateCompanyExistsAndReturn(1L)).thenReturn(company1);
+        doThrow(new CompanyValidationException("Company name already exists: Company 4"))
+                .when(companyDomainService).validateUpdateConstraints(UPDATE_REQUEST, company1);
 
         Exception exception = assertThrows(CompanyValidationException.class,
                 () -> companyService.updateCompany(1L, UPDATE_REQUEST));
 
         assertEquals("Company name already exists: Company 4", exception.getMessage());
-        verify(companyRepository).existsByNameIgnoreCaseAndIdNot("Company 4", 1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
+        verify(companyDomainService).validateUpdateConstraints(UPDATE_REQUEST, company1);
     }
 
 
     @Test
     void updateCompany_should_throw_CompanyValidationException_if_email_exists() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company1));
-        when(companyRepository.existsByEmailIgnoreCaseAndIdNot("company4@company.com", 1L)).thenReturn(true);
+        when(companyDomainService.validateCompanyExistsAndReturn(1L)).thenReturn(company1);
+        doThrow(new CompanyValidationException("Company email already exists: company4@company.com"))
+                .when(companyDomainService).validateUpdateConstraints(UPDATE_REQUEST, company1);
 
         Exception exception = assertThrows(CompanyValidationException.class,
                 () -> companyService.updateCompany(1L, UPDATE_REQUEST));
 
         assertEquals("Company email already exists: company4@company.com", exception.getMessage());
-        verify(companyRepository).existsByEmailIgnoreCaseAndIdNot("company4@company.com", 1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
+        verify(companyDomainService).validateUpdateConstraints(UPDATE_REQUEST, company1);
     }
 
 
     @Test
     void updateCompany_should_throw_CompanyValidationException_if_taxId_exists() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company1));
-        when(companyRepository.existsByTaxIdIgnoreCaseAndIdNot("444444444A", 1L)).thenReturn(true);
+        when(companyDomainService.validateCompanyExistsAndReturn(1L)).thenReturn(company1);
+        doThrow(new CompanyValidationException("Company taxId already exists: 444444444A"))
+                .when(companyDomainService).validateUpdateConstraints(UPDATE_REQUEST, company1);
 
         Exception exception = assertThrows(CompanyValidationException.class,
                 () -> companyService.updateCompany(1L, UPDATE_REQUEST));
 
         assertEquals("Company taxId already exists: 444444444A", exception.getMessage());
-        verify(companyRepository).existsByTaxIdIgnoreCaseAndIdNot("444444444A", 1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
+        verify(companyDomainService).validateUpdateConstraints(UPDATE_REQUEST, company1);
     }
 
     @Test
     void updateCompany_should_throw_CompanyNotFoundException_if_company_not_exist() {
-        when(companyRepository.findById(1L))
-                .thenReturn(Optional.empty());
+        when(companyDomainService.validateCompanyExistsAndReturn(1L))
+                .thenThrow(new CompanyNotFoundException("Company not found with id: 1"));
 
         Exception exception = assertThrows(CompanyNotFoundException.class,
                 () -> companyService.updateCompany(1L, REQUEST_DTO));
 
         assertEquals("Company not found with id: 1", exception.getMessage());
-        verify(companyRepository).findById(1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
     }
 
     @Test
     void deactivateCompany_should_set_isActive_false() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company1));
+        when(companyDomainService.validateCompanyExistsAndReturn(1L)).thenReturn(company1);
         when(companyRepository.save(any())).thenReturn(company1);
 
         Company result = companyService.deactivateCompany(1L);
 
         assertFalse(result.getIsActive());
-        verify(companyRepository).findById(1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
         verify(companyRepository).save(company1);
     }
 
     @Test
     void deactivateCompany_should_throw_CompanyNotFoundException_if_not_exist() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.empty());
+        when(companyDomainService.validateCompanyExistsAndReturn(1L))
+                .thenThrow(new CompanyNotFoundException("Company not found with id: 1"));
 
         Exception exception = assertThrows(CompanyNotFoundException.class,
                 () -> companyService.deactivateCompany(1L));
 
         assertEquals("Company not found with id: 1", exception.getMessage());
-        verify(companyRepository).findById(1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
     }
 
 
     @Test
     void activateCompany_should_set_isActive_true() {
-        when(companyRepository.findById(3L)).thenReturn(Optional.of(company3));
+        when(companyDomainService.validateCompanyExistsAndReturn(3L)).thenReturn(company3);
         when(companyRepository.save(any())).thenReturn(company3);
 
         Company result = companyService.activateCompany(3L);
 
         assertTrue(result.getIsActive());
-        verify(companyRepository).findById(3L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(3L);
         verify(companyRepository).save(company3);
     }
 
     @Test
     void activateCompany_should_throw_CompanyNotFoundException_if_not_exist() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.empty());
+        when(companyDomainService.validateCompanyExistsAndReturn(1L))
+                .thenThrow(new CompanyNotFoundException("Company not found with id: 1"));
 
         Exception exception = assertThrows(CompanyNotFoundException.class,
                 () -> companyService.activateCompany(1L));
 
         assertEquals("Company not found with id: 1", exception.getMessage());
-        verify(companyRepository).findById(1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
     }
 
     @Test
     void deleteCompany_should_delete_if_exists() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company1));
+        when(companyDomainService.validateCompanyExistsAndReturn(1L)).thenReturn(company1);
 
         companyService.deleteCompany(1L);
 
-        verify(companyRepository).findById(1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
         verify(companyRepository).delete(company1);
     }
 
     @Test
     void deleteCompany_should_throw_CompanyNotFoundException_if_not_exist() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.empty());
+        when(companyDomainService.validateCompanyExistsAndReturn(1L))
+                .thenThrow(new CompanyNotFoundException("Company not found with id: 1"));
 
         Exception exception = assertThrows(CompanyNotFoundException.class,
                 () -> companyService.deleteCompany(1L));
 
         assertEquals("Company not found with id: 1", exception.getMessage());
-        verify(companyRepository).findById(1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
     }
 
     @Test
     void getCompany_should_return_company_if_exists() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company1));
+        when(companyDomainService.validateCompanyExistsAndReturn(1L)).thenReturn(company1);
 
         Company result = companyService.getCompany(1L);
 
         assertEquals("Company 1", result.getName());
-        verify(companyRepository).findById(1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
     }
 
     @Test
     void getCompany_should_throw_CompanyNotFoundException_if_not_exist() {
-        when(companyRepository.findById(1L)).thenReturn(Optional.empty());
+        when(companyDomainService.validateCompanyExistsAndReturn(1L))
+                .thenThrow(new CompanyNotFoundException("Company not found with id: 1"));
 
         Exception exception = assertThrows(CompanyNotFoundException.class,
                 () -> companyService.getCompany(1L));
 
         assertEquals("Company not found with id: 1", exception.getMessage());
-        verify(companyRepository).findById(1L);
+        verify(companyDomainService).validateCompanyExistsAndReturn(1L);
     }
 
 
