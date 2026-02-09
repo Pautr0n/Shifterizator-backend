@@ -1,15 +1,9 @@
 package com.shifterizator.shifterizatorbackend.shift.service;
 
-import com.shifterizator.shifterizatorbackend.availability.model.AvailabilityType;
-import com.shifterizator.shifterizatorbackend.availability.model.EmployeeAvailability;
-import com.shifterizator.shifterizatorbackend.availability.repository.EmployeeAvailabilityRepository;
 import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
-import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLanguage;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
-import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeLanguageRepository;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
-import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftAssignmentNotFoundException;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFoundException;
@@ -20,6 +14,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftAssignmentRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.validator.ShiftAssignmentValidator;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import org.junit.jupiter.api.Test;
@@ -50,10 +45,7 @@ class ShiftAssignmentServiceImplTest {
     private EmployeeRepository employeeRepository;
 
     @Mock
-    private EmployeeAvailabilityRepository employeeAvailabilityRepository;
-
-    @Mock
-    private EmployeeLanguageRepository employeeLanguageRepository;
+    private ShiftAssignmentValidator shiftAssignmentValidator;
 
     @InjectMocks
     private ShiftAssignmentServiceImpl service;
@@ -119,20 +111,27 @@ class ShiftAssignmentServiceImplTest {
 
         when(shiftInstanceRepository.findById(99L)).thenReturn(Optional.of(shiftInstance));
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
-        when(shiftAssignmentRepository.findByShiftInstance_IdAndEmployee_IdAndDeletedAtIsNull(99L, 1L))
-                .thenReturn(Optional.empty());
-        when(employeeAvailabilityRepository.findOverlapping(1L, futureDate(), futureDate(), null))
-                .thenReturn(List.of());
         when(shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(99L))
                 .thenReturn(List.of());
-        when(shiftAssignmentRepository.findByEmployeeAndDate(1L, futureDate()))
-                .thenReturn(List.of());
         when(shiftAssignmentRepository.save(any(ShiftAssignment.class))).thenReturn(assignment);
+        // Validator passes all validations (no exceptions thrown)
+        doNothing().when(shiftAssignmentValidator).validateNotAlreadyAssigned(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateEmployeeAvailability(any(), any());
+        doNothing().when(shiftAssignmentValidator).validatePositionMatch(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateLanguageRequirements(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateNoOverlappingShifts(any(), any());
+        doNothing().when(shiftAssignmentValidator).validatePositionCapacity(any(), any());
 
         ShiftAssignment result = service.assign(dto);
 
         assertThat(result.getId()).isEqualTo(100L);
         verify(shiftAssignmentRepository).save(any(ShiftAssignment.class));
+        verify(shiftAssignmentValidator).validateNotAlreadyAssigned(99L, 1L);
+        verify(shiftAssignmentValidator).validateEmployeeAvailability(1L, futureDate());
+        verify(shiftAssignmentValidator).validatePositionMatch(employee, shiftInstance);
+        verify(shiftAssignmentValidator).validateLanguageRequirements(employee, shiftInstance);
+        verify(shiftAssignmentValidator).validateNoOverlappingShifts(1L, shiftInstance);
+        verify(shiftAssignmentValidator).validatePositionCapacity(employee, shiftInstance);
     }
 
     @Test
@@ -171,8 +170,8 @@ class ShiftAssignmentServiceImplTest {
 
         when(shiftInstanceRepository.findById(99L)).thenReturn(Optional.of(shiftInstance));
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
-        when(shiftAssignmentRepository.findByShiftInstance_IdAndEmployee_IdAndDeletedAtIsNull(99L, 1L))
-                .thenReturn(Optional.of(existing));
+        doThrow(new ShiftValidationException("Employee is already assigned to this shift"))
+                .when(shiftAssignmentValidator).validateNotAlreadyAssigned(99L, 1L);
 
         assertThatThrownBy(() -> service.assign(dto))
                 .isInstanceOf(ShiftValidationException.class)
@@ -187,19 +186,11 @@ class ShiftAssignmentServiceImplTest {
         Position position = Position.builder().id(1L).name("Sales Assistant").company(company).build();
         Employee employee = Employee.builder().id(1L).name("John").surname("Doe").position(position).build();
 
-        EmployeeAvailability vacation = EmployeeAvailability.builder()
-                .employee(employee)
-                .startDate(futureDate())
-                .endDate(futureDate())
-                .type(AvailabilityType.VACATION)
-                .build();
-
         when(shiftInstanceRepository.findById(99L)).thenReturn(Optional.of(shiftInstance));
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
-        when(shiftAssignmentRepository.findByShiftInstance_IdAndEmployee_IdAndDeletedAtIsNull(99L, 1L))
-                .thenReturn(Optional.empty());
-        when(employeeAvailabilityRepository.findOverlapping(1L, futureDate(), futureDate(), null))
-                .thenReturn(List.of(vacation));
+        doNothing().when(shiftAssignmentValidator).validateNotAlreadyAssigned(any(), any());
+        doThrow(new ShiftValidationException("Employee is marked as VACATION on this date"))
+                .when(shiftAssignmentValidator).validateEmployeeAvailability(1L, futureDate());
 
         assertThatThrownBy(() -> service.assign(dto))
                 .isInstanceOf(ShiftValidationException.class)
@@ -216,10 +207,10 @@ class ShiftAssignmentServiceImplTest {
 
         when(shiftInstanceRepository.findById(99L)).thenReturn(Optional.of(shiftInstance));
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
-        when(shiftAssignmentRepository.findByShiftInstance_IdAndEmployee_IdAndDeletedAtIsNull(99L, 1L))
-                .thenReturn(Optional.empty());
-        when(employeeAvailabilityRepository.findOverlapping(1L, futureDate(), futureDate(), null))
-                .thenReturn(List.of());
+        doNothing().when(shiftAssignmentValidator).validateNotAlreadyAssigned(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateEmployeeAvailability(any(), any());
+        doThrow(new ShiftValidationException("Employee position does not match any required position for this shift template"))
+                .when(shiftAssignmentValidator).validatePositionMatch(employee, shiftInstance);
 
         assertThatThrownBy(() -> service.assign(dto))
                 .isInstanceOf(ShiftValidationException.class)
@@ -233,23 +224,16 @@ class ShiftAssignmentServiceImplTest {
         Company company = shiftInstance.getLocation().getCompany();
         Position position = Position.builder().id(1L).name("Sales Assistant").company(company).build();
         Employee employee1 = Employee.builder().id(1L).name("John").surname("Doe").position(position).build();
-        Employee employee2 = Employee.builder().id(2L).name("Jane").surname("Smith").position(position).build();
-
-        ShiftAssignment existing1 = ShiftAssignment.builder()
-                .shiftInstance(shiftInstance)
-                .employee(employee2)
-                .build();
 
         when(shiftInstanceRepository.findById(99L)).thenReturn(Optional.of(shiftInstance));
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee1));
-        when(shiftAssignmentRepository.findByShiftInstance_IdAndEmployee_IdAndDeletedAtIsNull(99L, 1L))
-                .thenReturn(Optional.empty());
-        when(employeeAvailabilityRepository.findOverlapping(1L, futureDate(), futureDate(), null))
-                .thenReturn(List.of());
-        when(shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(99L))
-                .thenReturn(List.of(existing1));
-        when(shiftAssignmentRepository.findByEmployeeAndDate(1L, futureDate()))
-                .thenReturn(List.of());
+        doNothing().when(shiftAssignmentValidator).validateNotAlreadyAssigned(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateEmployeeAvailability(any(), any());
+        doNothing().when(shiftAssignmentValidator).validatePositionMatch(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateLanguageRequirements(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateNoOverlappingShifts(any(), any());
+        doThrow(new ShiftValidationException("Position capacity reached: 1 employees already assigned (required: 2)"))
+                .when(shiftAssignmentValidator).validatePositionCapacity(employee1, shiftInstance);
 
         assertThatThrownBy(() -> service.assign(dto))
                 .isInstanceOf(ShiftValidationException.class)
