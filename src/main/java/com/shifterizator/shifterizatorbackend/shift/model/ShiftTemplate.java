@@ -1,0 +1,73 @@
+package com.shifterizator.shifterizatorbackend.shift.model;
+
+import com.shifterizator.shifterizatorbackend.company.model.Location;
+import com.shifterizator.shifterizatorbackend.employee.model.Position;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "shift_templates")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ShiftTemplate {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = false)
+    private Location location;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "position_id", nullable = false)
+    private Position position;
+
+    @Column(nullable = false)
+    private LocalTime startTime;
+
+    @Column(nullable = false)
+    private LocalTime endTime;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer requiredEmployees = 1;
+
+    @Column(length = 200)
+    private String description;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "shift_template_languages",
+            joinColumns = @JoinColumn(name = "shift_template_id"),
+            inverseJoinColumns = @JoinColumn(name = "language_id")
+    )
+    @Builder.Default
+    private Set<com.shifterizator.shifterizatorbackend.language.model.Language> requiredLanguages = new HashSet<>();
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    private String createdBy;
+    private String updatedBy;
+
+    private LocalDateTime deletedAt;
+}

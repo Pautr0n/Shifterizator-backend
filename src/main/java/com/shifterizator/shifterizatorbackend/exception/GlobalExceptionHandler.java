@@ -17,6 +17,10 @@ import com.shifterizator.shifterizatorbackend.openinghours.exception.SpecialOpen
 import com.shifterizator.shifterizatorbackend.openinghours.exception.SpecialOpeningHoursValidationException;
 import com.shifterizator.shifterizatorbackend.blackoutdays.exception.BlackoutDayNotFoundException;
 import com.shifterizator.shifterizatorbackend.blackoutdays.exception.BlackoutDayValidationException;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftTemplateNotFoundException;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFoundException;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftAssignmentNotFoundException;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.user.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -140,6 +144,46 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BlackoutDayValidationException.class)
     public ResponseEntity<ApiErrorDto> handleBlackoutDayValidation(BlackoutDayValidationException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "VALIDATION_ERROR",
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(ShiftTemplateNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handleShiftTemplateNotFound(ShiftTemplateNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(ShiftInstanceNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handleShiftInstanceNotFound(ShiftInstanceNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(ShiftAssignmentNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handleShiftAssignmentNotFound(ShiftAssignmentNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(ShiftValidationException.class)
+    public ResponseEntity<ApiErrorDto> handleShiftValidation(ShiftValidationException ex) {
         ApiErrorDto error = new ApiErrorDto(
                 ex.getMessage(),
                 "VALIDATION_ERROR",
