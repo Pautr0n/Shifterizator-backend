@@ -67,9 +67,15 @@ class ShiftInstanceServiceImplTest {
                 "Notes"
         );
 
-        Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
+        Company company = new Company("Skynet",
+                "Skynet",
+                "12345678T",
+                "test@test.com",
+                "+34999999999");
         company.setId(1L);
+
         Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
+
         ShiftTemplate template = ShiftTemplate.builder().id(1L).location(location).build();
 
         ShiftInstance instance = ShiftInstance.builder()

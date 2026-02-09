@@ -26,14 +26,15 @@ public class CompanyMapper {
     }
 
     public Company toEntity(CompanyRequestDto requestDto) {
-        Company company = new Company();
-        company.setName(requestDto.name());
-        company.setLegalName(requestDto.legalName());
-        company.setTaxId(requestDto.taxId());
-        company.setEmail(requestDto.email());
-        company.setPhone(requestDto.phone());
-        company.setCountry(requestDto.country());
-        return company;
+        return Company.builder()
+                .name(requestDto.name())
+                .legalName(requestDto.legalName())
+                .taxId(requestDto.taxId())
+                .email(requestDto.email())
+                .phone(requestDto.phone())
+                .country(requestDto.country())
+                .isActive(true)
+                .build();
     }
 
 

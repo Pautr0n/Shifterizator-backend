@@ -7,8 +7,6 @@ import com.shifterizator.shifterizatorbackend.company.repository.LocationReposit
 import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import com.shifterizator.shifterizatorbackend.employee.repository.PositionRepository;
-import com.shifterizator.shifterizatorbackend.language.exception.LanguageNotFoundException;
-import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.language.repository.LanguageRepository;
 import com.shifterizator.shifterizatorbackend.shift.dto.PositionRequirementDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
@@ -16,7 +14,6 @@ import com.shifterizator.shifterizatorbackend.shift.exception.ShiftTemplateNotFo
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftTemplateMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
-import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,8 +70,13 @@ class ShiftTemplateServiceImplTest {
                 true
         );
 
-        Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
+        Company company = new Company("Skynet",
+                "Skynet",
+                "12345678T",
+                "test@test.com",
+                "+34999999999");
         company.setId(1L);
+
         Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
         Position position1 = Position.builder().id(1L).name("Sales Assistant").company(company).build();
         Position position2 = Position.builder().id(2L).name("Manager").company(company).build();
@@ -190,7 +192,11 @@ class ShiftTemplateServiceImplTest {
                 true
         );
 
-        Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
+        Company company = new Company("Skynet",
+                "Skynet",
+                "12345678T",
+                "test@test.com",
+                "+34999999999");
         company.setId(1L);
         Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
         Position position1 = Position.builder().id(1L).name("Sales Assistant").company(company).build();
