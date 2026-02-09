@@ -10,6 +10,9 @@ import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoun
 import com.shifterizator.shifterizatorbackend.employee.exception.PositionAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
 import com.shifterizator.shifterizatorbackend.language.exception.LanguageNotFoundException;
+import com.shifterizator.shifterizatorbackend.availability.exception.AvailabilityNotFoundException;
+import com.shifterizator.shifterizatorbackend.availability.exception.AvailabilityValidationException;
+import com.shifterizator.shifterizatorbackend.availability.exception.OverlappingAvailabilityException;
 import com.shifterizator.shifterizatorbackend.user.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,6 +72,36 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(AvailabilityNotFoundException.class)
+    public ResponseEntity<ApiErrorDto> handleAvailabilityNotFound(AvailabilityNotFoundException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND.value()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(AvailabilityValidationException.class)
+    public ResponseEntity<ApiErrorDto> handleAvailabilityValidation(AvailabilityValidationException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "VALIDATION_ERROR",
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(OverlappingAvailabilityException.class)
+    public ResponseEntity<ApiErrorDto> handleOverlappingAvailability(OverlappingAvailabilityException ex) {
+        ApiErrorDto error = new ApiErrorDto(
+                ex.getMessage(),
+                "VALIDATION_ERROR",
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
