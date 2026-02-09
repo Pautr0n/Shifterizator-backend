@@ -47,7 +47,7 @@ class EmployeeDomainServiceTest {
     @Test
     void validateEmailUniqueness_shouldDoNothingWhenEmailIsNull() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", null, "123", 1L, Set.of(1L), null, null
+                "John", "Connor", null, "123", 1L, Set.of(1L), null, null, null
         );
 
         service.validateEmailUniqueness(dto, null);
@@ -58,7 +58,7 @@ class EmployeeDomainServiceTest {
     @Test
     void validateEmailUniqueness_shouldThrowWhenEmailExistsForAnotherEmployee() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
         );
 
         when(employeeRepository.existsByEmailAndCompany("john@example.com", 1L))
@@ -74,7 +74,7 @@ class EmployeeDomainServiceTest {
     @Test
     void validateEmailUniqueness_shouldNotThrowWhenSameEmployeeKeepsSameEmail() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
         );
 
         when(employeeRepository.existsByEmailAndCompany("john@example.com", 1L))
@@ -109,7 +109,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeCompanies().add(EmployeeCompany.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L, 2L), null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L, 2L), null, null, null
         );
 
         Company company1 = new Company();
@@ -134,7 +134,7 @@ class EmployeeDomainServiceTest {
     void assignCompanies_shouldThrowWhenCompanyNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
         );
 
         when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
@@ -150,7 +150,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLocations().add(EmployeeLocation.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L, 11L), null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L, 11L), null, null
         );
 
         Location loc1 = Location.builder().id(10L).name("HQ").build();
@@ -173,7 +173,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLocations().add(EmployeeLocation.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
         );
 
         service.assignLocations(employee, dto);
@@ -185,7 +185,7 @@ class EmployeeDomainServiceTest {
     void assignLocations_shouldThrowWhenLocationNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L), null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L), null, null
         );
 
         when(locationRepository.findById(10L)).thenReturn(Optional.empty());
@@ -201,7 +201,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLanguages().add(EmployeeLanguage.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L, 2L)
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L, 2L), null
         );
 
         Language lang1 = Language.builder().id(1L).code("EN").name("English").build();
@@ -224,7 +224,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLanguages().add(EmployeeLanguage.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null
         );
 
         service.assignLanguages(employee, dto);
@@ -236,7 +236,7 @@ class EmployeeDomainServiceTest {
     void assignLanguages_shouldThrowWhenLanguageNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L)
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L), null
         );
 
         when(languageRepository.findById(1L)).thenReturn(Optional.empty());

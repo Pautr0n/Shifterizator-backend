@@ -9,6 +9,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,6 +41,10 @@ public class Employee {
 
     @Column
     private String phone;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "preferred_day_off", length = 10)
+    private DayOfWeek preferredDayOff;
 
     @NotNull
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

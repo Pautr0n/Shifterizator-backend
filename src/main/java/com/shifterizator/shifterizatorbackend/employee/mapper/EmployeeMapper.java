@@ -9,6 +9,7 @@ import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLocation;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,8 +22,24 @@ public class EmployeeMapper {
                 .surname(dto.surname())
                 .email(dto.email())
                 .phone(dto.phone())
+                .preferredDayOff(parsePreferredDayOff(dto.preferredDayOff()))
                 .position(position)
                 .build();
+    }
+
+    /**
+     * Parses preferred day off from DTO string (e.g. "WEDNESDAY"). Returns null if null or blank.
+     * @throws IllegalArgumentException if the value is not a valid DayOfWeek name
+     */
+    public static DayOfWeek parsePreferredDayOff(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return DayOfWeek.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid preferredDayOff: '" + value + "'. Must be one of: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY");
+        }
     }
 
     public EmployeeResponseDto toResponse(Employee employee) {
@@ -36,6 +53,7 @@ public class EmployeeMapper {
                 extractCompanyNames(employee.getEmployeeCompanies()),
                 extractLocationNames(employee.getEmployeeLocations()),
                 extractLanguageNames(employee.getEmployeeLanguages()),
+                employee.getPreferredDayOff() != null ? employee.getPreferredDayOff().name() : null,
                 employee.getCreatedAt(),
                 employee.getUpdatedAt()
         );

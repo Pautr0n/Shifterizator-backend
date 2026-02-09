@@ -31,7 +31,8 @@ class EmployeeMapperTest {
                 5L,
                 Set.of(1L),
                 Set.of(2L),
-                Set.of(1L)
+                Set.of(1L),
+                null
         );
 
         Employee employee = mapper.toEntity(dto, position);
@@ -41,6 +42,20 @@ class EmployeeMapperTest {
         assertThat(employee.getEmail()).isEqualTo("john@example.com");
         assertThat(employee.getPhone()).isEqualTo("123456789");
         assertThat(employee.getPosition()).isSameAs(position);
+        assertThat(employee.getPreferredDayOff()).isNull();
+    }
+
+    @Test
+    void toEntity_shouldMapPreferredDayOffWhenProvided() {
+        Position position = Position.builder().id(5L).name("Waiter").build();
+        EmployeeRequestDto dto = new EmployeeRequestDto(
+                "John", "Connor", "john@example.com", "123",
+                5L, Set.of(1L), Set.of(2L), Set.of(1L), "WEDNESDAY"
+        );
+
+        Employee employee = mapper.toEntity(dto, position);
+
+        assertThat(employee.getPreferredDayOff()).isEqualTo(java.time.DayOfWeek.WEDNESDAY);
     }
 
     @Test

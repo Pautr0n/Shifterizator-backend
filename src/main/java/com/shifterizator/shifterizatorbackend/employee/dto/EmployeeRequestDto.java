@@ -27,7 +27,10 @@ public record EmployeeRequestDto(
 
         Set<Long> locationIds,
 
-        Set<Long> languageIds
+        Set<Long> languageIds,
+
+        /** Optional. Preferred weekday off (e.g. WEDNESDAY, FRIDAY). Must be a valid DayOfWeek name. */
+        String preferredDayOff
 
 ) {
 }

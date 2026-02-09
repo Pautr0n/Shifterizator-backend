@@ -13,6 +13,8 @@ public record EmployeeResponseDto(
         Set<String> companies,
         Set<String> locations,
         Set<String> languages,
+        /** Preferred weekday off (e.g. WEDNESDAY, FRIDAY), or null if not set. */
+        String preferredDayOff,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 

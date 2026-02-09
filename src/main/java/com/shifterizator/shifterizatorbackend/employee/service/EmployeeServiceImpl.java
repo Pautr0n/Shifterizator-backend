@@ -62,6 +62,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setSurname(dto.surname());
         employee.setEmail(dto.email());
         employee.setPhone(dto.phone());
+        employee.setPreferredDayOff(EmployeeMapper.parsePreferredDayOff(dto.preferredDayOff()));
         employee.setPosition(position);
 
         employeeDomainService.assignCompanies(employee, dto);
