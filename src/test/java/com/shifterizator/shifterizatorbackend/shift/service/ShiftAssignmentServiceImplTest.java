@@ -14,6 +14,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftAssignmentRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceCompletenessService;
 import com.shifterizator.shifterizatorbackend.shift.service.validator.ShiftAssignmentValidator;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
@@ -46,6 +47,9 @@ class ShiftAssignmentServiceImplTest {
 
     @Mock
     private ShiftAssignmentValidator shiftAssignmentValidator;
+
+    @Mock
+    private ShiftInstanceCompletenessService shiftInstanceCompletenessService;
 
     @InjectMocks
     private ShiftAssignmentServiceImpl service;
@@ -111,8 +115,6 @@ class ShiftAssignmentServiceImplTest {
 
         when(shiftInstanceRepository.findById(99L)).thenReturn(Optional.of(shiftInstance));
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
-        when(shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(99L))
-                .thenReturn(List.of());
         when(shiftAssignmentRepository.save(any(ShiftAssignment.class))).thenReturn(assignment);
         // Validator passes all validations (no exceptions thrown)
         doNothing().when(shiftAssignmentValidator).validateNotAlreadyAssigned(any(), any());
@@ -121,6 +123,7 @@ class ShiftAssignmentServiceImplTest {
         doNothing().when(shiftAssignmentValidator).validateLanguageRequirements(any(), any());
         doNothing().when(shiftAssignmentValidator).validateNoOverlappingShifts(any(), any());
         doNothing().when(shiftAssignmentValidator).validatePositionCapacity(any(), any());
+        doNothing().when(shiftInstanceCompletenessService).updateCompleteness(any());
 
         ShiftAssignment result = service.assign(dto);
 
@@ -132,6 +135,7 @@ class ShiftAssignmentServiceImplTest {
         verify(shiftAssignmentValidator).validateLanguageRequirements(employee, shiftInstance);
         verify(shiftAssignmentValidator).validateNoOverlappingShifts(1L, shiftInstance);
         verify(shiftAssignmentValidator).validatePositionCapacity(employee, shiftInstance);
+        verify(shiftInstanceCompletenessService).updateCompleteness(shiftInstance);
     }
 
     @Test
@@ -255,12 +259,12 @@ class ShiftAssignmentServiceImplTest {
 
         when(shiftAssignmentRepository.findByShiftInstance_IdAndEmployee_IdAndDeletedAtIsNull(99L, 1L))
                 .thenReturn(Optional.of(assignment));
-        when(shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(99L))
-                .thenReturn(List.of());
+        doNothing().when(shiftInstanceCompletenessService).updateCompleteness(any());
 
         service.unassign(99L, 1L);
 
         assertThat(assignment.getDeletedAt()).isNotNull();
+        verify(shiftInstanceCompletenessService).updateCompleteness(shiftInstance);
     }
 
     @Test

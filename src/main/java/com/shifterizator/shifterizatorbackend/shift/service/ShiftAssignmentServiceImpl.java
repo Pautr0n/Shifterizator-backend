@@ -10,6 +10,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftAssignment;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftAssignmentRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceCompletenessService;
 import com.shifterizator.shifterizatorbackend.shift.service.validator.ShiftAssignmentValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
     private final ShiftInstanceRepository shiftInstanceRepository;
     private final EmployeeRepository employeeRepository;
     private final ShiftAssignmentValidator shiftAssignmentValidator;
+    private final ShiftInstanceCompletenessService shiftInstanceCompletenessService;
 
     @Override
     public ShiftAssignment assign(ShiftAssignmentRequestDto dto) {
@@ -54,7 +56,7 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
         ShiftAssignment saved = shiftAssignmentRepository.save(assignment);
 
         // Update shift instance completeness
-        updateShiftInstanceCompleteness(shiftInstance);
+        shiftInstanceCompletenessService.updateCompleteness(shiftInstance);
 
         return saved;
     }
@@ -68,7 +70,7 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
         assignment.setDeletedAt(LocalDateTime.now());
 
         ShiftInstance shiftInstance = assignment.getShiftInstance();
-        updateShiftInstanceCompleteness(shiftInstance);
+        shiftInstanceCompletenessService.updateCompleteness(shiftInstance);
     }
 
     @Override
@@ -90,21 +92,5 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
     public List<ShiftAssignment> findByEmployee(Long employeeId) {
         return shiftAssignmentRepository
                 .findByEmployee_IdAndDeletedAtIsNullOrderByShiftInstance_DateAscShiftInstance_StartTimeAsc(employeeId);
-    }
-
-    private void updateShiftInstanceCompleteness(ShiftInstance shiftInstance) {
-        List<ShiftAssignment> assignments = shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(
-                shiftInstance.getId());
-        
-        // Check if all position requirements are met
-        boolean isComplete = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
-                .allMatch(stp -> {
-                    long assignedCount = assignments.stream()
-                            .filter(a -> a.getEmployee().getPosition().getId().equals(stp.getPosition().getId()))
-                            .count();
-                    return assignedCount >= stp.getRequiredCount();
-                });
-        
-        shiftInstance.setIsComplete(isComplete);
     }
 }
