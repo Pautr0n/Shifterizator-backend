@@ -200,7 +200,9 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
                 .filter(a -> a.getEmployee().getPosition().getId().equals(employeePositionId))
                 .count();
         
-        if (assignedCountForPosition >= requiredCount) {
+        // Check if adding this employee would exceed or reach capacity
+        // We check if current count + 1 would exceed or equal requiredCount
+        if (assignedCountForPosition + 1 >= requiredCount) {
             throw new ShiftValidationException(
                     String.format("Position capacity reached: %d employees already assigned (required: %d)",
                             assignedCountForPosition, requiredCount));
