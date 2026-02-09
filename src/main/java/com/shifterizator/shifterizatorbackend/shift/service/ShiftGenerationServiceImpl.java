@@ -98,6 +98,7 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
                 .startTime(special.getOpenTime())
                 .endTime(special.getCloseTime())
                 .requiredEmployees(template.getRequiredEmployees())
+                .idealEmployees(template.getIdealEmployees())
                 .isComplete(false)
                 .build();
         created.add(shiftInstanceRepository.save(instance));
@@ -112,6 +113,7 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
                     .startTime(template.getStartTime())
                     .endTime(template.getEndTime())
                     .requiredEmployees(template.getRequiredEmployees())
+                    .idealEmployees(template.getIdealEmployees())
                     .isComplete(false)
                     .build();
             created.add(shiftInstanceRepository.save(instance));

@@ -36,6 +36,7 @@ class ShiftInstanceRequestDtoTest {
                 anyStartTime(),
                 anyEndTime(),
                 3,
+                null,
                 "Notes"
         );
 
@@ -53,6 +54,7 @@ class ShiftInstanceRequestDtoTest {
                 anyStartTime(),
                 anyEndTime(),
                 3,
+                null,
                 null
         );
 
@@ -71,6 +73,7 @@ class ShiftInstanceRequestDtoTest {
                 anyStartTime(),
                 anyEndTime(),
                 3,
+                null,
                 null
         );
 
@@ -89,6 +92,7 @@ class ShiftInstanceRequestDtoTest {
                 anyStartTime(),
                 anyEndTime(),
                 0,
+                null,
                 null
         );
 

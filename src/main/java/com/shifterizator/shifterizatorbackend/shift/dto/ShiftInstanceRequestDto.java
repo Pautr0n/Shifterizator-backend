@@ -27,6 +27,9 @@ public record ShiftInstanceRequestDto(
         @Positive(message = "Required employees must be positive")
         Integer requiredEmployees,
 
+        /** Target headcount when enough staff; must be >= requiredEmployees if set. */
+        Integer idealEmployees,
+
         @Size(max = 200, message = "Notes must not exceed 200 characters")
         String notes
 ) {

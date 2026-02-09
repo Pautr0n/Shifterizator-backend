@@ -60,6 +60,7 @@ class ShiftInstanceMapperTest {
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 3,
+                null,
                 "Test notes"
         );
 

@@ -21,6 +21,7 @@ public class ShiftInstanceMapper {
                 instance.getStartTime(),
                 instance.getEndTime(),
                 instance.getRequiredEmployees(),
+                instance.getIdealEmployees(),
                 assignedEmployees,
                 instance.getIsComplete(),
                 instance.getNotes(),
@@ -39,6 +40,7 @@ public class ShiftInstanceMapper {
                 .startTime(dto.startTime())
                 .endTime(dto.endTime())
                 .requiredEmployees(dto.requiredEmployees() != null ? dto.requiredEmployees() : 1)
+                .idealEmployees(dto.idealEmployees())
                 .notes(dto.notes())
                 .isComplete(false)
                 .build();

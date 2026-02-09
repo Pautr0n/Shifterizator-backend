@@ -13,6 +13,7 @@ public record ShiftInstanceResponseDto(
         LocalTime startTime,
         LocalTime endTime,
         Integer requiredEmployees,
+        Integer idealEmployees,
         Integer assignedEmployees,
         Boolean isComplete,
         String notes,

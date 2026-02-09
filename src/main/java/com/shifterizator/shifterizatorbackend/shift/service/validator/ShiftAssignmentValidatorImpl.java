@@ -98,16 +98,18 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
     public void validatePositionCapacity(Employee employee, ShiftInstance shiftInstance) {
         Long employeePositionId = employee.getPosition().getId();
 
-        // Find required count for this position
-        Integer requiredCount = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
+        // Find required count and cap (ideal if set, else required) for this position
+        var positionReq = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
                 .filter(stp -> stp.getPosition().getId().equals(employeePositionId))
-                .map(stp -> stp.getRequiredCount())
                 .findFirst()
-                .orElse(0);
+                .orElse(null);
 
-        if (requiredCount == 0) {
+        if (positionReq == null || positionReq.getRequiredCount() == null || positionReq.getRequiredCount() == 0) {
             throw new ShiftValidationException("Position not required for this shift");
         }
+
+        int requiredCount = positionReq.getRequiredCount();
+        int cap = positionReq.getIdealCount() != null ? positionReq.getIdealCount() : requiredCount;
 
         // Count how many employees of this position are already assigned
         List<ShiftAssignment> assignments = shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(
@@ -116,12 +118,11 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
                 .filter(a -> a.getEmployee().getPosition().getId().equals(employeePositionId))
                 .count();
 
-        // Check if adding this employee would exceed or reach capacity
-        // We check if current count + 1 would exceed or equal requiredCount
-        if (assignedCountForPosition + 1 >= requiredCount) {
+        // Throw only when exceeding cap (allow assignments up to cap)
+        if (assignedCountForPosition + 1 > cap) {
             throw new ShiftValidationException(
-                    String.format("Position capacity reached: %d employees already assigned (required: %d)",
-                            assignedCountForPosition, requiredCount));
+                    String.format("Position capacity reached: %d employees already assigned (max: %d)",
+                            assignedCountForPosition, cap));
         }
     }
 

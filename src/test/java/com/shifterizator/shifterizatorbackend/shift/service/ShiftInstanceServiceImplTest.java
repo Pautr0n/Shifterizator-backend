@@ -59,6 +59,7 @@ class ShiftInstanceServiceImplTest {
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 3,
+                null,
                 "Notes"
         );
 
@@ -106,6 +107,35 @@ class ShiftInstanceServiceImplTest {
         assertThat(result.getId()).isEqualTo(99L);
         verify(shiftInstanceRepository).save(any(ShiftInstance.class));
         verify(shiftInstanceDomainService).validateTimes(dto.startTime(), dto.endTime());
+        verify(shiftInstanceDomainService).validateIdealEmployees(dto.requiredEmployees(), dto.idealEmployees());
+    }
+
+    @Test
+    void create_shouldThrowWhenIdealEmployeesLessThanRequired() {
+        ShiftInstanceRequestDto dto = new ShiftInstanceRequestDto(
+                1L,
+                1L,
+                futureDate(),
+                LocalTime.of(9, 0),
+                LocalTime.of(17, 0),
+                5,
+                3,
+                null
+        );
+
+        Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
+        company.setId(1L);
+        Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
+        ShiftTemplate template = ShiftTemplate.builder().id(1L).location(location).build();
+
+        when(shiftInstanceDomainService.resolveTemplate(1L)).thenReturn(template);
+        when(shiftInstanceDomainService.resolveLocation(1L)).thenReturn(location);
+        doThrow(new ShiftValidationException("Ideal employees must be greater than or equal to required employees"))
+                .when(shiftInstanceDomainService).validateIdealEmployees(5, 3);
+
+        assertThatThrownBy(() -> service.create(dto))
+                .isInstanceOf(ShiftValidationException.class)
+                .hasMessageContaining("Ideal employees must be greater than or equal to required employees");
     }
 
     @Test
@@ -117,6 +147,7 @@ class ShiftInstanceServiceImplTest {
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 3,
+                null,
                 null
         );
 
@@ -137,6 +168,7 @@ class ShiftInstanceServiceImplTest {
                 LocalTime.of(17, 0),
                 LocalTime.of(9, 0),
                 3,
+                null,
                 null
         );
 
@@ -164,6 +196,7 @@ class ShiftInstanceServiceImplTest {
                 LocalTime.of(10, 0),
                 LocalTime.of(18, 0),
                 5,
+                null,
                 "Updated notes"
         );
 
@@ -203,6 +236,7 @@ class ShiftInstanceServiceImplTest {
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 3,
+                null,
                 null
         );
 

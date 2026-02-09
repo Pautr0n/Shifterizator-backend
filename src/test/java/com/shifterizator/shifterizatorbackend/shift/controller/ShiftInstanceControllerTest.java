@@ -119,6 +119,7 @@ class ShiftInstanceControllerTest {
                 START_TIME,
                 END_TIME,
                 3,
+                null,
                 2,
                 false,
                 null,

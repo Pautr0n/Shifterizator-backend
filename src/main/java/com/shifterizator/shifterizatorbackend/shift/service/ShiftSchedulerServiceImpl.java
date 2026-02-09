@@ -112,9 +112,13 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
                 .toList();
     }
 
-    private boolean shiftNeedsMore(ShiftInstance instance) {
+    private int getIdealTarget(ShiftInstance instance) {
+        return instance.getIdealEmployees() != null ? instance.getIdealEmployees() : instance.getRequiredEmployees();
+    }
+
+    private boolean shiftNeedsMore(ShiftInstance instance, int targetCount) {
         int current = shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(instance.getId()).size();
-        return current < instance.getRequiredEmployees();
+        return current < targetCount;
     }
 
     /**
@@ -136,16 +140,16 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
     private void fillMinimumsForAllShifts(List<ShiftInstance> instances, List<Employee> candidates,
                                           LocalDate date, Long locationId) {
         for (ShiftInstance instance : instances) {
-            fillShiftUpToMinimum(instance, candidates, date, locationId, instances);
+            fillShiftUpTo(instance, instance.getRequiredEmployees(), candidates, date, locationId, instances);
         }
     }
 
-    private void fillShiftUpToMinimum(ShiftInstance instance, List<Employee> candidates,
-                                      LocalDate date, Long locationId, List<ShiftInstance> allInstances) {
+    private void fillShiftUpTo(ShiftInstance instance, int targetCount, List<Employee> candidates,
+                               LocalDate date, Long locationId, List<ShiftInstance> allInstances) {
         Set<Long> assigned = getAssignedEmployeeIdsForDay(allInstances);
         List<Employee> available = unassignedCandidates(candidates, assigned);
 
-        while (shiftNeedsMore(instance) && !available.isEmpty()) {
+        while (shiftNeedsMore(instance, targetCount) && !available.isEmpty()) {
             boolean assignedSomeone = false;
             for (Employee employee : available) {
                 if (tryAssign(instance.getId(), employee.getId())) {
@@ -162,7 +166,7 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
     }
 
     /**
-     * Priority 2: Prefer filling afternoon shifts (later start time) once minimums are met.
+     * Fill toward ideal per shift (idealEmployees or required if null), afternoon shifts first.
      */
     private void fillAfternoonShiftsFirst(List<ShiftInstance> instances, List<Employee> candidates,
                                          LocalDate date, Long locationId) {
@@ -171,10 +175,11 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
                 .toList();
 
         for (ShiftInstance instance : afternoonFirst) {
-            if (!shiftNeedsMore(instance)) {
+            int target = getIdealTarget(instance);
+            if (!shiftNeedsMore(instance, target)) {
                 continue;
             }
-            fillShiftUpToMinimum(instance, candidates, date, locationId, instances);
+            fillShiftUpTo(instance, target, candidates, date, locationId, instances);
         }
     }
 
@@ -228,7 +233,7 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         List<Employee> available = unassignedCandidates(candidates, assigned);
 
         for (ShiftInstance instance : instances) {
-            if (!shiftNeedsMore(instance)) {
+            if (!shiftNeedsMore(instance, getIdealTarget(instance))) {
                 continue;
             }
             for (Employee employee : available) {

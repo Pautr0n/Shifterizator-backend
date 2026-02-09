@@ -34,6 +34,7 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
         ShiftTemplate template = shiftInstanceDomainService.resolveTemplate(dto.shiftTemplateId());
         Location location = shiftInstanceDomainService.resolveLocation(dto.locationId());
         shiftInstanceDomainService.validateTimes(dto.startTime(), dto.endTime());
+        shiftInstanceDomainService.validateIdealEmployees(dto.requiredEmployees(), dto.idealEmployees());
 
         ShiftInstance instance = shiftInstanceMapper.toEntity(dto, template, location);
         return shiftInstanceRepository.save(instance);
@@ -56,6 +57,7 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
         }
 
         shiftInstanceDomainService.validateTimes(dto.startTime(), dto.endTime());
+        shiftInstanceDomainService.validateIdealEmployees(dto.requiredEmployees(), dto.idealEmployees());
 
         existing.setShiftTemplate(template);
         existing.setLocation(location);
@@ -63,6 +65,7 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
         existing.setStartTime(dto.startTime());
         existing.setEndTime(dto.endTime());
         existing.setRequiredEmployees(dto.requiredEmployees());
+        existing.setIdealEmployees(dto.idealEmployees());
         existing.setNotes(dto.notes());
 
         return existing;
