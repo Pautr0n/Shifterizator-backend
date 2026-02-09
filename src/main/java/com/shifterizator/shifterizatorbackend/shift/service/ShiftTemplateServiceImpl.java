@@ -1,22 +1,12 @@
 package com.shifterizator.shifterizatorbackend.shift.service;
 
-import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
-import com.shifterizator.shifterizatorbackend.company.repository.LocationRepository;
-import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
-import com.shifterizator.shifterizatorbackend.employee.model.Position;
-import com.shifterizator.shifterizatorbackend.employee.repository.PositionRepository;
-import com.shifterizator.shifterizatorbackend.language.exception.LanguageNotFoundException;
-import com.shifterizator.shifterizatorbackend.language.model.Language;
-import com.shifterizator.shifterizatorbackend.language.repository.LanguageRepository;
-import com.shifterizator.shifterizatorbackend.shift.dto.PositionRequirementDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftTemplateNotFoundException;
-import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftTemplateMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
-import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftTemplateDomainService;
 import com.shifterizator.shifterizatorbackend.shift.spec.ShiftTemplateSpecs;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,10 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,42 +24,18 @@ import java.util.stream.Collectors;
 public class ShiftTemplateServiceImpl implements ShiftTemplateService {
 
     private final ShiftTemplateRepository shiftTemplateRepository;
-    private final LocationRepository locationRepository;
-    private final PositionRepository positionRepository;
-    private final LanguageRepository languageRepository;
     private final ShiftTemplateMapper shiftTemplateMapper;
+    private final ShiftTemplateDomainService shiftTemplateDomainService;
 
     @Override
     public ShiftTemplate create(ShiftTemplateRequestDto dto) {
-        Location location = locationRepository.findById(dto.locationId())
-                .orElseThrow(() -> new LocationNotFoundException("Location not found"));
-
-        validateTimes(dto.startTime(), dto.endTime());
-
-        Set<Language> languages = new HashSet<>();
-        if (dto.requiredLanguageIds() != null && !dto.requiredLanguageIds().isEmpty()) {
-            languages = dto.requiredLanguageIds().stream()
-                    .map(id -> languageRepository.findById(id)
-                            .orElseThrow(() -> new LanguageNotFoundException("Language not found")))
-                    .collect(Collectors.toSet());
-        }
-
+        Location location = shiftTemplateDomainService.resolveLocation(dto.locationId());
+        shiftTemplateDomainService.validateTimes(dto.startTime(), dto.endTime());
+        
+        var languages = shiftTemplateDomainService.resolveLanguages(dto.requiredLanguageIds());
         ShiftTemplate template = shiftTemplateMapper.toEntity(dto, location, languages);
-
-        // Create position requirements
-        Set<ShiftTemplatePosition> positions = new HashSet<>();
-        for (PositionRequirementDto req : dto.requiredPositions()) {
-            Position position = positionRepository.findById(req.positionId())
-                    .orElseThrow(() -> new PositionNotFoundException("Position not found: " + req.positionId()));
-            
-            ShiftTemplatePosition templatePosition = ShiftTemplatePosition.builder()
-                    .shiftTemplate(template)
-                    .position(position)
-                    .requiredCount(req.requiredCount())
-                    .build();
-            positions.add(templatePosition);
-        }
-        template.setRequiredPositions(positions);
+        
+        shiftTemplateDomainService.buildPositionRequirements(template, dto.requiredPositions());
 
         return shiftTemplateRepository.save(template);
     }
@@ -85,19 +48,11 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
 
         Location location = existing.getLocation();
         if (!location.getId().equals(dto.locationId())) {
-            location = locationRepository.findById(dto.locationId())
-                    .orElseThrow(() -> new LocationNotFoundException("Location not found"));
+            location = shiftTemplateDomainService.resolveLocation(dto.locationId());
         }
 
-        validateTimes(dto.startTime(), dto.endTime());
-
-        Set<Language> languages = new HashSet<>();
-        if (dto.requiredLanguageIds() != null && !dto.requiredLanguageIds().isEmpty()) {
-            languages = dto.requiredLanguageIds().stream()
-                    .map(langId -> languageRepository.findById(langId)
-                            .orElseThrow(() -> new LanguageNotFoundException("Language not found")))
-                    .collect(Collectors.toSet());
-        }
+        shiftTemplateDomainService.validateTimes(dto.startTime(), dto.endTime());
+        var languages = shiftTemplateDomainService.resolveLanguages(dto.requiredLanguageIds());
 
         existing.setLocation(location);
         existing.setStartTime(dto.startTime());
@@ -106,19 +61,7 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         existing.setRequiredLanguages(languages);
         existing.setIsActive(dto.isActive() != null ? dto.isActive() : true);
 
-        // Update position requirements - clear existing and add new ones
-        existing.getRequiredPositions().clear();
-        for (PositionRequirementDto req : dto.requiredPositions()) {
-            Position position = positionRepository.findById(req.positionId())
-                    .orElseThrow(() -> new PositionNotFoundException("Position not found: " + req.positionId()));
-            
-            ShiftTemplatePosition templatePosition = ShiftTemplatePosition.builder()
-                    .shiftTemplate(existing)
-                    .position(position)
-                    .requiredCount(req.requiredCount())
-                    .build();
-            existing.getRequiredPositions().add(templatePosition);
-        }
+        shiftTemplateDomainService.buildPositionRequirements(existing, dto.requiredPositions());
 
         return existing;
     }
@@ -160,11 +103,5 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
     @Transactional(readOnly = true)
     public List<ShiftTemplate> findByLocation(Long locationId) {
         return shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(locationId);
-    }
-
-    private void validateTimes(java.time.LocalTime startTime, java.time.LocalTime endTime) {
-        if (!endTime.isAfter(startTime)) {
-            throw new ShiftValidationException("End time must be after start time");
-        }
     }
 }

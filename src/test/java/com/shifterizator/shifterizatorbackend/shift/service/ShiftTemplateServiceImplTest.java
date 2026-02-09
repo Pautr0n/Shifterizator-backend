@@ -3,11 +3,8 @@ package com.shifterizator.shifterizatorbackend.shift.service;
 import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
-import com.shifterizator.shifterizatorbackend.company.repository.LocationRepository;
 import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
-import com.shifterizator.shifterizatorbackend.employee.repository.PositionRepository;
-import com.shifterizator.shifterizatorbackend.language.repository.LanguageRepository;
 import com.shifterizator.shifterizatorbackend.shift.dto.PositionRequirementDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftTemplateNotFoundException;
@@ -15,6 +12,7 @@ import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationExc
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftTemplateMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftTemplateDomainService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,16 +39,10 @@ class ShiftTemplateServiceImplTest {
     private ShiftTemplateRepository shiftTemplateRepository;
 
     @Mock
-    private LocationRepository locationRepository;
-
-    @Mock
-    private PositionRepository positionRepository;
-
-    @Mock
-    private LanguageRepository languageRepository;
-
-    @Mock
     private ShiftTemplateMapper shiftTemplateMapper;
+
+    @Mock
+    private ShiftTemplateDomainService shiftTemplateDomainService;
 
     @InjectMocks
     private ShiftTemplateServiceImpl service;
@@ -98,16 +90,15 @@ class ShiftTemplateServiceImplTest {
                 .isActive(true)
                 .build();
 
-        when(locationRepository.findById(1L)).thenReturn(Optional.of(location));
-        when(positionRepository.findById(1L)).thenReturn(Optional.of(position1));
-        when(positionRepository.findById(2L)).thenReturn(Optional.of(position2));
+        when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
+        when(shiftTemplateDomainService.resolveLanguages(Set.of())).thenReturn(Set.of());
         when(shiftTemplateMapper.toEntity(dto, location, Set.of())).thenReturn(template);
         when(shiftTemplateRepository.save(any(ShiftTemplate.class))).thenReturn(saved);
 
         ShiftTemplate result = service.create(dto);
 
         assertThat(result.getId()).isEqualTo(99L);
-        verify(positionRepository, times(2)).findById(any());
+        verify(shiftTemplateDomainService).buildPositionRequirements(template, dto.requiredPositions());
         verify(shiftTemplateRepository).save(any(ShiftTemplate.class));
     }
 
@@ -123,7 +114,8 @@ class ShiftTemplateServiceImplTest {
                 true
         );
 
-        when(locationRepository.findById(999L)).thenReturn(Optional.empty());
+        when(shiftTemplateDomainService.resolveLocation(999L))
+                .thenThrow(new LocationNotFoundException("Location not found"));
 
         assertThatThrownBy(() -> service.create(dto))
                 .isInstanceOf(LocationNotFoundException.class)
@@ -146,8 +138,11 @@ class ShiftTemplateServiceImplTest {
         company.setId(1L);
         Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
 
-        when(locationRepository.findById(1L)).thenReturn(Optional.of(location));
-        when(positionRepository.findById(999L)).thenReturn(Optional.empty());
+        when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
+        when(shiftTemplateDomainService.resolveLanguages(Set.of())).thenReturn(Set.of());
+        when(shiftTemplateMapper.toEntity(any(), any(), any())).thenReturn(ShiftTemplate.builder().build());
+        doThrow(new PositionNotFoundException("Position not found: 999"))
+                .when(shiftTemplateDomainService).buildPositionRequirements(any(), any());
 
         assertThatThrownBy(() -> service.create(dto))
                 .isInstanceOf(PositionNotFoundException.class)
@@ -170,7 +165,9 @@ class ShiftTemplateServiceImplTest {
         company.setId(1L);
         Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
 
-        when(locationRepository.findById(1L)).thenReturn(Optional.of(location));
+        when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
+        doThrow(new ShiftValidationException("End time must be after start time"))
+                .when(shiftTemplateDomainService).validateTimes(any(), any());
 
         assertThatThrownBy(() -> service.create(dto))
                 .isInstanceOf(ShiftValidationException.class)
@@ -212,8 +209,24 @@ class ShiftTemplateServiceImplTest {
                 .build();
 
         when(shiftTemplateRepository.findById(99L)).thenReturn(Optional.of(existing));
-        when(positionRepository.findById(1L)).thenReturn(Optional.of(position1));
-        when(positionRepository.findById(2L)).thenReturn(Optional.of(position2));
+        when(shiftTemplateDomainService.resolveLanguages(Set.of())).thenReturn(Set.of());
+        doAnswer(invocation -> {
+            ShiftTemplate template = invocation.getArgument(0);
+            List<PositionRequirementDto> requirements = invocation.getArgument(1);
+            // Simulate building position requirements
+            template.getRequiredPositions().clear();
+            for (PositionRequirementDto req : requirements) {
+                Position pos = req.positionId() == 1L ? position1 : position2;
+                com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition stp = 
+                    com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition.builder()
+                        .shiftTemplate(template)
+                        .position(pos)
+                        .requiredCount(req.requiredCount())
+                        .build();
+                template.getRequiredPositions().add(stp);
+            }
+            return null;
+        }).when(shiftTemplateDomainService).buildPositionRequirements(existing, dto.requiredPositions());
 
         ShiftTemplate result = service.update(99L, dto);
 
