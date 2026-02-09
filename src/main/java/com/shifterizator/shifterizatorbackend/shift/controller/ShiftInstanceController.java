@@ -1,10 +1,12 @@
 package com.shifterizator.shifterizatorbackend.shift.controller;
 
+import com.shifterizator.shifterizatorbackend.shift.dto.GenerateMonthRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftInstanceMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.ShiftGenerationService;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftInstanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.YearMonth;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -26,6 +29,17 @@ public class ShiftInstanceController {
     private final ShiftInstanceService shiftInstanceService;
     private final ShiftInstanceMapper shiftInstanceMapper;
     private final ShiftInstanceRepository shiftInstanceRepository;
+    private final ShiftGenerationService shiftGenerationService;
+
+    @PostMapping("/generate-month")
+    public ResponseEntity<List<ShiftInstanceResponseDto>> generateMonth(@Valid @RequestBody GenerateMonthRequestDto dto) {
+        YearMonth yearMonth = YearMonth.of(dto.year(), dto.month());
+        List<ShiftInstance> instances = shiftGenerationService.generateMonth(dto.locationId(), yearMonth);
+        List<ShiftInstanceResponseDto> body = instances.stream()
+                .map(i -> shiftInstanceMapper.toDto(i, shiftInstanceRepository.countActiveAssignments(i.getId())))
+                .toList();
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
 
     @PostMapping
     public ResponseEntity<ShiftInstanceResponseDto> create(@Valid @RequestBody ShiftInstanceRequestDto dto) {

@@ -7,6 +7,7 @@ import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceResponseDto;
+import com.shifterizator.shifterizatorbackend.shift.service.ShiftGenerationService;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFoundException;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftInstanceMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
@@ -28,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -53,6 +55,9 @@ class ShiftInstanceControllerTest {
 
     @MockitoBean
     private ShiftInstanceRepository shiftInstanceRepository;
+
+    @MockitoBean
+    private ShiftGenerationService shiftGenerationService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -162,5 +167,23 @@ class ShiftInstanceControllerTest {
                 .andExpect(jsonPath("$[0].id").value(99));
 
         verify(shiftInstanceService).findByLocationAndDate(10L, DATE);
+    }
+
+    @Test
+    void generateMonth_shouldReturn201AndListOfInstances() throws Exception {
+        when(shiftGenerationService.generateMonth(10L, YearMonth.of(2025, 2))).thenReturn(List.of(instance));
+        when(shiftInstanceRepository.countActiveAssignments(99L)).thenReturn(0);
+        when(shiftInstanceMapper.toDto(instance, 0)).thenReturn(responseDto);
+
+        mockMvc.perform(post("/api/shift-instances/generate-month")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"locationId\":10,\"year\":2025,\"month\":2}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(99))
+                .andExpect(jsonPath("$[0].locationId").value(10));
+
+        verify(shiftGenerationService).generateMonth(10L, YearMonth.of(2025, 2));
     }
 }
