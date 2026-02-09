@@ -4,6 +4,7 @@ import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoun
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
+import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentAssignResult;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftAssignmentNotFoundException;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFoundException;
@@ -14,6 +15,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftAssignmentRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.advisor.ShiftAssignmentPreferenceAdvisor;
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceCompletenessService;
 import com.shifterizator.shifterizatorbackend.shift.service.validator.ShiftAssignmentValidator;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
@@ -50,6 +52,9 @@ class ShiftAssignmentServiceImplTest {
 
     @Mock
     private ShiftInstanceCompletenessService shiftInstanceCompletenessService;
+
+    @Mock
+    private ShiftAssignmentPreferenceAdvisor shiftAssignmentPreferenceAdvisor;
 
     @InjectMocks
     private ShiftAssignmentServiceImpl service;
@@ -124,10 +129,12 @@ class ShiftAssignmentServiceImplTest {
         doNothing().when(shiftAssignmentValidator).validateNoOverlappingShifts(any(), any());
         doNothing().when(shiftAssignmentValidator).validatePositionCapacity(any(), any());
         doNothing().when(shiftInstanceCompletenessService).updateCompleteness(any());
+        when(shiftAssignmentPreferenceAdvisor.getWarnings(any(), any())).thenReturn(List.of());
 
-        ShiftAssignment result = service.assign(dto);
+        ShiftAssignmentAssignResult result = service.assign(dto);
 
-        assertThat(result.getId()).isEqualTo(100L);
+        assertThat(result.assignment().getId()).isEqualTo(100L);
+        assertThat(result.warnings()).isEmpty();
         verify(shiftAssignmentRepository).save(any(ShiftAssignment.class));
         verify(shiftAssignmentValidator).validateNotAlreadyAssigned(99L, 1L);
         verify(shiftAssignmentValidator).validateEmployeeAvailability(1L, futureDate());
@@ -136,6 +143,82 @@ class ShiftAssignmentServiceImplTest {
         verify(shiftAssignmentValidator).validateNoOverlappingShifts(1L, shiftInstance);
         verify(shiftAssignmentValidator).validatePositionCapacity(employee, shiftInstance);
         verify(shiftInstanceCompletenessService).updateCompleteness(shiftInstance);
+    }
+
+    @Test
+    void assign_shouldReturnWarningWhenAssignedOnPreferredDayOff() {
+        ShiftAssignmentRequestDto dto = new ShiftAssignmentRequestDto(99L, 1L);
+        ShiftInstance shiftInstance = createShiftInstance();
+        Company company = shiftInstance.getLocation().getCompany();
+        Position position = Position.builder().id(1L).name("Sales Assistant").company(company).build();
+        Employee employee = Employee.builder()
+                .id(1L)
+                .name("John")
+                .surname("Doe")
+                .position(position)
+                .preferredDayOff(futureDate().getDayOfWeek())
+                .build();
+
+        ShiftAssignment assignment = ShiftAssignment.builder()
+                .id(100L)
+                .shiftInstance(shiftInstance)
+                .employee(employee)
+                .isConfirmed(false)
+                .build();
+
+        String preferredDayOffWarning = "Assignment is on employee's preferred day off (" + futureDate().getDayOfWeek() + ").";
+        when(shiftInstanceRepository.findById(99L)).thenReturn(Optional.of(shiftInstance));
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+        when(shiftAssignmentRepository.save(any(ShiftAssignment.class))).thenReturn(assignment);
+        doNothing().when(shiftAssignmentValidator).validateNotAlreadyAssigned(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateEmployeeAvailability(any(), any());
+        doNothing().when(shiftAssignmentValidator).validatePositionMatch(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateLanguageRequirements(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateNoOverlappingShifts(any(), any());
+        doNothing().when(shiftAssignmentValidator).validatePositionCapacity(any(), any());
+        doNothing().when(shiftInstanceCompletenessService).updateCompleteness(any());
+        when(shiftAssignmentPreferenceAdvisor.getWarnings(employee, shiftInstance))
+                .thenReturn(List.of(preferredDayOffWarning));
+
+        ShiftAssignmentAssignResult result = service.assign(dto);
+
+        assertThat(result.assignment().getId()).isEqualTo(100L);
+        assertThat(result.warnings()).containsExactly(preferredDayOffWarning);
+    }
+
+    @Test
+    void assign_shouldReturnWarningWhenShiftTemplateNotAmongPreferred() {
+        ShiftAssignmentRequestDto dto = new ShiftAssignmentRequestDto(99L, 1L);
+        ShiftInstance shiftInstance = createShiftInstance();
+        Company company = shiftInstance.getLocation().getCompany();
+        Position position = Position.builder().id(1L).name("Sales Assistant").company(company).build();
+        Employee employee = Employee.builder().id(1L).name("John").surname("Doe").position(position).build();
+
+        ShiftAssignment assignment = ShiftAssignment.builder()
+                .id(100L)
+                .shiftInstance(shiftInstance)
+                .employee(employee)
+                .isConfirmed(false)
+                .build();
+
+        String notPreferredWarning = "Shift template is not among employee's preferred shifts.";
+        when(shiftInstanceRepository.findById(99L)).thenReturn(Optional.of(shiftInstance));
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+        when(shiftAssignmentRepository.save(any(ShiftAssignment.class))).thenReturn(assignment);
+        doNothing().when(shiftAssignmentValidator).validateNotAlreadyAssigned(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateEmployeeAvailability(any(), any());
+        doNothing().when(shiftAssignmentValidator).validatePositionMatch(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateLanguageRequirements(any(), any());
+        doNothing().when(shiftAssignmentValidator).validateNoOverlappingShifts(any(), any());
+        doNothing().when(shiftAssignmentValidator).validatePositionCapacity(any(), any());
+        doNothing().when(shiftInstanceCompletenessService).updateCompleteness(any());
+        when(shiftAssignmentPreferenceAdvisor.getWarnings(employee, shiftInstance))
+                .thenReturn(List.of(notPreferredWarning));
+
+        ShiftAssignmentAssignResult result = service.assign(dto);
+
+        assertThat(result.assignment().getId()).isEqualTo(100L);
+        assertThat(result.warnings()).containsExactly(notPreferredWarning);
     }
 
     @Test

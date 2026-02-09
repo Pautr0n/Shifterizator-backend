@@ -23,8 +23,9 @@ public class ShiftAssignmentController {
 
     @PostMapping
     public ResponseEntity<ShiftAssignmentResponseDto> assign(@Valid @RequestBody ShiftAssignmentRequestDto dto) {
-        ShiftAssignment assignment = shiftAssignmentService.assign(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(shiftAssignmentMapper.toDto(assignment));
+        var result = shiftAssignmentService.assign(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(shiftAssignmentMapper.toDto(result.assignment(), result.warnings()));
     }
 
     @DeleteMapping("/shift-instance/{shiftInstanceId}/employee/{employeeId}")

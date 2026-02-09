@@ -1,6 +1,7 @@
 package com.shifterizator.shifterizatorbackend.shift.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ShiftAssignmentResponseDto(
         Long id,
@@ -10,6 +11,8 @@ public record ShiftAssignmentResponseDto(
         Boolean isConfirmed,
         LocalDateTime assignedAt,
         String assignedBy,
-        LocalDateTime confirmedAt
+        LocalDateTime confirmedAt,
+        /** Preference-related warnings (e.g. assigned on preferred day off). Never null. */
+        List<String> warnings
 ) {
 }

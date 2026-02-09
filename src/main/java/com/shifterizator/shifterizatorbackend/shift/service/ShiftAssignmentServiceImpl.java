@@ -3,6 +3,7 @@ package com.shifterizator.shifterizatorbackend.shift.service;
 import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
+import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentAssignResult;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftAssignmentNotFoundException;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFoundException;
@@ -10,6 +11,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftAssignment;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftAssignmentRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.advisor.ShiftAssignmentPreferenceAdvisor;
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceCompletenessService;
 import com.shifterizator.shifterizatorbackend.shift.service.validator.ShiftAssignmentValidator;
 import lombok.RequiredArgsConstructor;
@@ -29,9 +31,10 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
     private final EmployeeRepository employeeRepository;
     private final ShiftAssignmentValidator shiftAssignmentValidator;
     private final ShiftInstanceCompletenessService shiftInstanceCompletenessService;
+    private final ShiftAssignmentPreferenceAdvisor shiftAssignmentPreferenceAdvisor;
 
     @Override
-    public ShiftAssignment assign(ShiftAssignmentRequestDto dto) {
+    public ShiftAssignmentAssignResult assign(ShiftAssignmentRequestDto dto) {
         ShiftInstance shiftInstance = shiftInstanceRepository.findById(dto.shiftInstanceId())
                 .filter(i -> i.getDeletedAt() == null)
                 .orElseThrow(() -> new ShiftInstanceNotFoundException("Shift instance not found"));
@@ -58,7 +61,8 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
         // Update shift instance completeness
         shiftInstanceCompletenessService.updateCompleteness(shiftInstance);
 
-        return saved;
+        List<String> warnings = shiftAssignmentPreferenceAdvisor.getWarnings(saved.getEmployee(), saved.getShiftInstance());
+        return new ShiftAssignmentAssignResult(saved, warnings);
     }
 
     @Override

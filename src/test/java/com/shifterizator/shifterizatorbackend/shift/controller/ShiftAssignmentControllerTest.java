@@ -7,6 +7,7 @@ import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
+import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentAssignResult;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftAssignmentNotFoundException;
@@ -97,14 +98,15 @@ class ShiftAssignmentControllerTest {
                 false,
                 LocalDateTime.now(),
                 null,
-                null
+                null,
+                List.of()
         );
     }
 
     @Test
     void assign_shouldReturn201AndBody() throws Exception {
-        when(shiftAssignmentService.assign(any())).thenReturn(assignment);
-        when(shiftAssignmentMapper.toDto(assignment)).thenReturn(responseDto);
+        when(shiftAssignmentService.assign(any())).thenReturn(new ShiftAssignmentAssignResult(assignment, List.of()));
+        when(shiftAssignmentMapper.toDto(assignment, List.of())).thenReturn(responseDto);
 
         mockMvc.perform(post("/api/shift-assignments")
                         .with(csrf())
@@ -113,6 +115,26 @@ class ShiftAssignmentControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(100))
                 .andExpect(jsonPath("$.employeeId").value(1));
+
+        verify(shiftAssignmentService).assign(any());
+    }
+
+    @Test
+    void assign_shouldIncludeWarningsInResponse() throws Exception {
+        var warnings = List.of("Assignment is on employee's preferred day off (MONDAY).");
+        var responseWithWarnings = new ShiftAssignmentResponseDto(
+                100L, 99L, 1L, "John Doe", false, LocalDateTime.now(), null, null, warnings);
+        when(shiftAssignmentService.assign(any())).thenReturn(new ShiftAssignmentAssignResult(assignment, warnings));
+        when(shiftAssignmentMapper.toDto(assignment, warnings)).thenReturn(responseWithWarnings);
+
+        mockMvc.perform(post("/api/shift-assignments")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"shiftInstanceId\":99,\"employeeId\":1}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.warnings").isArray())
+                .andExpect(jsonPath("$.warnings.length()").value(1))
+                .andExpect(jsonPath("$.warnings[0]").value("Assignment is on employee's preferred day off (MONDAY)."));
 
         verify(shiftAssignmentService).assign(any());
     }
