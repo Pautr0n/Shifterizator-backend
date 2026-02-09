@@ -79,6 +79,14 @@ public class Employee {
     @Builder.Default
     private Set<EmployeeLanguage> employeeLanguages = new HashSet<>();
 
+    @OneToMany(
+            mappedBy = "employee",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private Set<EmployeeShiftPreference> shiftPreferences = new HashSet<>();
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -119,6 +127,16 @@ public class Employee {
     public void removeLanguage(EmployeeLanguage employeeLanguage) {
         employeeLanguages.remove(employeeLanguage);
         employeeLanguage.setEmployee(null);
+    }
+
+    public void addShiftPreference(EmployeeShiftPreference preference) {
+        shiftPreferences.add(preference);
+        preference.setEmployee(this);
+    }
+
+    public void removeShiftPreference(EmployeeShiftPreference preference) {
+        shiftPreferences.remove(preference);
+        preference.setEmployee(null);
     }
 }
 
