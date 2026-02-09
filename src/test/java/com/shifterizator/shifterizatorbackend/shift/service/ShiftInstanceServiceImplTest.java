@@ -1,9 +1,7 @@
 package com.shifterizator.shifterizatorbackend.shift.service;
 
-import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
-import com.shifterizator.shifterizatorbackend.company.repository.LocationRepository;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFoundException;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftTemplateNotFoundException;
@@ -12,7 +10,7 @@ import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftInstanceMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
-import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceDomainService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -40,13 +38,10 @@ class ShiftInstanceServiceImplTest {
     private ShiftInstanceRepository shiftInstanceRepository;
 
     @Mock
-    private ShiftTemplateRepository shiftTemplateRepository;
-
-    @Mock
-    private LocationRepository locationRepository;
-
-    @Mock
     private ShiftInstanceMapper shiftInstanceMapper;
+
+    @Mock
+    private ShiftInstanceDomainService shiftInstanceDomainService;
 
     @InjectMocks
     private ShiftInstanceServiceImpl service;
@@ -101,8 +96,8 @@ class ShiftInstanceServiceImplTest {
                 .isComplete(false)
                 .build();
 
-        when(shiftTemplateRepository.findById(1L)).thenReturn(Optional.of(template));
-        when(locationRepository.findById(1L)).thenReturn(Optional.of(location));
+        when(shiftInstanceDomainService.resolveTemplate(1L)).thenReturn(template);
+        when(shiftInstanceDomainService.resolveLocation(1L)).thenReturn(location);
         when(shiftInstanceMapper.toEntity(dto, template, location)).thenReturn(instance);
         when(shiftInstanceRepository.save(any(ShiftInstance.class))).thenReturn(saved);
 
@@ -110,6 +105,7 @@ class ShiftInstanceServiceImplTest {
 
         assertThat(result.getId()).isEqualTo(99L);
         verify(shiftInstanceRepository).save(any(ShiftInstance.class));
+        verify(shiftInstanceDomainService).validateTimes(dto.startTime(), dto.endTime());
     }
 
     @Test
@@ -124,7 +120,8 @@ class ShiftInstanceServiceImplTest {
                 null
         );
 
-        when(shiftTemplateRepository.findById(999L)).thenReturn(Optional.empty());
+        when(shiftInstanceDomainService.resolveTemplate(999L))
+                .thenThrow(new ShiftTemplateNotFoundException("Shift template not found"));
 
         assertThatThrownBy(() -> service.create(dto))
                 .isInstanceOf(ShiftTemplateNotFoundException.class)
@@ -148,8 +145,10 @@ class ShiftInstanceServiceImplTest {
         Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
         ShiftTemplate template = ShiftTemplate.builder().id(1L).location(location).build();
 
-        when(shiftTemplateRepository.findById(1L)).thenReturn(Optional.of(template));
-        when(locationRepository.findById(1L)).thenReturn(Optional.of(location));
+        when(shiftInstanceDomainService.resolveTemplate(1L)).thenReturn(template);
+        when(shiftInstanceDomainService.resolveLocation(1L)).thenReturn(location);
+        doThrow(new ShiftValidationException("End time must be after start time"))
+                .when(shiftInstanceDomainService).validateTimes(any(), any());
 
         assertThatThrownBy(() -> service.create(dto))
                 .isInstanceOf(ShiftValidationException.class)
