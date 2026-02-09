@@ -113,14 +113,22 @@ public class EmployeeDomainService {
     }
 
     public void assignShiftPreferences(Employee employee, EmployeeRequestDto dto) {
+        assignShiftPreferencesFromIds(employee,
+                dto.preferredShiftTemplateIds() == null ? List.of() : dto.preferredShiftTemplateIds());
+    }
+
+    /**
+     * Clears and reassigns shift preferences from an ordered list of template IDs.
+     */
+    public void assignShiftPreferencesFromIds(Employee employee, List<Long> templateIds) {
         employee.getShiftPreferences().clear();
 
-        if (dto.preferredShiftTemplateIds() == null || dto.preferredShiftTemplateIds().isEmpty()) {
+        if (templateIds == null || templateIds.isEmpty()) {
             return;
         }
 
         int order = 1;
-        for (Long templateId : dto.preferredShiftTemplateIds()) {
+        for (Long templateId : templateIds) {
             ShiftTemplate template = shiftTemplateRepository.findById(templateId)
                     .filter(t -> t.getDeletedAt() == null)
                     .orElseThrow(() -> new ShiftTemplateNotFoundException("Shift template not found: " + templateId));

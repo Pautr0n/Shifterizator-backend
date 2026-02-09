@@ -1,5 +1,6 @@
 package com.shifterizator.shifterizatorbackend.employee.mapper;
 
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
@@ -71,6 +72,13 @@ public class EmployeeMapper {
                 .sorted(Comparator.comparing(EmployeeShiftPreference::getPriorityOrder, Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(esp -> esp.getShiftTemplate().getId())
                 .collect(Collectors.toList());
+    }
+
+    public EmployeePreferencesResponseDto toPreferencesResponse(Employee employee) {
+        return new EmployeePreferencesResponseDto(
+                employee.getPreferredDayOff() != null ? employee.getPreferredDayOff().name() : null,
+                extractPreferredShiftTemplateIds(employee.getShiftPreferences())
+        );
     }
 
     private Set<String> extractCompanyNames(Set<EmployeeCompany> employeeCompanies) {

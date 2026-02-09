@@ -1,5 +1,7 @@
 package com.shifterizator.shifterizatorbackend.employee.service;
 
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesRequestDto;
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
@@ -23,5 +25,9 @@ public interface EmployeeService {
             String position,
             Pageable pageable
     );
+
+    EmployeePreferencesResponseDto getPreferences(Long id);
+
+    EmployeePreferencesResponseDto updatePreferences(Long id, EmployeePreferencesRequestDto dto);
 
 }

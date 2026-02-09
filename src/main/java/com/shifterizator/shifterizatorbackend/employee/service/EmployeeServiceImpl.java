@@ -1,4 +1,6 @@
 package com.shifterizator.shifterizatorbackend.employee.service;
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesRequestDto;
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -125,6 +128,23 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return employeeRepository.findAll(spec, pageable);
 
+    }
+
+    @Override
+    public EmployeePreferencesResponseDto getPreferences(Long id) {
+        Employee employee = employeeRepository.findActiveById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
+        return employeeMapper.toPreferencesResponse(employee);
+    }
+
+    @Override
+    public EmployeePreferencesResponseDto updatePreferences(Long id, EmployeePreferencesRequestDto dto) {
+        Employee employee = employeeRepository.findActiveById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
+        employee.setPreferredDayOff(EmployeeMapper.parsePreferredDayOff(dto.preferredDayOff()));
+        employeeDomainService.assignShiftPreferencesFromIds(employee,
+                dto.preferredShiftTemplateIds() != null ? dto.preferredShiftTemplateIds() : List.of());
+        return employeeMapper.toPreferencesResponse(employee);
     }
 }
 

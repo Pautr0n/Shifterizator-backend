@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.employee.controller;
 
 
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesRequestDto;
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper;
@@ -51,6 +53,18 @@ public class EmployeeController {
 
         return ResponseEntity.ok(employeeMapper.toResponse(employee));
 
+    }
+
+    @GetMapping("/{id}/preferences")
+    public ResponseEntity<EmployeePreferencesResponseDto> getPreferences(@PathVariable Long id) {
+        return ResponseEntity.ok(employeeService.getPreferences(id));
+    }
+
+    @PutMapping("/{id}/preferences")
+    public ResponseEntity<EmployeePreferencesResponseDto> updatePreferences(
+            @PathVariable Long id,
+            @Valid @RequestBody EmployeePreferencesRequestDto dto) {
+        return ResponseEntity.ok(employeeService.updatePreferences(id, dto));
     }
 
     @GetMapping

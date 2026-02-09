@@ -3,6 +3,8 @@ package com.shifterizator.shifterizatorbackend.employee.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shifterizator.shifterizatorbackend.auth.jwt.JwtAuthenticationFilter;
 import com.shifterizator.shifterizatorbackend.auth.jwt.JwtUtil;
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesRequestDto;
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
@@ -23,13 +25,12 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -330,6 +331,64 @@ class EmployeeControllerTest {
                 .andExpect(jsonPath("$.content[0].id").value(99));
 
         verify(employeeService).search(eq(1L), eq(10L), eq("john"), eq("Waiter"), any());
+    }
+
+    @Test
+    void getPreferences_should_return_200_with_preferences() throws Exception {
+        EmployeePreferencesResponseDto preferencesDto = new EmployeePreferencesResponseDto("WEDNESDAY", List.of(1L, 2L));
+        when(employeeService.getPreferences(99L)).thenReturn(preferencesDto);
+
+        mvc.perform(get("/api/employees/99/preferences"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.preferredDayOff").value("WEDNESDAY"))
+                .andExpect(jsonPath("$.preferredShiftTemplateIds").isArray())
+                .andExpect(jsonPath("$.preferredShiftTemplateIds[0]").value(1))
+                .andExpect(jsonPath("$.preferredShiftTemplateIds[1]").value(2));
+
+        verify(employeeService).getPreferences(99L);
+    }
+
+    @Test
+    void getPreferences_should_return_404_when_employee_not_found() throws Exception {
+        when(employeeService.getPreferences(999L)).thenThrow(new EmployeeNotFoundException("Employee not found"));
+
+        mvc.perform(get("/api/employees/999/preferences"))
+                .andExpect(status().isNotFound());
+
+        verify(employeeService).getPreferences(999L);
+    }
+
+    @Test
+    void updatePreferences_should_return_200_with_updated_preferences() throws Exception {
+        EmployeePreferencesRequestDto requestDto = new EmployeePreferencesRequestDto("FRIDAY", List.of(2L, 3L));
+        EmployeePreferencesResponseDto responseDto = new EmployeePreferencesResponseDto("FRIDAY", List.of(2L, 3L));
+        when(employeeService.updatePreferences(eq(99L), any(EmployeePreferencesRequestDto.class))).thenReturn(responseDto);
+
+        mvc.perform(put("/api/employees/99/preferences")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.preferredDayOff").value("FRIDAY"))
+                .andExpect(jsonPath("$.preferredShiftTemplateIds[0]").value(2))
+                .andExpect(jsonPath("$.preferredShiftTemplateIds[1]").value(3));
+
+        verify(employeeService).updatePreferences(eq(99L), any(EmployeePreferencesRequestDto.class));
+    }
+
+    @Test
+    void updatePreferences_should_return_404_when_employee_not_found() throws Exception {
+        EmployeePreferencesRequestDto requestDto = new EmployeePreferencesRequestDto(null, List.of());
+        when(employeeService.updatePreferences(eq(999L), any(EmployeePreferencesRequestDto.class)))
+                .thenThrow(new EmployeeNotFoundException("Employee not found"));
+
+        mvc.perform(put("/api/employees/999/preferences")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(requestDto)))
+                .andExpect(status().isNotFound());
+
+        verify(employeeService).updatePreferences(eq(999L), any(EmployeePreferencesRequestDto.class));
     }
 
 }
