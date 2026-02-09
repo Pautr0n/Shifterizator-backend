@@ -12,6 +12,7 @@ import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoun
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.ShiftAssignmentService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -40,6 +41,8 @@ class AvailabilityServiceImplTest {
     private EmployeeRepository employeeRepository;
     @Mock
     private AvailabilityMapper availabilityMapper;
+    @Mock
+    private ShiftAssignmentService shiftAssignmentService;
 
     @InjectMocks
     private AvailabilityServiceImpl availabilityService;
@@ -76,6 +79,7 @@ class AvailabilityServiceImplTest {
         assertThat(result.getId()).isEqualTo(99L);
         assertThat(result.getType()).isEqualTo(AvailabilityType.VACATION);
         verify(availabilityRepository).save(any(EmployeeAvailability.class));
+        verify(shiftAssignmentService).unassignEmployeeFromShiftsInDateRange(1L, dto.startDate(), dto.endDate());
     }
 
     @Test
@@ -141,6 +145,7 @@ class AvailabilityServiceImplTest {
         assertThat(result.getEndDate()).isEqualTo(dto.endDate());
         assertThat(result.getType()).isEqualTo(AvailabilityType.SICK_LEAVE);
         verify(availabilityRepository, never()).save(any());
+        verify(shiftAssignmentService).unassignEmployeeFromShiftsInDateRange(1L, dto.startDate(), dto.endDate());
     }
 
     @Test

@@ -361,6 +361,31 @@ class ShiftAssignmentServiceImplTest {
     }
 
     @Test
+    void unassignEmployeeFromShiftsInDateRange_shouldSoftDeleteAndUpdateCompleteness() {
+        LocalDate start = LocalDate.now().plusDays(1);
+        LocalDate end = LocalDate.now().plusDays(5);
+        ShiftInstance instance1 = createShiftInstance();
+        instance1.setDate(start);
+        ShiftInstance instance2 = createShiftInstance();
+        instance2.setId(100L);
+        instance2.setDate(end);
+        Employee employee = Employee.builder().id(1L).build();
+        ShiftAssignment a1 = ShiftAssignment.builder().id(1L).shiftInstance(instance1).employee(employee).build();
+        ShiftAssignment a2 = ShiftAssignment.builder().id(2L).shiftInstance(instance2).employee(employee).build();
+
+        when(shiftAssignmentRepository.findByEmployee_IdAndShiftInstance_DateBetweenAndDeletedAtIsNull(1L, start, end))
+                .thenReturn(List.of(a1, a2));
+        doNothing().when(shiftInstanceCompletenessService).updateCompleteness(any());
+
+        service.unassignEmployeeFromShiftsInDateRange(1L, start, end);
+
+        assertThat(a1.getDeletedAt()).isNotNull();
+        assertThat(a2.getDeletedAt()).isNotNull();
+        verify(shiftInstanceCompletenessService).updateCompleteness(instance1);
+        verify(shiftInstanceCompletenessService).updateCompleteness(instance2);
+    }
+
+    @Test
     void findById_shouldReturnAssignment() {
         ShiftInstance shiftInstance = createShiftInstance();
         Company company = shiftInstance.getLocation().getCompany();

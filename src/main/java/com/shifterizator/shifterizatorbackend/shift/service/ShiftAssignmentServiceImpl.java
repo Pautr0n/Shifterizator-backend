@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -75,6 +76,16 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
 
         ShiftInstance shiftInstance = assignment.getShiftInstance();
         shiftInstanceCompletenessService.updateCompleteness(shiftInstance);
+    }
+
+    @Override
+    public void unassignEmployeeFromShiftsInDateRange(Long employeeId, LocalDate startDate, LocalDate endDate) {
+        List<ShiftAssignment> inRange = shiftAssignmentRepository
+                .findByEmployee_IdAndShiftInstance_DateBetweenAndDeletedAtIsNull(employeeId, startDate, endDate);
+        for (ShiftAssignment assignment : inRange) {
+            assignment.setDeletedAt(LocalDateTime.now());
+            shiftInstanceCompletenessService.updateCompleteness(assignment.getShiftInstance());
+        }
     }
 
     @Override

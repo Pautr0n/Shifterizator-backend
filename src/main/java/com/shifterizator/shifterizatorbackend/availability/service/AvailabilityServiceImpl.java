@@ -12,6 +12,7 @@ import com.shifterizator.shifterizatorbackend.availability.spec.AvailabilitySpec
 import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.ShiftAssignmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,15 +23,25 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class AvailabilityServiceImpl implements AvailabilityService {
 
+    private static final Set<AvailabilityType> BLOCKING_TYPES = Set.of(
+            AvailabilityType.VACATION,
+            AvailabilityType.SICK_LEAVE,
+            AvailabilityType.UNAVAILABLE,
+            AvailabilityType.UNJUSTIFIED_ABSENCE,
+            AvailabilityType.PERSONAL_LEAVE
+    );
+
     private final EmployeeAvailabilityRepository availabilityRepository;
     private final EmployeeRepository employeeRepository;
     private final AvailabilityMapper availabilityMapper;
+    private final ShiftAssignmentService shiftAssignmentService;
 
     @Override
     public EmployeeAvailability create(AvailabilityRequestDto dto) {
@@ -41,7 +52,12 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         ensureNoOverlap(dto.employeeId(), dto.startDate(), dto.endDate(), null);
 
         EmployeeAvailability availability = availabilityMapper.toEntity(dto, employee);
-        return availabilityRepository.save(availability);
+        EmployeeAvailability saved = availabilityRepository.save(availability);
+        if (BLOCKING_TYPES.contains(saved.getType())) {
+            shiftAssignmentService.unassignEmployeeFromShiftsInDateRange(
+                    saved.getEmployee().getId(), saved.getStartDate(), saved.getEndDate());
+        }
+        return saved;
     }
 
     @Override
@@ -63,6 +79,10 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         existing.setStartDate(dto.startDate());
         existing.setEndDate(dto.endDate());
         existing.setType(dto.type());
+        if (BLOCKING_TYPES.contains(existing.getType())) {
+            shiftAssignmentService.unassignEmployeeFromShiftsInDateRange(
+                    existing.getEmployee().getId(), existing.getStartDate(), existing.getEndDate());
+        }
         return existing;
     }
 
