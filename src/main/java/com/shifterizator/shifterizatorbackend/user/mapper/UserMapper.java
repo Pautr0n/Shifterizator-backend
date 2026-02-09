@@ -11,15 +11,14 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
 
     public User toEntity(UserRequestDto dto, String hashedPassword, Company company) {
-        User user = new User(
-                dto.username(),
-                dto.email(),
-                hashedPassword,
-                Role.valueOf(dto.role()),
-                company
-        );
-        user.setPhone(dto.phone());
-        return user;
+        return User.builder()
+                .username(dto.username())
+                .email(dto.email())
+                .password(hashedPassword)
+                .role(Role.valueOf(dto.role()))
+                .company(company)
+                .phone(dto.phone())
+                .build();
     }
 
     public UserResponseDto toDto(User user) {

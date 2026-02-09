@@ -1,9 +1,10 @@
 package com.shifterizator.shifterizatorbackend.user.model;
 
-
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +16,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "users")
 public class User {
@@ -27,6 +30,7 @@ public class User {
     private String username;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isSystemUser = false;
 
     @Column(nullable = false, unique = true)
@@ -49,6 +53,7 @@ public class User {
     private Employee employee;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
 
     @CreationTimestamp
@@ -61,17 +66,8 @@ public class User {
     private String updatedBy;
     private LocalDateTime deletedAt;
 
-    public User(String username
-            , String email
-            , String password
-            , Role role
-            , Company company) {
-
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-        this.company = company;
-
+    /** Convenience constructor for creation with required fields only. */
+    public User(String username, String email, String password, Role role, Company company) {
+        this(null, username, false, email, null, password, role, company, null, true, null, null, null, null, null);
     }
 }
