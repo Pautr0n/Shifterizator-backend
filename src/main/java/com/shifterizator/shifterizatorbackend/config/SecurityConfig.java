@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/health")
                                 .permitAll()
+                                .requestMatchers("/api/availability/**").hasAnyRole("SUPERADMIN", "COMPANYADMIN", "SHIFTMANAGER")
                                 .requestMatchers("/api/companies/**").hasAnyRole("SUPERADMIN", "COMPANYADMIN")
                                 .requestMatchers("/api/test/superadmin").hasRole("SUPERADMIN")
                                 .requestMatchers("/api/test/companyadmin").hasRole("COMPANYADMIN")
