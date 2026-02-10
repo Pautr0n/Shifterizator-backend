@@ -6,7 +6,6 @@ import com.shifterizator.shifterizatorbackend.auth.dto.LoginRequestDto;
 import com.shifterizator.shifterizatorbackend.auth.dto.TokenResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -19,8 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class AuthFlowIT extends BaseIntegrationTest {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     @DisplayName("Superadmin can log in and access a protected endpoint")
