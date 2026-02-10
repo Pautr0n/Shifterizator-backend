@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.user.exception;
 
-public class UserAlreadyExistsException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.ConflictException;
+
+public class UserAlreadyExistsException extends ConflictException {
     public UserAlreadyExistsException(String message) {
         super(message);
     }

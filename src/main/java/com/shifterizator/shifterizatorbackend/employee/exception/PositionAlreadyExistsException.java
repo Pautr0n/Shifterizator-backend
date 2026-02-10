@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.employee.exception;
 
-public class PositionAlreadyExistsException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.ConflictException;
+
+public class PositionAlreadyExistsException extends ConflictException {
     public PositionAlreadyExistsException(String message) {
         super(message);
     }

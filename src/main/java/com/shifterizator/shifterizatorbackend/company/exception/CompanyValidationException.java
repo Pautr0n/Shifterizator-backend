@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.company.exception;
 
-public class CompanyValidationException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainValidationException;
+
+public class CompanyValidationException extends DomainValidationException {
     public CompanyValidationException(String message) {
         super(message);
     }

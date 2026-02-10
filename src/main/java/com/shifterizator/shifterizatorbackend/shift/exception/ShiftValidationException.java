@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.shift.exception;
 
-public class ShiftValidationException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainValidationException;
+
+public class ShiftValidationException extends DomainValidationException {
 
     public ShiftValidationException(String message) {
         super(message);

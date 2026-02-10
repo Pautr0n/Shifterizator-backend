@@ -30,14 +30,6 @@ import java.util.Set;
 @Transactional
 public class AvailabilityServiceImpl implements AvailabilityService {
 
-    private static final Set<AvailabilityType> BLOCKING_TYPES = Set.of(
-            AvailabilityType.VACATION,
-            AvailabilityType.SICK_LEAVE,
-            AvailabilityType.UNAVAILABLE,
-            AvailabilityType.UNJUSTIFIED_ABSENCE,
-            AvailabilityType.PERSONAL_LEAVE
-    );
-
     private final EmployeeAvailabilityRepository availabilityRepository;
     private final EmployeeRepository employeeRepository;
     private final AvailabilityMapper availabilityMapper;
@@ -53,7 +45,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         EmployeeAvailability availability = availabilityMapper.toEntity(dto, employee);
         EmployeeAvailability saved = availabilityRepository.save(availability);
-        if (BLOCKING_TYPES.contains(saved.getType())) {
+        if (saved.getType().isBlocking()) {
             shiftAssignmentService.unassignEmployeeFromShiftsInDateRange(
                     saved.getEmployee().getId(), saved.getStartDate(), saved.getEndDate());
         }
@@ -79,7 +71,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         existing.setStartDate(dto.startDate());
         existing.setEndDate(dto.endDate());
         existing.setType(dto.type());
-        if (BLOCKING_TYPES.contains(existing.getType())) {
+        if (existing.getType().isBlocking()) {
             shiftAssignmentService.unassignEmployeeFromShiftsInDateRange(
                     existing.getEmployee().getId(), existing.getStartDate(), existing.getEndDate());
         }

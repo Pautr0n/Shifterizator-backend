@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.openinghours.exception;
 
-public class SpecialOpeningHoursNotFoundException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainNotFoundException;
+
+public class SpecialOpeningHoursNotFoundException extends DomainNotFoundException {
 
     public SpecialOpeningHoursNotFoundException(String message) {
         super(message);

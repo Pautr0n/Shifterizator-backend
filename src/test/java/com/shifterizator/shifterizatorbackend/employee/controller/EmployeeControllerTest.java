@@ -167,7 +167,7 @@ class EmployeeControllerTest {
     }
 
     @Test
-    void createEmployee_should_return_400_when_validation_error() throws Exception {
+    void createEmployee_should_return_409_when_email_exists() throws Exception {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
                 1L, Set.of(1L), Set.of(10L), null, null, null
@@ -180,9 +180,9 @@ class EmployeeControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Email already exists for this company"))
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.error").value("CONFLICT"));
 
         verify(employeeService).create(any());
     }
@@ -267,7 +267,7 @@ class EmployeeControllerTest {
     }
 
     @Test
-    void update_should_return_400_when_validation_error() throws Exception {
+    void update_should_return_409_when_email_exists() throws Exception {
         when(employeeService.update(eq(99L), any()))
                 .thenThrow(new EmailAlreadyExistsException("Email already exists for this company"));
 
@@ -275,9 +275,9 @@ class EmployeeControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(requestDto)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Email already exists for this company"))
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.error").value("CONFLICT"));
 
         verify(employeeService).update(eq(99L), any());
     }

@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.availability.exception;
 
-public class OverlappingAvailabilityException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainValidationException;
+
+public class OverlappingAvailabilityException extends DomainValidationException {
 
     public OverlappingAvailabilityException(String message) {
         super(message);

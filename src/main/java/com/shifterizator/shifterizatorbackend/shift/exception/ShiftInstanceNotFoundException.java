@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.shift.exception;
 
-public class ShiftInstanceNotFoundException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainNotFoundException;
+
+public class ShiftInstanceNotFoundException extends DomainNotFoundException {
 
     public ShiftInstanceNotFoundException(String message) {
         super(message);

@@ -28,14 +28,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
 
-    private static final Set<AvailabilityType> BLOCKING_AVAILABILITY_TYPES = Set.of(
-            AvailabilityType.VACATION,
-            AvailabilityType.SICK_LEAVE,
-            AvailabilityType.UNAVAILABLE,
-            AvailabilityType.UNJUSTIFIED_ABSENCE,
-            AvailabilityType.PERSONAL_LEAVE
-    );
-
     private static final String MANAGER_POSITION_NAME = "manager";
 
     private final ShiftInstanceRepository shiftInstanceRepository;
@@ -93,7 +85,7 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         List<EmployeeAvailability> overlapping = employeeAvailabilityRepository.findOverlapping(
                 employeeId, date, date, null);
         return overlapping.stream()
-                .noneMatch(ea -> BLOCKING_AVAILABILITY_TYPES.contains(ea.getType()));
+                .noneMatch(ea -> ea.getType().isBlocking());
     }
 
     private Set<Long> getAssignedEmployeeIdsForDay(List<ShiftInstance> instances) {

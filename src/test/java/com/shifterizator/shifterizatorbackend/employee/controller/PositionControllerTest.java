@@ -102,7 +102,7 @@ class PositionControllerTest {
     }
 
     @Test
-    void create_should_return_400_when_position_already_exists() throws Exception {
+    void create_should_return_409_when_position_already_exists() throws Exception {
         when(positionService.create(eq("Waiter"), eq(1L)))
                 .thenThrow(new PositionAlreadyExistsException("Position already exists for this company"));
 
@@ -110,9 +110,9 @@ class PositionControllerTest {
                         .with(csrf())
                         .param("name", "Waiter")
                         .param("companyId", "1"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Position already exists for this company"))
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.error").value("CONFLICT"));
 
         verify(positionService).create("Waiter", 1L);
     }
@@ -149,16 +149,16 @@ class PositionControllerTest {
     }
 
     @Test
-    void update_should_return_400_when_name_already_exists() throws Exception {
+    void update_should_return_409_when_name_already_exists() throws Exception {
         when(positionService.update(eq(10L), eq("ExistingPosition")))
                 .thenThrow(new PositionAlreadyExistsException("Position already exists for this company"));
 
         mockMvc.perform(put("/api/positions/10")
                         .with(csrf())
                         .param("name", "ExistingPosition"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Position already exists for this company"))
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.error").value("CONFLICT"));
 
         verify(positionService).update(10L, "ExistingPosition");
     }

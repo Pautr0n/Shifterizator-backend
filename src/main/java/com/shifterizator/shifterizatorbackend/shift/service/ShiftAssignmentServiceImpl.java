@@ -45,6 +45,7 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
 
         // Validate assignment
         shiftAssignmentValidator.validateNotAlreadyAssigned(dto.shiftInstanceId(), dto.employeeId());
+        shiftAssignmentValidator.validateEmployeeCompanyAndLocation(employee, shiftInstance);
         shiftAssignmentValidator.validateEmployeeAvailability(employee.getId(), shiftInstance.getDate());
         shiftAssignmentValidator.validatePositionMatch(employee, shiftInstance);
         shiftAssignmentValidator.validateLanguageRequirements(employee, shiftInstance);

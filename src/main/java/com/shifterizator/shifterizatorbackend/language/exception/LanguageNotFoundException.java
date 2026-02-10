@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.language.exception;
 
-public class LanguageNotFoundException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainNotFoundException;
+
+public class LanguageNotFoundException extends DomainNotFoundException {
 
     public LanguageNotFoundException(String message) {
         super(message);

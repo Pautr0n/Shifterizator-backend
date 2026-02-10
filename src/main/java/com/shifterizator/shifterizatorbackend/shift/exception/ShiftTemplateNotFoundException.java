@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.shift.exception;
 
-public class ShiftTemplateNotFoundException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainNotFoundException;
+
+public class ShiftTemplateNotFoundException extends DomainNotFoundException {
 
     public ShiftTemplateNotFoundException(String message) {
         super(message);

@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.user.exception;
 
-public class UserNotFoundException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainNotFoundException;
+
+public class UserNotFoundException extends DomainNotFoundException {
     public UserNotFoundException(String message) {
         super(message);
     }

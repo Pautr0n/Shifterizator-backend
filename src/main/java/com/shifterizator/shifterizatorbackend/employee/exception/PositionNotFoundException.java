@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.employee.exception;
 
-public class PositionNotFoundException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainNotFoundException;
+
+public class PositionNotFoundException extends DomainNotFoundException {
     public PositionNotFoundException(String message) {
         super(message);
     }

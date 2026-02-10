@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.openinghours.exception;
 
-public class SpecialOpeningHoursValidationException extends RuntimeException {
+import com.shifterizator.shifterizatorbackend.exception.DomainValidationException;
+
+public class SpecialOpeningHoursValidationException extends DomainValidationException {
 
     public SpecialOpeningHoursValidationException(String message) {
         super(message);

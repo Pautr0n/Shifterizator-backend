@@ -109,7 +109,7 @@ class UserControllerTest {
 
     @Test
     @WithMockUser
-    void createUser_should_return_400_when_username_exists() throws Exception {
+    void createUser_should_return_409_when_username_exists() throws Exception {
 
         UserRequestDto requestDto = new UserRequestDto(
                 "john",
@@ -127,8 +127,8 @@ class UserControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("CONFLICT"))
                 .andExpect(jsonPath("$.message").value("Username already exists: john"));
     }
 
@@ -170,7 +170,7 @@ class UserControllerTest {
 
     @Test
     @WithMockUser
-    void updateUser_should_return_400_when_email_exists() throws Exception {
+    void updateUser_should_return_409_when_email_exists() throws Exception {
 
         UserRequestDto requestDto = new UserRequestDto(
                 "john",
@@ -188,8 +188,8 @@ class UserControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("CONFLICT"))
                 .andExpect(jsonPath("$.message").value("Email already exists: duplicate@mail.com"));
     }
 

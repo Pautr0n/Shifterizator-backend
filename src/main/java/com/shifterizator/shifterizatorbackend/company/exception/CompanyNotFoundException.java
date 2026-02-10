@@ -1,7 +1,9 @@
-    package com.shifterizator.shifterizatorbackend.company.exception;
+package com.shifterizator.shifterizatorbackend.company.exception;
 
-    public class CompanyNotFoundException extends RuntimeException {
-        public CompanyNotFoundException(String message) {
-            super(message);
-        }
+import com.shifterizator.shifterizatorbackend.exception.DomainNotFoundException;
+
+public class CompanyNotFoundException extends DomainNotFoundException {
+    public CompanyNotFoundException(String message) {
+        super(message);
     }
+}

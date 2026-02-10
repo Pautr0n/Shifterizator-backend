@@ -40,10 +40,7 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
 
         for (EmployeeAvailability availability : availabilities) {
             AvailabilityType type = availability.getType();
-            if (type == AvailabilityType.VACATION
-                    || type == AvailabilityType.SICK_LEAVE
-                    || type == AvailabilityType.UNAVAILABLE
-                    || type == AvailabilityType.UNJUSTIFIED_ABSENCE) {
+            if (type.isBlocking()) {
                 throw new ShiftValidationException(
                         String.format("Employee is marked as %s on this date", type.name()));
             }
@@ -58,6 +55,24 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
 
         if (!positionMatches) {
             throw new ShiftValidationException("Employee position does not match any required position for this shift template");
+        }
+    }
+
+    @Override
+    public void validateEmployeeCompanyAndLocation(Employee employee, ShiftInstance shiftInstance) {
+        var shiftLocation = shiftInstance.getLocation();
+        var shiftCompany = shiftLocation.getCompany();
+
+        boolean belongsToCompany = employee.getEmployeeCompanies().stream()
+                .anyMatch(ec -> ec.getCompany().getId().equals(shiftCompany.getId()));
+        if (!belongsToCompany) {
+            throw new ShiftValidationException("Employee does not belong to the company for this shift");
+        }
+
+        boolean worksAtLocation = employee.getEmployeeLocations().stream()
+                .anyMatch(el -> el.getLocation().getId().equals(shiftLocation.getId()));
+        if (!worksAtLocation) {
+            throw new ShiftValidationException("Employee is not assigned to this location");
         }
     }
 

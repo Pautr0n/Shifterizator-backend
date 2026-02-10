@@ -36,6 +36,17 @@ public interface ShiftAssignmentValidator {
     void validatePositionMatch(Employee employee, ShiftInstance shiftInstance);
 
     /**
+     * Validates that the employee belongs to the company and works at the location
+     * of the given shift instance.
+     *
+     * @param employee the employee
+     * @param shiftInstance the shift instance
+     * @throws com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException
+     *         if the employee is not linked to the company or location
+     */
+    void validateEmployeeCompanyAndLocation(Employee employee, ShiftInstance shiftInstance);
+
+    /**
      * Validates that the employee meets language requirements for the shift.
      *
      * @param employee the employee
