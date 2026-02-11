@@ -1,17 +1,45 @@
 package com.shifterizator.shifterizatorbackend.company.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDateTime;
 
-public record CompanyResponseDto(Long id,
-                                 String name,
-                                 String legalName,
-                                 String taxId,
-                                 String email,
-                                 String phone,
-                                 String country,
-                                 boolean isActive,
-                                 LocalDateTime createdAt,
-                                 LocalDateTime updatedAt,
-                                 String createdBy,
-                                 String updatedBy) {
+@Schema(description = "Company information response")
+public record CompanyResponseDto(
+        @Schema(description = "Unique company identifier", example = "1")
+        Long id,
+
+        @Schema(description = "Company name", example = "Acme Corp")
+        String name,
+
+        @Schema(description = "Legal company name", example = "Acme Corporation S.A.")
+        String legalName,
+
+        @Schema(description = "Tax identification number", example = "B123456789")
+        String taxId,
+
+        @Schema(description = "Company contact email", example = "contact@acmecorp.com")
+        String email,
+
+        @Schema(description = "Company contact phone", example = "+34612345678")
+        String phone,
+
+        @Schema(description = "Country", example = "Spain")
+        String country,
+
+        @Schema(description = "Whether the company is currently active", example = "true")
+        boolean isActive,
+
+        @Schema(description = "Creation timestamp")
+        LocalDateTime createdAt,
+
+        @Schema(description = "Last update timestamp")
+        LocalDateTime updatedAt,
+
+        @Schema(description = "Username who created the company", nullable = true)
+        String createdBy,
+
+        @Schema(description = "Username who last updated the company", nullable = true)
+        String updatedBy
+) {
 }

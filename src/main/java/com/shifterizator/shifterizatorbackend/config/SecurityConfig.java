@@ -38,6 +38,14 @@ public class SecurityConfig {
                                 // Public endpoints
                                 .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/health")
                                 .permitAll()
+                                // Swagger / OpenAPI documentation (no auth required to view docs)
+                                .requestMatchers(
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs",
+                                        "/v3/api-docs/**"
+                                )
+                                .permitAll()
 
                                 // Companies: POST only SUPERADMIN, DELETE only SUPERADMIN, activate/deactivate only SUPERADMIN
                                 // GET/PUT for SUPERADMIN+COMPANYADMIN (method-level checks needed for company ownership)
