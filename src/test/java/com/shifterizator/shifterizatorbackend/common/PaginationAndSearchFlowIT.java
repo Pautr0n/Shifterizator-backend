@@ -153,16 +153,31 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
     void companySearchWithFiltersAndPagination() throws Exception {
         String adminToken = loginAndGetBearerToken("admin", "Admin123!");
 
-        Long company1Id = createCompany(adminToken, "Alpha Corp", "Spain");
-        Long company2Id = createCompany(adminToken, "Beta Ltd", "France");
-        Long company3Id = createCompany(adminToken, "Gamma Inc", "Spain");
+        // Use unique suffix to avoid conflicts with other tests (company name must be 4-20 chars)
+        String uniqueSuffix = String.valueOf(System.currentTimeMillis()).substring(9); // Last 4 digits
+        Long company1Id = createCompany(adminToken, "Alpha" + uniqueSuffix, "Spain");
+        Long company2Id = createCompany(adminToken, "Beta" + uniqueSuffix, "France");
+        Long company3Id = createCompany(adminToken, "Gamma" + uniqueSuffix, "Spain");
 
         // Company activation/deactivation is restricted to SUPERADMIN only
         String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
-        mockMvc.perform(patch("/api/companies/{id}/deactivate", company3Id)
+        
+        // Deactivate company3 and verify it was deactivated
+        MvcResult deactivateResult = mockMvc.perform(patch("/api/companies/{id}/deactivate", company3Id)
                         .header("Authorization", superAdminToken))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(company3Id))
+                .andExpect(jsonPath("$.isActive").value(false))
+                .andReturn();
 
+        // Verify company3 is actually inactive by fetching it directly
+        mockMvc.perform(get("/api/companies/{id}", company3Id)
+                        .header("Authorization", adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isActive").value(false));
+
+        // Now search for active companies in Spain - should return at least company1, but not company3
+        // Note: There might be other companies from other tests, so we verify our specific companies
         MvcResult result = mockMvc.perform(get("/api/companies")
                         .header("Authorization", adminToken)
                         .param("country", "Spain")
@@ -171,18 +186,32 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.totalPages").value(1))
                 .andExpect(jsonPath("$.size").value(10))
                 .andExpect(jsonPath("$.number").value(0))
-                .andExpect(jsonPath("$.content[0].id").value(company1Id))
-                .andExpect(jsonPath("$.content[0].country").value("Spain"))
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
         com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(responseBody);
-        assertThat(root.get("totalElements").asInt()).isEqualTo(1);
-        assertThat(root.get("content").size()).isEqualTo(1);
+        
+        // Verify company1 is in the results and is active
+        boolean foundCompany1 = false;
+        boolean foundCompany3 = false;
+        for (com.fasterxml.jackson.databind.JsonNode company : root.get("content")) {
+            long id = company.get("id").asLong();
+            if (id == company1Id) {
+                foundCompany1 = true;
+                assertThat(company.get("isActive").asBoolean()).isTrue();
+                assertThat(company.get("country").asText()).isEqualTo("Spain");
+            }
+            if (id == company3Id) {
+                foundCompany3 = true;
+            }
+        }
+        
+        // Verify our expectations: company1 should be found, company3 should NOT be found
+        assertThat(foundCompany1).as("Company1 (active, Spain) should be in search results").isTrue();
+        assertThat(foundCompany3).as("Company3 (deactivated) should NOT be in active search results").isFalse();
     }
 
     @Test
