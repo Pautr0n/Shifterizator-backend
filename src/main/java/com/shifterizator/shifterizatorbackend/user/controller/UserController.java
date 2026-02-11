@@ -6,6 +6,12 @@ import com.shifterizator.shifterizatorbackend.user.dto.UserResponseDto;
 import com.shifterizator.shifterizatorbackend.user.mapper.UserMapper;
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import com.shifterizator.shifterizatorbackend.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,14 +25,22 @@ import java.util.List;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/users")
+@Tag(
+        name = "Users",
+        description = "Endpoints for managing users (create, update, activate/deactivate, reset password). " +
+                "User creation and company-scoped operations restricted to SUPERADMIN/COMPANYADMIN; reset password typically SUPERADMIN."
+)
 public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
 
-    // ---------------------------------------------------------
-    // CREATE
-    // ---------------------------------------------------------
+    @Operation(summary = "Create user", description = "Creates a new user. Restricted to SUPERADMIN or COMPANYADMIN (company-scoped).", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "User created successfully"),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(
             @Valid @RequestBody UserRequestDto requestDto
@@ -40,23 +54,29 @@ public class UserController {
     }
 
 
-    // ---------------------------------------------------------
-    // UPDATE
-    // ---------------------------------------------------------
+    @Operation(summary = "Update user", description = "Updates an existing user.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDto> updateUser(
-            @PathVariable Long id,
+            @Parameter(description = "User ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UserRequestDto requestDto
     ) {
         User updated = userService.updateUser(id, requestDto);
         return ResponseEntity.ok(userMapper.toDto(updated));
     }
 
-    // ---------------------------------------------------------
-    // ACTIVATE-DEACTIVATE
-    // ---------------------------------------------------------
+    @Operation(summary = "Activate user", description = "Activates a deactivated user.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User activated successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @PatchMapping("/{id}/activate")
-    public ResponseEntity<UserResponseDto> activateUser(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> activateUser(
+            @Parameter(description = "User ID", required = true) @PathVariable Long id) {
 
         User user = userService.activateUser(id);
 
@@ -64,105 +84,134 @@ public class UserController {
 
     }
 
+    @Operation(summary = "Deactivate user", description = "Deactivates a user (soft disable).", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User deactivated successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<UserResponseDto> deactivateUser(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> deactivateUser(
+            @Parameter(description = "User ID", required = true) @PathVariable Long id) {
 
         User user = userService.deactivateUser(id);
 
         return ResponseEntity.ok(userMapper.toDto(user));
     }
 
-    // ---------------------------------------------------------
-    // DELETE
-    // ---------------------------------------------------------
+    @Operation(summary = "Delete user", description = "Deletes a user. Use physical=true for hard delete.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(
-            @PathVariable Long id,
-            @RequestParam(defaultValue = "false") boolean physical
+            @Parameter(description = "User ID", required = true) @PathVariable Long id,
+            @Parameter(description = "If true, physically delete from DB") @RequestParam(defaultValue = "false") boolean physical
     ) {
         userService.deleteUser(id, physical);
         return ResponseEntity.noContent().build();
     }
 
-    // ---------------------------------------------------------
-    // RESET PASSWORD (admin)
-    // ---------------------------------------------------------
+    @Operation(summary = "Reset password (admin)", description = "Resets a user's password. Typically restricted to SUPERADMIN.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Password reset successfully"),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @PatchMapping("/{id}/reset-password")
     public ResponseEntity<Void> resetPassword(
-            @PathVariable Long id,
+            @Parameter(description = "User ID", required = true) @PathVariable Long id,
             @Valid @RequestBody ResetPasswordRequestDto dto
     ) {
         userService.resetPassword(id, dto.newPassword());
         return ResponseEntity.noContent().build();
     }
 
-    // ---------------------------------------------------------
-    // GET BY ID
-    // ---------------------------------------------------------
+    @Operation(summary = "Get user by ID", description = "Retrieves a user by ID.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUser(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> getUser(
+            @Parameter(description = "User ID", required = true) @PathVariable Long id) {
         User user = userService.getUser(id);
         return ResponseEntity.ok(userMapper.toDto(user));
     }
 
-    // ---------------------------------------------------------
-    // LIST (paginated with optional filters)
-    // ---------------------------------------------------------
+    @Operation(summary = "List users (paginated)", description = "Paginated list with optional filters: role, companyId, email, isActive.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Page of users") })
     @GetMapping
     public ResponseEntity<Page<UserResponseDto>> listUsers(
-            @RequestParam(required = false) String role,
-            @RequestParam(required = false) Long companyId,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) Boolean isActive,
+            @Parameter(description = "Filter by role") @RequestParam(required = false) String role,
+            @Parameter(description = "Filter by company ID") @RequestParam(required = false) Long companyId,
+            @Parameter(description = "Filter by email") @RequestParam(required = false) String email,
+            @Parameter(description = "Filter by active status") @RequestParam(required = false) Boolean isActive,
             Pageable pageable
     ) {
         Page<User> page = userService.search(role, companyId, email, isActive, pageable);
         return ResponseEntity.ok(page.map(userMapper::toDto));
     }
 
+    @Operation(summary = "List users by company", description = "Returns all users belonging to a company.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of users") })
     @GetMapping("/company/{companyId}")
-    public ResponseEntity<List<UserResponseDto>> listUsersByCompany(@PathVariable Long companyId) {
+    public ResponseEntity<List<UserResponseDto>> listUsersByCompany(
+            @Parameter(description = "Company ID", required = true) @PathVariable Long companyId) {
         List<User> users = userService.listByCompany(companyId);
         return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
     }
 
+    @Operation(summary = "List active users", description = "Returns all active users.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of active users") })
     @GetMapping("/active")
     public ResponseEntity<List<UserResponseDto>> listActiveUsers() {
         List<User> users = userService.listActiveUsers();
         return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
     }
 
+    @Operation(summary = "List inactive users", description = "Returns all inactive users.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of inactive users") })
     @GetMapping("/inactive")
     public ResponseEntity<List<UserResponseDto>> listInactiveUsers() {
         List<User> users = userService.listInactiveUsers();
         return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
     }
 
+    @Operation(summary = "Search users by username", description = "Searches users by username.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of users") })
     @GetMapping("/search")
     public ResponseEntity<List<UserResponseDto>> searchUsersByUsername(
-            @RequestParam String username
+            @Parameter(description = "Username (partial match)", required = true) @RequestParam String username
     ) {
         List<User> users = userService.searchUsersByUsername(username);
         return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
     }
 
+    @Operation(summary = "Search users by email", description = "Searches users by email.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of users") })
     @GetMapping("/search/email")
-    public ResponseEntity<List<UserResponseDto>> searchUsersByEmail(@RequestParam String email) {
+    public ResponseEntity<List<UserResponseDto>> searchUsersByEmail(
+            @Parameter(description = "Email (partial match)", required = true) @RequestParam String email) {
         List<User> users = userService.searchUsersByEmail(email);
         return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
     }
 
+    @Operation(summary = "Search active users by username", description = "Searches active users by username.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of active users") })
     @GetMapping("/search/active")
     public ResponseEntity<List<UserResponseDto>> searchActiveUsersByUsername(
-            @RequestParam String username
+            @Parameter(description = "Username (partial match)", required = true) @RequestParam String username
     ) {
         List<User> users = userService.searchActiveUsersByUsername(username);
         return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
     }
 
+    @Operation(summary = "Search inactive users by username", description = "Searches inactive users by username.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of inactive users") })
     @GetMapping("/search/inactive")
     public ResponseEntity<List<UserResponseDto>> searchInactiveUsersByUsername(
-            @RequestParam String username
+            @Parameter(description = "Username (partial match)", required = true) @RequestParam String username
     ) {
         List<User> users = userService.searchInactiveUsersByUsername(username);
         return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
