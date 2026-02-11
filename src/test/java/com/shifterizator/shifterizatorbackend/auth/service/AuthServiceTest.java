@@ -4,6 +4,7 @@ import com.shifterizator.shifterizatorbackend.auth.dto.LoginRequestDto;
 import com.shifterizator.shifterizatorbackend.auth.dto.RefreshTokenRequestDto;
 import com.shifterizator.shifterizatorbackend.auth.dto.TokenResponseDto;
 import com.shifterizator.shifterizatorbackend.auth.exception.InvalidCredentialsException;
+import com.shifterizator.shifterizatorbackend.auth.exception.InvalidRefreshTokenException;
 import com.shifterizator.shifterizatorbackend.auth.jwt.JwtUtil;
 import com.shifterizator.shifterizatorbackend.user.exception.UserNotFoundException;
 import com.shifterizator.shifterizatorbackend.user.model.Role;
@@ -102,7 +103,7 @@ class AuthServiceTest {
         when(jwtUtil.isRefreshToken("invalid")).thenReturn(false);
 
         assertThatThrownBy(() -> authService.refresh(dto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidRefreshTokenException.class);
     }
 
     @Test
@@ -113,8 +114,10 @@ class AuthServiceTest {
         when(jwtUtil.getUsername("refreshToken")).thenReturn("john");
         when(userRepository.findByUsername("john")).thenReturn(Optional.empty());
 
+        // UserNotFoundException is caught and converted to InvalidRefreshTokenException
+        // for security reasons (to avoid leaking user existence information)
         assertThatThrownBy(() -> authService.refresh(dto))
-                .isInstanceOf(UserNotFoundException.class);
+                .isInstanceOf(InvalidRefreshTokenException.class);
     }
 
 

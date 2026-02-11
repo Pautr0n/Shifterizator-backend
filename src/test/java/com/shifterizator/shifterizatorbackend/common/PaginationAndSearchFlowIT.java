@@ -61,6 +61,8 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
     }
 
     private Long createCompany(String adminToken, String name, String country) throws Exception {
+        // Company creation is restricted to SUPERADMIN only
+        String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         String unique = name + country;
         String hash = String.valueOf(unique.hashCode()).replace("-", "");
         String taxId = "T" + hash.substring(0, Math.min(8, hash.length()));
@@ -75,7 +77,7 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
                 country
         );
         MvcResult result = mockMvc.perform(post("/api/companies")
-                        .header("Authorization", adminToken)
+                        .header("Authorization", superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -155,8 +157,10 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
         Long company2Id = createCompany(adminToken, "Beta Ltd", "France");
         Long company3Id = createCompany(adminToken, "Gamma Inc", "Spain");
 
+        // Company activation/deactivation is restricted to SUPERADMIN only
+        String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         mockMvc.perform(patch("/api/companies/{id}/deactivate", company3Id)
-                        .header("Authorization", adminToken))
+                        .header("Authorization", superAdminToken))
                 .andExpect(status().isOk());
 
         MvcResult result = mockMvc.perform(get("/api/companies")

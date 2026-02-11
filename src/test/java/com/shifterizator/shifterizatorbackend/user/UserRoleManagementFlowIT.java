@@ -49,6 +49,8 @@ class UserRoleManagementFlowIT extends BaseIntegrationTest {
     }
 
     private Long createCompany(String adminToken, String suffix) throws Exception {
+        // Company creation is restricted to SUPERADMIN only
+        String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         String taxId = suffix.length() <= 2 ? "S" + suffix + "23456789" : suffix.substring(0, 1).toUpperCase() + "12345678";
         if (taxId.length() > 12) taxId = taxId.substring(0, 12);
         if (taxId.length() < 9) taxId = String.format("%-9s", taxId).replace(' ', '0');
@@ -61,7 +63,7 @@ class UserRoleManagementFlowIT extends BaseIntegrationTest {
                 "Spain"
         );
         MvcResult result = mockMvc.perform(post("/api/companies")
-                        .header("Authorization", adminToken)
+                        .header("Authorization", superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -184,8 +186,8 @@ class UserRoleManagementFlowIT extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("Employee cannot access user management endpoints")
-    void employeeCannotAccessUserManagement() throws Exception {
+    @DisplayName("Employee cannot modify users but can read them")
+    void employeeCannotModifyUsersButCanReadThem() throws Exception {
         String employeeToken = loginAndGetBearerToken("employee", "Employee123!");
 
         UserRequestDto createRequest = new UserRequestDto(
@@ -197,16 +199,18 @@ class UserRoleManagementFlowIT extends BaseIntegrationTest {
                 null
         );
 
+        // Employee cannot create users (POST requires SUPERADMIN or COMPANYADMIN)
         mockMvc.perform(post("/api/users")
                         .header("Authorization", employeeToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isForbidden());
 
+        // Employee can read users (GET is allowed for all authenticated)
         mockMvc.perform(get("/api/users")
                         .header("Authorization", employeeToken)
                         .param("page", "0")
                         .param("size", "10"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 }

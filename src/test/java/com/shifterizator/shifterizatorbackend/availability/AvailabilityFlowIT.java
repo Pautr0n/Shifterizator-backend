@@ -55,6 +55,8 @@ class AvailabilityFlowIT extends BaseIntegrationTest {
     }
 
     private Long createCompany(String adminToken, String suffix) throws Exception {
+        // Company creation is restricted to SUPERADMIN only
+        String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         String name = "AvailCo-" + suffix;
         String legalName = "Avail Company " + suffix + " S.A.";
         String taxId = "C" + suffix + "23456789";
@@ -69,7 +71,7 @@ class AvailabilityFlowIT extends BaseIntegrationTest {
         );
 
         MvcResult result = mockMvc.perform(post("/api/companies")
-                        .header("Authorization", adminToken)
+                        .header("Authorization", superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

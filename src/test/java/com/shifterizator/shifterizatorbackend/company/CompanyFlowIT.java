@@ -48,6 +48,8 @@ class CompanyFlowIT extends BaseIntegrationTest {
     @Test
     @DisplayName("Admin can create and retrieve a company")
     void adminCanCreateAndRetrieveCompany() throws Exception {
+        // Company creation is restricted to SUPERADMIN only
+        String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         String adminToken = loginAndGetBearerToken("admin", "Admin123!");
 
         CompanyRequestDto request = new CompanyRequestDto(
@@ -59,9 +61,9 @@ class CompanyFlowIT extends BaseIntegrationTest {
                 "Spain"
         );
 
-        // Create company
+        // Create company (requires SUPERADMIN)
         MvcResult createResult = mockMvc.perform(post("/api/companies")
-                        .header("Authorization", adminToken)
+                        .header("Authorization", superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

@@ -43,6 +43,22 @@ class ErrorAndValidationContractIT extends BaseIntegrationTest {
         return "Bearer " + tokens.accessToken();
     }
 
+    private String loginAndGetBearerToken(String username, String password) throws Exception {
+        LoginRequestDto loginRequest = new LoginRequestDto(username, password);
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        com.shifterizator.shifterizatorbackend.auth.dto.TokenResponseDto tokens =
+                objectMapper.readValue(loginResult.getResponse().getContentAsString(),
+                        com.shifterizator.shifterizatorbackend.auth.dto.TokenResponseDto.class);
+
+        return "Bearer " + tokens.accessToken();
+    }
+
     @Test
     @DisplayName("Requesting non-existing company returns 404 ApiErrorDto with NOT_FOUND error code")
     void requestingNonExistingCompanyReturnsNotFoundError() throws Exception {
@@ -60,7 +76,8 @@ class ErrorAndValidationContractIT extends BaseIntegrationTest {
     @Test
     @DisplayName("Creating company with invalid data returns 400 ApiErrorDto with VALIDATION_ERROR")
     void creatingCompanyWithInvalidDataReturnsValidationError() throws Exception {
-        String adminToken = loginAsAdminAndGetBearerToken();
+        // Company creation is restricted to SUPERADMIN only
+        String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
 
         // Invalid company request: blank name, short taxId, invalid email
         CompanyRequestDto invalidRequest = new CompanyRequestDto(
@@ -73,7 +90,7 @@ class ErrorAndValidationContractIT extends BaseIntegrationTest {
         );
 
         MvcResult result = mockMvc.perform(post("/api/companies")
-                        .header("Authorization", adminToken)
+                        .header("Authorization", superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
