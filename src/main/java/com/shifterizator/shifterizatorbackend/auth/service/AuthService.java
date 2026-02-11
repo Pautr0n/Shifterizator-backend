@@ -5,6 +5,7 @@ import com.shifterizator.shifterizatorbackend.auth.dto.LoginRequestDto;
 import com.shifterizator.shifterizatorbackend.auth.dto.RefreshTokenRequestDto;
 import com.shifterizator.shifterizatorbackend.auth.dto.TokenResponseDto;
 import com.shifterizator.shifterizatorbackend.auth.exception.InvalidCredentialsException;
+import com.shifterizator.shifterizatorbackend.auth.exception.InvalidRefreshTokenException;
 import com.shifterizator.shifterizatorbackend.auth.jwt.JwtUtil;
 import com.shifterizator.shifterizatorbackend.user.exception.UserNotFoundException;
 import com.shifterizator.shifterizatorbackend.user.model.User;
@@ -60,28 +61,37 @@ public class AuthService {
         String token = dto.refreshToken();
         log.info("Refresh token attempt");
 
-        if (!jwtUtil.isRefreshToken(token)) {
-            log.warn("Invalid refresh token type");
-            throw new IllegalArgumentException("Invalid refresh token");
+        try {
+            if (!jwtUtil.isRefreshToken(token)) {
+                log.warn("Invalid refresh token type");
+                throw new InvalidRefreshTokenException("Invalid refresh token");
+            }
+
+            String username = jwtUtil.getUsername(token);
+
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UserNotFoundException("User not found for refresh token"));
+
+            String newAccessToken = jwtUtil.generateAccessToken(user);
+
+            log.info("Refresh token successful for username: {}", username);
+
+            return new TokenResponseDto(
+                    newAccessToken,
+                    token,
+                    user.getId(),
+                    user.getUsername(),
+                    user.getRole().name(),
+                    user.getCompany() != null ? user.getCompany().getId() : null
+            );
+
+        } catch (InvalidRefreshTokenException ex) {
+            // Re-throw to be handled by GlobalExceptionHandler
+            throw ex;
+        } catch (Exception ex) {
+            log.warn("Invalid refresh token", ex);
+            throw new InvalidRefreshTokenException("Invalid refresh token");
         }
-
-        String username = jwtUtil.getUsername(token);
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found for refresh token"));
-
-        String newAccessToken = jwtUtil.generateAccessToken(user);
-
-        log.info("Refresh token successful for username: {}", username);
-
-        return new TokenResponseDto(
-                newAccessToken,
-                token,
-                user.getId(),
-                user.getUsername(),
-                user.getRole().name(),
-                user.getCompany() != null ? user.getCompany().getId() : null
-        );
     }
 
 }
