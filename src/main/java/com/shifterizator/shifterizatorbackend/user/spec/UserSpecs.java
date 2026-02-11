@@ -25,6 +25,14 @@ public final class UserSpecs {
         return (root, query, cb) -> cb.equal(root.get("company").get("id"), companyId);
     }
 
+    public static Specification<User> usernameContains(String username) {
+        if (username == null || username.isBlank()) {
+            return Specification.where((Specification<User>) null);
+        }
+        String pattern = "%" + username.toLowerCase() + "%";
+        return (root, query, cb) -> cb.like(cb.lower(root.get("username")), pattern);
+    }
+
     public static Specification<User> emailContains(String email) {
         if (email == null || email.isBlank()) {
             return Specification.where((Specification<User>) null);

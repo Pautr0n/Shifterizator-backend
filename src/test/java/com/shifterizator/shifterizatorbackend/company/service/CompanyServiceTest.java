@@ -16,12 +16,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -315,70 +321,62 @@ class CompanyServiceTest {
 
 
     @Test
-    void listAllCompanies_should_return_all_non_deleted_companies() {
-        when(companyRepository.findByDeletedAtIsNull()).thenReturn(List.of(company1, company2, company3));
+    void search_should_return_page_with_no_filters() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(companyRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(company1, company2, company3), pageable, 3));
 
-        List<Company> result = companyService.listAllCompanies();
+        Page<Company> result = companyService.search(null, null, null, null, null, pageable);
 
-        assertEquals(3, result.size());
-        verify(companyRepository).findByDeletedAtIsNull();
+        assertEquals(3, result.getContent().size());
+        verify(companyRepository).findAll(any(Specification.class), eq(pageable));
     }
 
     @Test
-    void listActiveCompanies_should_return_only_active_companies() {
-        when(companyRepository.findByIsActiveAndDeletedAtIsNull(true)).thenReturn(List.of(company1, company2));
+    void search_should_filter_by_name() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(companyRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(company1, company2), pageable, 2));
 
-        List<Company> result = companyService.listActiveCompanies();
+        Page<Company> result = companyService.search("Comp", null, null, null, null, pageable);
 
-        assertEquals(2, result.size());
-        verify(companyRepository).findByIsActiveAndDeletedAtIsNull(true);
+        assertEquals(2, result.getContent().size());
     }
 
-
     @Test
-    void listInActiveCompanies_should_return_only_inactive_companies() {
-        when(companyRepository.findByIsActiveAndDeletedAtIsNull(false)).thenReturn(List.of(company3));
+    void search_should_filter_by_isActive_true() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(companyRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(company1, company2), pageable, 2));
 
-        List<Company> result = companyService.listInActiveCompanies();
+        Page<Company> result = companyService.search(null, null, null, null, true, pageable);
 
-        assertEquals(1, result.size());
-        verify(companyRepository).findByIsActiveAndDeletedAtIsNull(false);
+        assertEquals(2, result.getContent().size());
     }
 
-
     @Test
-    void searchActiveCompaniesByName_should_return_matches() {
-        when(companyRepository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Comp", true))
-                .thenReturn(List.of(company1, company2));
+    void search_should_filter_by_isActive_false() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(companyRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(company3), pageable, 1));
 
-        List<Company> result = companyService.searchActiveCompaniesByName("Comp");
+        Page<Company> result = companyService.search(null, null, null, null, false, pageable);
 
-        assertEquals(2, result.size());
-        verify(companyRepository).findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Comp", true);
+        assertEquals(1, result.getContent().size());
+        assertFalse(result.getContent().get(0).getIsActive());
     }
 
-
     @Test
-    void searchInActiveCompaniesByName_should_return_matches() {
-        when(companyRepository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Comp", false))
-                .thenReturn(List.of(company3));
+    void search_should_filter_by_name_and_isActive() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(companyRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(company1), pageable, 1));
 
-        List<Company> result = companyService.searchInActiveCompaniesByName("Comp");
+        Page<Company> result = companyService.search("Comp", null, null, null, true, pageable);
 
-        assertEquals(1, result.size());
-        verify(companyRepository).findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull("Comp", false);
-    }
-
-
-    @Test
-    void searchAllCompaniesByName_should_return_matches() {
-        when(companyRepository.findByNameContainingIgnoreCaseAndDeletedAtIsNull("Comp"))
-                .thenReturn(List.of(company1, company2, company3));
-
-        List<Company> result = companyService.searchAllCompaniesByName("Comp");
-
-        assertEquals(3, result.size());
-        verify(companyRepository).findByNameContainingIgnoreCaseAndDeletedAtIsNull("Comp");
+        assertEquals(1, result.getContent().size());
+        assertEquals("Company 1", result.getContent().get(0).getName());
+        assertTrue(result.getContent().get(0).getIsActive());
     }
 
 }

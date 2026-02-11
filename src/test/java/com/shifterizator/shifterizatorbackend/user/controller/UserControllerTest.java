@@ -317,7 +317,7 @@ class UserControllerTest {
         );
 
         Pageable pageable = PageRequest.of(0, 10);
-        when(userService.search(any(), any(), any(), any(), any()))
+        when(userService.search(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
         when(userMapper.toDto(user)).thenReturn(dto);
 
@@ -327,117 +327,63 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
 
-    // ---------------------------------------------------------
-    // LIST ACTIVE
-    // ---------------------------------------------------------
     @Test
     @WithMockUser
-    void listActiveUsers_should_return_200() throws Exception {
-
-        User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
-        user.setId(10L);
-
-        UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
-        );
-
-        when(userService.listActiveUsers()).thenReturn(List.of(user));
-        when(userMapper.toDto(user)).thenReturn(dto);
-
-        mockMvc.perform(get("/api/users/active"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].isActive").value(true));
-    }
-
-    // ---------------------------------------------------------
-    // LIST INACTIVE
-    // ---------------------------------------------------------
-    @Test
-    @WithMockUser
-    void listInactiveUsers_should_return_200() throws Exception {
-
-        User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
-        user.setId(10L);
-        user.setIsActive(false);
-
-        UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, false, null, null
-        );
-
-        when(userService.listInactiveUsers()).thenReturn(List.of(user));
-        when(userMapper.toDto(user)).thenReturn(dto);
-
-        mockMvc.perform(get("/api/users/inactive"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].isActive").value(false));
-    }
-
-    // ---------------------------------------------------------
-    // SEARCH BY USERNAME
-    // ---------------------------------------------------------
-    @Test
-    @WithMockUser
-    void searchUsersByUsername_should_return_200() throws Exception {
-
-        User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
-        user.setId(10L);
-
-        UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
-        );
-
-        when(userService.searchUsersByUsername("john")).thenReturn(List.of(user));
-        when(userMapper.toDto(user)).thenReturn(dto);
-
-        mockMvc.perform(get("/api/users/search?username=john"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("john"));
-    }
-
-    @Test
-    @WithMockUser
-    void searchActiveUsersByUsername_should_return_200() throws Exception {
-
+    void listUsers_with_isActive_true_returns_active_users() throws Exception {
         User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
         user.setId(10L);
         user.setIsActive(true);
-
         UserResponseDto dto = new UserResponseDto(
                 10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
         );
-
-        when(userService.searchActiveUsersByUsername("john"))
-                .thenReturn(List.of(user));
+        Pageable pageable = PageRequest.of(0, 10);
+        when(userService.search(any(), any(), any(), any(), eq(true), any()))
+                .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
         when(userMapper.toDto(user)).thenReturn(dto);
 
-        mockMvc.perform(get("/api/users/search/active?username=john"))
+        mockMvc.perform(get("/api/users").param("isActive", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(10))
-                .andExpect(jsonPath("$[0].username").value("john"))
-                .andExpect(jsonPath("$[0].isActive").value(true));
+                .andExpect(jsonPath("$.content[0].isActive").value(true));
     }
 
     @Test
     @WithMockUser
-    void searchInactiveUsersByUsername_should_return_200() throws Exception {
-
+    void listUsers_with_username_filter_returns_matching_users() throws Exception {
         User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
         user.setId(10L);
-        user.setIsActive(false);
-
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, false, null, null
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
         );
-
-        when(userService.searchInactiveUsersByUsername("john"))
-                .thenReturn(List.of(user));
+        Pageable pageable = PageRequest.of(0, 10);
+        when(userService.search(any(), any(), eq("john"), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
         when(userMapper.toDto(user)).thenReturn(dto);
 
-        mockMvc.perform(get("/api/users/search/inactive?username=john"))
+        mockMvc.perform(get("/api/users").param("username", "john"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(10))
-                .andExpect(jsonPath("$[0].username").value("john"))
-                .andExpect(jsonPath("$[0].isActive").value(false));
+                .andExpect(jsonPath("$.content[0].username").value("john"));
+    }
+
+    @Test
+    @WithMockUser
+    void listUsers_with_username_and_isActive_returns_filtered_page() throws Exception {
+        User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
+        user.setId(10L);
+        user.setIsActive(true);
+        UserResponseDto dto = new UserResponseDto(
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
+        );
+        Pageable pageable = PageRequest.of(0, 10);
+        when(userService.search(any(), any(), eq("john"), any(), eq(true), any()))
+                .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
+        when(userMapper.toDto(user)).thenReturn(dto);
+
+        mockMvc.perform(get("/api/users")
+                        .param("username", "john")
+                        .param("isActive", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].username").value("john"))
+                .andExpect(jsonPath("$.content[0].isActive").value(true));
     }
 
 }

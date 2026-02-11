@@ -139,17 +139,22 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toDto(user));
     }
 
-    @Operation(summary = "List users (paginated)", description = "Paginated list with optional filters: role, companyId, email, isActive.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @Operation(
+            summary = "List users (paginated)",
+            description = "Paginated list with optional filters: role, companyId, username (partial match), email (partial match), isActive. Use e.g. ?isActive=true for active only, ?username=john for search by username.",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
     @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Page of users") })
     @GetMapping
     public ResponseEntity<Page<UserResponseDto>> listUsers(
             @Parameter(description = "Filter by role") @RequestParam(required = false) String role,
             @Parameter(description = "Filter by company ID") @RequestParam(required = false) Long companyId,
-            @Parameter(description = "Filter by email") @RequestParam(required = false) String email,
+            @Parameter(description = "Filter by username (partial match)") @RequestParam(required = false) String username,
+            @Parameter(description = "Filter by email (partial match)") @RequestParam(required = false) String email,
             @Parameter(description = "Filter by active status") @RequestParam(required = false) Boolean isActive,
             Pageable pageable
     ) {
-        Page<User> page = userService.search(role, companyId, email, isActive, pageable);
+        Page<User> page = userService.search(role, companyId, username, email, isActive, pageable);
         return ResponseEntity.ok(page.map(userMapper::toDto));
     }
 
@@ -159,61 +164,6 @@ public class UserController {
     public ResponseEntity<List<UserResponseDto>> listUsersByCompany(
             @Parameter(description = "Company ID", required = true) @PathVariable Long companyId) {
         List<User> users = userService.listByCompany(companyId);
-        return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
-    }
-
-    @Operation(summary = "List active users", description = "Returns all active users.", security = @SecurityRequirement(name = "Bearer Authentication"))
-    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of active users") })
-    @GetMapping("/active")
-    public ResponseEntity<List<UserResponseDto>> listActiveUsers() {
-        List<User> users = userService.listActiveUsers();
-        return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
-    }
-
-    @Operation(summary = "List inactive users", description = "Returns all inactive users.", security = @SecurityRequirement(name = "Bearer Authentication"))
-    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of inactive users") })
-    @GetMapping("/inactive")
-    public ResponseEntity<List<UserResponseDto>> listInactiveUsers() {
-        List<User> users = userService.listInactiveUsers();
-        return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
-    }
-
-    @Operation(summary = "Search users by username", description = "Searches users by username.", security = @SecurityRequirement(name = "Bearer Authentication"))
-    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of users") })
-    @GetMapping("/search")
-    public ResponseEntity<List<UserResponseDto>> searchUsersByUsername(
-            @Parameter(description = "Username (partial match)", required = true) @RequestParam String username
-    ) {
-        List<User> users = userService.searchUsersByUsername(username);
-        return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
-    }
-
-    @Operation(summary = "Search users by email", description = "Searches users by email.", security = @SecurityRequirement(name = "Bearer Authentication"))
-    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of users") })
-    @GetMapping("/search/email")
-    public ResponseEntity<List<UserResponseDto>> searchUsersByEmail(
-            @Parameter(description = "Email (partial match)", required = true) @RequestParam String email) {
-        List<User> users = userService.searchUsersByEmail(email);
-        return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
-    }
-
-    @Operation(summary = "Search active users by username", description = "Searches active users by username.", security = @SecurityRequirement(name = "Bearer Authentication"))
-    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of active users") })
-    @GetMapping("/search/active")
-    public ResponseEntity<List<UserResponseDto>> searchActiveUsersByUsername(
-            @Parameter(description = "Username (partial match)", required = true) @RequestParam String username
-    ) {
-        List<User> users = userService.searchActiveUsersByUsername(username);
-        return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
-    }
-
-    @Operation(summary = "Search inactive users by username", description = "Searches inactive users by username.", security = @SecurityRequirement(name = "Bearer Authentication"))
-    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of inactive users") })
-    @GetMapping("/search/inactive")
-    public ResponseEntity<List<UserResponseDto>> searchInactiveUsersByUsername(
-            @Parameter(description = "Username (partial match)", required = true) @RequestParam String username
-    ) {
-        List<User> users = userService.searchInactiveUsersByUsername(username);
         return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
     }
 

@@ -95,10 +95,6 @@ public class CompanyService {
         return locationService.findByCompany(companyId);
     }
 
-    public List<Company> listAllCompanies() {
-        return companyRepository.findByDeletedAtIsNull();
-    }
-
     /**
      * Paginated search with optional filters: name, country, email, taxId, isActive.
      * Excludes soft-deleted companies.
@@ -123,26 +119,6 @@ public class CompanyService {
         }
 
         return companyRepository.findAll(spec, pageable);
-    }
-
-    public List<Company> listActiveCompanies() {
-        return companyRepository.findByIsActiveAndDeletedAtIsNull(true);
-    }
-
-    public List<Company> listInActiveCompanies() {
-        return companyRepository.findByIsActiveAndDeletedAtIsNull(false);
-    }
-
-    public List<Company> searchActiveCompaniesByName(String name) {
-        return companyRepository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull(name, true);
-    }
-
-    public List<Company> searchInActiveCompaniesByName(String name) {
-        return companyRepository.findByNameContainingIgnoreCaseAndIsActiveAndDeletedAtIsNull(name, false);
-    }
-
-    public List<Company> searchAllCompaniesByName(String name) {
-        return companyRepository.findByNameContainingIgnoreCaseAndDeletedAtIsNull(name);
     }
 }
 

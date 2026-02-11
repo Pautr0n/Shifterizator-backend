@@ -13,12 +13,17 @@ import com.shifterizator.shifterizatorbackend.user.model.Role;
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import com.shifterizator.shifterizatorbackend.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
@@ -26,6 +31,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
@@ -381,82 +387,57 @@ class UserServiceTest {
     }
 
     // ---------------------------------------------------------
-    // LIST & SEARCH
+    // SEARCH (paginated with filters: role, companyId, username, email, isActive)
     // ---------------------------------------------------------
     @Test
-    void listAllUsers_should_return_list() {
-
+    void search_should_return_page_with_no_filters() {
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
+        Pageable pageable = PageRequest.of(0, 10);
+        when(userRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
 
-        when(userRepository.findAll(any(Specification.class))).thenReturn(List.of(user));
+        Page<User> result = service.search(null, null, null, null, null, pageable);
 
-        List<User> result = service.listAllUsers();
-
-        assertThat(result).containsExactly(user);
+        assertThat(result.getContent()).containsExactly(user);
+        assertThat(result.getTotalElements()).isOne();
     }
 
     @Test
-    void listActiveUsers_should_return_active_users() {
-
+    void search_should_filter_by_username() {
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
+        Pageable pageable = PageRequest.of(0, 10);
+        when(userRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
 
-        when(userRepository.findAll(any(Specification.class))).thenReturn(List.of(user));
+        Page<User> result = service.search(null, null, "john", null, null, pageable);
 
-        List<User> result = service.listActiveUsers();
-
-        assertThat(result).containsExactly(user);
+        assertThat(result.getContent()).containsExactly(user);
     }
 
     @Test
-    void listInactiveUsers_should_return_inactive_users() {
-
+    void search_should_filter_by_isActive_true() {
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
+        user.setIsActive(true);
+        Pageable pageable = PageRequest.of(0, 10);
+        when(userRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
 
-        when(userRepository.findAll(any(Specification.class))).thenReturn(List.of(user));
+        Page<User> result = service.search(null, null, null, null, true, pageable);
 
-        List<User> result = service.listInactiveUsers();
-
-        assertThat(result).containsExactly(user);
+        assertThat(result.getContent()).containsExactly(user);
     }
 
     @Test
-    void searchUsersByUsername_should_return_matching_users() {
-
+    void search_should_filter_by_username_and_isActive() {
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
+        user.setIsActive(true);
+        Pageable pageable = PageRequest.of(0, 10);
+        when(userRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
 
-        when(userRepository.findByUsernameContainingIgnoreCase("john"))
-                .thenReturn(List.of(user));
+        Page<User> result = service.search(null, null, "john", null, true, pageable);
 
-        List<User> result = service.searchUsersByUsername("john");
-
-        assertThat(result).containsExactly(user);
+        assertThat(result.getContent()).containsExactly(user);
     }
-
-    @Test
-    void searchActiveUsersByUsername_should_return_matching_active_users() {
-
-        User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
-
-        when(userRepository.findByUsernameContainingIgnoreCaseAndIsActive("john", true))
-                .thenReturn(List.of(user));
-
-        List<User> result = service.searchActiveUsersByUsername("john");
-
-        assertThat(result).containsExactly(user);
-    }
-
-    @Test
-    void searchInactiveUsersByUsername_should_return_matching_inactive_users() {
-
-        User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);
-
-        when(userRepository.findByUsernameContainingIgnoreCaseAndIsActive("john", false))
-                .thenReturn(List.of(user));
-
-        List<User> result = service.searchInactiveUsersByUsername("john");
-
-        assertThat(result).containsExactly(user);
-    }
-
 
 }

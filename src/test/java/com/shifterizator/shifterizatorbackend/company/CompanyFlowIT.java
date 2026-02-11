@@ -87,21 +87,19 @@ class CompanyFlowIT extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.name").value("TestCo"))
                 .andExpect(jsonPath("$.email").value("testco@example.com"));
 
-        // List active companies and ensure our company is present
-        MvcResult listResult = mockMvc.perform(get("/api/companies/active")
+        // List active companies (via filter) and ensure our company is present
+        MvcResult listResult = mockMvc.perform(get("/api/companies")
+                        .param("isActive", "true")
                         .header("Authorization", adminToken))
                 .andExpect(status().isOk())
                 .andReturn();
 
         String listJson = listResult.getResponse().getContentAsString();
-        CompanyResponseDto[] companies = objectMapper.readValue(
-                listJson,
-                CompanyResponseDto[].class
-        );
-
-        assertThat(companies)
-                .extracting(CompanyResponseDto::id)
-                .contains(companyId);
+        com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(listJson);
+        com.fasterxml.jackson.databind.JsonNode content = root.get("content");
+        assertThat(content).isNotNull();
+        assertThat(content.isArray()).isTrue();
+        assertThat(content.findValuesAsText("id")).contains(String.valueOf(companyId));
     }
 
     @Test

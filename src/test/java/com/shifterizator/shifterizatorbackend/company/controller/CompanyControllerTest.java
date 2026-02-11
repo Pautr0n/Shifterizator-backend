@@ -198,84 +198,51 @@ class CompanyControllerTest {
         verify(companyService).search(any(), any(), any(), any(), any(), any());
     }
 
-    // ---------------------------------------------------------
-    // LIST ACTIVE
-    // ---------------------------------------------------------
-
     @Test
-    void listActiveCompanies_should_return_200_and_list() throws Exception {
-        when(companyService.listActiveCompanies()).thenReturn(List.of(company1));
+    void listCompanies_with_isActive_true_returns_active_companies() throws Exception {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(companyService.search(any(), any(), any(), any(), eq(true), any()))
+                .thenReturn(new PageImpl<>(List.of(company1), pageable, 1));
         when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
-        mockMvc.perform(get("/api/companies/active").with(csrf()))
+        mockMvc.perform(get("/api/companies").param("isActive", "true").with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[0].isActive").value(true));
 
-        verify(companyService).listActiveCompanies();
+        verify(companyService).search(any(), any(), any(), any(), eq(true), any());
     }
 
-    // ---------------------------------------------------------
-    // LIST INACTIVE
-    // ---------------------------------------------------------
-
     @Test
-    void listInactiveCompanies_should_return_200_and_list() throws Exception {
-        when(companyService.listInActiveCompanies()).thenReturn(List.of(company1));
+    void listCompanies_with_name_filter_returns_matching_companies() throws Exception {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(companyService.search(eq("Comp"), any(), any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(company1), pageable, 1));
         when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
-        mockMvc.perform(get("/api/companies/inactive").with(csrf()))
+        mockMvc.perform(get("/api/companies").param("name", "Comp").with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.content[0].name").value("Company 1"));
 
-        verify(companyService).listInActiveCompanies();
+        verify(companyService).search(eq("Comp"), any(), any(), any(), any(), any());
     }
 
-    // ---------------------------------------------------------
-    // SEARCH ACTIVE
-    // ---------------------------------------------------------
-
     @Test
-    void searchActiveCompanies_should_return_200_and_list() throws Exception {
-        when(companyService.searchActiveCompaniesByName("Comp")).thenReturn(List.of(company1));
+    void listCompanies_with_name_and_isActive_returns_filtered_page() throws Exception {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(companyService.search(eq("Comp"), any(), any(), any(), eq(true), any()))
+                .thenReturn(new PageImpl<>(List.of(company1), pageable, 1));
         when(companyMapper.toDto(company1)).thenReturn(responseDto1);
 
-        mockMvc.perform(get("/api/companies/active/search?name=Comp"))
+        mockMvc.perform(get("/api/companies")
+                        .param("name", "Comp")
+                        .param("isActive", "true")
+                        .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Company 1"));
+                .andExpect(jsonPath("$.content[0].name").value("Company 1"))
+                .andExpect(jsonPath("$.content[0].isActive").value(true));
 
-        verify(companyService).searchActiveCompaniesByName("Comp");
-    }
-
-    // ---------------------------------------------------------
-    // SEARCH INACTIVE
-    // ---------------------------------------------------------
-
-    @Test
-    void searchInactiveCompanies_should_return_200_and_list() throws Exception {
-        when(companyService.searchInActiveCompaniesByName("Comp")).thenReturn(List.of(company1));
-        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
-
-        mockMvc.perform(get("/api/companies/inactive/search?name=Comp"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Company 1"));
-
-        verify(companyService).searchInActiveCompaniesByName("Comp");
-    }
-
-    // ---------------------------------------------------------
-    // SEARCH ALL
-    // ---------------------------------------------------------
-
-    @Test
-    void searchCompaniesByName_should_return_200_and_list() throws Exception {
-        when(companyService.searchAllCompaniesByName("Comp")).thenReturn(List.of(company1));
-        when(companyMapper.toDto(company1)).thenReturn(responseDto1);
-
-        mockMvc.perform(get("/api/companies/search?name=Comp"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Company 1"));
-
-        verify(companyService).searchAllCompaniesByName("Comp");
+        verify(companyService).search(eq("Comp"), any(), any(), any(), eq(true), any());
     }
 
     // ---------------------------------------------------------

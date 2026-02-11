@@ -131,15 +131,18 @@ public class UserService {
     }
 
     /**
-     * Paginated search with optional filters: role, companyId, email, isActive. Excludes logically deleted users.
+     * Paginated search with optional filters: role, companyId, username, email, isActive. Excludes logically deleted users.
      */
-    public Page<User> search(String role, Long companyId, String email, Boolean isActive, Pageable pageable) {
+    public Page<User> search(String role, Long companyId, String username, String email, Boolean isActive, Pageable pageable) {
         Specification<User> spec = UserSpecs.notDeleted();
         if (role != null && !role.isBlank()) {
             spec = spec.and(UserSpecs.byRole(role));
         }
         if (companyId != null) {
             spec = spec.and(UserSpecs.byCompany(companyId));
+        }
+        if (username != null && !username.isBlank()) {
+            spec = spec.and(UserSpecs.usernameContains(username));
         }
         if (email != null && !email.isBlank()) {
             spec = spec.and(UserSpecs.emailContains(email));
@@ -154,41 +157,11 @@ public class UserService {
         return userRepository.findByCompany_IdAndDeletedAtIsNull(companyId);
     }
 
-    public List<User> searchUsersByEmail(String email) {
-        return userRepository.findByEmailContainingIgnoreCaseAndDeletedAtIsNull(email);
-    }
-
     @Transactional
     public User resetPassword(Long id, String newPassword) {
         User user = findByIdOrThrow(id);
         user.setPassword(passwordEncoder.encode(newPassword));
         return userRepository.save(user);
-    }
-
-    public List<User> listAllUsers() {
-        return userRepository.findAll(UserSpecs.notDeleted());
-    }
-
-    public List<User> listActiveUsers() {
-        Specification<User> spec = UserSpecs.notDeleted().and(UserSpecs.byIsActive(true));
-        return userRepository.findAll(spec);
-    }
-
-    public List<User> listInactiveUsers() {
-        Specification<User> spec = UserSpecs.notDeleted().and(UserSpecs.byIsActive(false));
-        return userRepository.findAll(spec);
-    }
-
-    public List<User> searchUsersByUsername(String username) {
-        return userRepository.findByUsernameContainingIgnoreCase(username);
-    }
-
-    public List<User> searchActiveUsersByUsername(String username) {
-        return userRepository.findByUsernameContainingIgnoreCaseAndIsActive(username, true);
-    }
-
-    public List<User> searchInactiveUsersByUsername(String username) {
-        return userRepository.findByUsernameContainingIgnoreCaseAndIsActive(username, false);
     }
 
     private void validateUniqueUsername(String username) {
