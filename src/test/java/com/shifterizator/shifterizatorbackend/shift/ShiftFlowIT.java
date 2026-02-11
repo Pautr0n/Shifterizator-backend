@@ -16,6 +16,12 @@ import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceResponseDto
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.PositionRequirementDto;
+import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentRequestDto;
+import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentResponseDto;
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
+import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
+import com.shifterizator.shifterizatorbackend.availability.dto.AvailabilityRequestDto;
+import com.shifterizator.shifterizatorbackend.availability.model.AvailabilityType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -24,6 +30,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -32,8 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Integration tests for shift templates and instances flow:
- * create template → generate instances for a month → retrieve and verify.
+ * Integration tests for shift templates, instances, and assignment flows:
+ * create template → generate instances → assign employees → validate constraints.
  */
 class ShiftFlowIT extends BaseIntegrationTest {
 
@@ -58,10 +65,13 @@ class ShiftFlowIT extends BaseIntegrationTest {
     }
 
     private Long createCompany(String adminToken, String suffix) throws Exception {
+        String taxId = suffix.length() <= 2 ? "S" + suffix + "23456789" : suffix.substring(0, 1).toUpperCase() + "12345678";
+        if (taxId.length() > 12) taxId = taxId.substring(0, 12);
+        if (taxId.length() < 9) taxId = String.format("%-9s", taxId).replace(' ', '0');
         CompanyRequestDto request = new CompanyRequestDto(
                 "ShiftCo-" + suffix,
                 "Shift Company " + suffix + " S.A.",
-                "S" + suffix + "23456789",
+                taxId,
                 "shiftco" + suffix + "@example.com",
                 "555444333",
                 "Spain"
@@ -112,6 +122,33 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 PositionDto.class
         );
         return position.id();
+    }
+
+    private Long createEmployee(String adminToken, Long companyId, Long positionId, Long locationId, String suffix) throws Exception {
+        EmployeeRequestDto request = new EmployeeRequestDto(
+                "ShiftEmp-" + suffix,
+                "Worker",
+                "shiftemp" + suffix + "@example.com",
+                "111222333",
+                positionId,
+                Set.of(companyId),
+                Set.of(locationId),
+                Set.of(),
+                null,
+                List.of()
+        );
+        MvcResult result = mockMvc.perform(post("/api/employees")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andReturn();
+        EmployeeResponseDto employee = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                EmployeeResponseDto.class
+        );
+        return employee.id();
     }
 
     @Test
@@ -190,5 +227,207 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 .andExpect(jsonPath("$[0].locationId").value(locationId))
                 .andExpect(jsonPath("$[0].startTime").exists())
                 .andExpect(jsonPath("$[0].endTime").exists());
+    }
+
+    @Test
+    @DisplayName("Admin can assign employee to shift and retrieve assignments by shift and by employee")
+    void adminCanAssignEmployeeToShiftAndRetrieveAssignments() throws Exception {
+        String adminToken = loginAndGetBearerToken("admin", "Admin123!");
+        Long companyId = createCompany(adminToken, "assign");
+        Long locationId = createLocation(adminToken, companyId, "assign");
+        Long positionId = createPosition(adminToken, companyId);
+        Long employeeId = createEmployee(adminToken, companyId, positionId, locationId, "assign");
+
+        LocalTime startTime = LocalTime.of(9, 0);
+        LocalTime endTime = LocalTime.of(17, 0);
+        ShiftTemplateRequestDto templateRequest = new ShiftTemplateRequestDto(
+                locationId,
+                List.of(new PositionRequirementDto(positionId, 1, null)),
+                startTime,
+                endTime,
+                "Assign shift",
+                null,
+                null,
+                true
+        );
+        mockMvc.perform(post("/api/shift-templates")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(templateRequest)))
+                .andExpect(status().isCreated());
+
+        int year = 2026;
+        int month = 7;
+        GenerateMonthRequestDto generateRequest = new GenerateMonthRequestDto(locationId, year, month);
+        mockMvc.perform(post("/api/shift-instances/generate-month")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(generateRequest)))
+                .andExpect(status().isCreated());
+
+        LocalDate shiftDate = LocalDate.of(year, month, 15);
+        MvcResult listResult = mockMvc.perform(get("/api/shift-instances/by-location/{locationId}/date/{date}"
+                        , locationId, shiftDate)
+                        .header("Authorization", adminToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<ShiftInstanceResponseDto> instances = objectMapper.readValue(
+                listResult.getResponse().getContentAsString(),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, ShiftInstanceResponseDto.class)
+        );
+        assertThat(instances).isNotEmpty();
+        Long shiftInstanceId = instances.get(0).id();
+
+        ShiftAssignmentRequestDto assignRequest = new ShiftAssignmentRequestDto(shiftInstanceId, employeeId);
+        MvcResult assignResult = mockMvc.perform(post("/api/shift-assignments")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(assignRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.shiftInstanceId").value(shiftInstanceId))
+                .andExpect(jsonPath("$.employeeId").value(employeeId))
+                .andReturn();
+
+        ShiftAssignmentResponseDto assignment = objectMapper.readValue(
+                assignResult.getResponse().getContentAsString(),
+                ShiftAssignmentResponseDto.class
+        );
+        assertThat(assignment.id()).isNotNull();
+
+        mockMvc.perform(get("/api/shift-assignments/shift-instance/{shiftInstanceId}", shiftInstanceId)
+                        .header("Authorization", adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].employeeId").value(employeeId));
+
+        mockMvc.perform(get("/api/shift-assignments/employee/{employeeId}", employeeId)
+                        .header("Authorization", adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].shiftInstanceId").value(shiftInstanceId));
+    }
+
+    @Test
+    @DisplayName("Assigning same employee twice to same shift returns 400")
+    void assigningSameEmployeeTwiceToSameShiftReturns400() throws Exception {
+        String adminToken = loginAndGetBearerToken("admin", "Admin123!");
+        Long companyId = createCompany(adminToken, "dup");
+        Long locationId = createLocation(adminToken, companyId, "dup");
+        Long positionId = createPosition(adminToken, companyId);
+        Long employeeId = createEmployee(adminToken, companyId, positionId, locationId, "dup");
+
+        ShiftTemplateRequestDto templateRequest = new ShiftTemplateRequestDto(
+                locationId,
+                List.of(new PositionRequirementDto(positionId, 2, null)),
+                LocalTime.of(9, 0),
+                LocalTime.of(17, 0),
+                "Dup shift",
+                null,
+                null,
+                true
+        );
+        mockMvc.perform(post("/api/shift-templates")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(templateRequest)))
+                .andExpect(status().isCreated());
+
+        GenerateMonthRequestDto generateRequest = new GenerateMonthRequestDto(locationId, 2026, 8);
+        mockMvc.perform(post("/api/shift-instances/generate-month")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(generateRequest)))
+                .andExpect(status().isCreated());
+
+        MvcResult listResult = mockMvc.perform(get("/api/shift-instances/by-location/{locationId}/date/{date}", locationId, "2026-08-10")
+                        .header("Authorization", adminToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<ShiftInstanceResponseDto> instances = objectMapper.readValue(
+                listResult.getResponse().getContentAsString(),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, ShiftInstanceResponseDto.class)
+        );
+        assertThat(instances).isNotEmpty();
+        Long shiftInstanceId = instances.get(0).id();
+
+        ShiftAssignmentRequestDto assignRequest = new ShiftAssignmentRequestDto(shiftInstanceId, employeeId);
+        mockMvc.perform(post("/api/shift-assignments")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(assignRequest)))
+                .andExpect(status().isCreated());
+
+        MvcResult badResult = mockMvc.perform(post("/api/shift-assignments")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(assignRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertThat(badResult.getResponse().getContentAsString()).contains("already assigned");
+    }
+
+    @Test
+    @DisplayName("Assigning employee with blocking availability on shift date returns 400")
+    void assigningEmployeeWithBlockingAvailabilityReturns400() throws Exception {
+        String adminToken = loginAndGetBearerToken("admin", "Admin123!");
+        Long companyId = createCompany(adminToken, "block");
+        Long locationId = createLocation(adminToken, companyId, "block");
+        Long positionId = createPosition(adminToken, companyId);
+        Long employeeId = createEmployee(adminToken, companyId, positionId, locationId, "block");
+
+        ShiftTemplateRequestDto templateRequest = new ShiftTemplateRequestDto(
+                locationId,
+                List.of(new PositionRequirementDto(positionId, 1, null)),
+                LocalTime.of(9, 0),
+                LocalTime.of(17, 0),
+                "Block shift",
+                null,
+                null,
+                true
+        );
+        mockMvc.perform(post("/api/shift-templates")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(templateRequest)))
+                .andExpect(status().isCreated());
+
+        GenerateMonthRequestDto generateRequest = new GenerateMonthRequestDto(locationId, 2026, 9);
+        mockMvc.perform(post("/api/shift-instances/generate-month")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(generateRequest)))
+                .andExpect(status().isCreated());
+
+        LocalDate shiftDate = LocalDate.of(2026, 9, 20);
+        AvailabilityRequestDto blockingAvailability = new AvailabilityRequestDto(
+                employeeId,
+                shiftDate,
+                shiftDate,
+                AvailabilityType.UNAVAILABLE
+        );
+        mockMvc.perform(post("/api/availability")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(blockingAvailability)))
+                .andExpect(status().isCreated());
+
+        MvcResult listResult = mockMvc.perform(get("/api/shift-instances/by-location/{locationId}/date/{date}", locationId, shiftDate)
+                        .header("Authorization", adminToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<ShiftInstanceResponseDto> instances = objectMapper.readValue(
+                listResult.getResponse().getContentAsString(),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, ShiftInstanceResponseDto.class)
+        );
+        assertThat(instances).isNotEmpty();
+        Long shiftInstanceId = instances.get(0).id();
+
+        ShiftAssignmentRequestDto assignRequest = new ShiftAssignmentRequestDto(shiftInstanceId, employeeId);
+        MvcResult badResult = mockMvc.perform(post("/api/shift-assignments")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(assignRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertThat(badResult.getResponse().getContentAsString()).contains("marked as");
     }
 }
