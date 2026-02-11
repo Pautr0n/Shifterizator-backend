@@ -1,109 +1,224 @@
 # 🚀 Shifterizator - Automatic Multi-Business Schedule Generator
 
-## 🎯 Product Vision (Jan 31, 2026)
-**For jewelry/retail managers in Barcelona [who]**, generates optimal 1‑month schedules [what], considering positions/seniority/languages/managers + employee preferences [how], **scalable multi‑tenant** (3–50 employees/business) [why].
+📄 **Description - App Statement**
 
-## 👥 Roles and Permissions
-| Role | Key Responsibilities |
-|------|-----------------------|
-| **SUPERADMIN** | Create ADMINS + companies |
-| **ADMIN** | Company config, full CRUD employees, shifts |
-| **MANAGER** | Generate/edit schedules, employee preferences |
-| **EMPLOYEE** | View calendars, request holidays |
+Shifterizator is a comprehensive backend system for automatic multi-business schedule generation and workforce management. This Spring Boot application provides a RESTful API for managing companies, employees, shifts, availability, and schedules across multiple business locations. The system supports role-based access control (RBAC) with different permission levels for super administrators, company administrators, shift managers, and employees.
 
-🚀 Initial Users (Seed Data)
-The application automatically seeds initial users when running in non‑production environments (dev, test).
-This allows developers to test authentication, roles, and permissions immediately.
-✔ Seeded Users
-|  |  |  |  |
-| superadmin |  | SuperAdmin1! |  |
-| admin |  | Admin123! |  |
-| manager |  | Manager123! |  |
-| employee |  | Employee123! |  |
-
-
-✔ Behavior
-- Users are created only if the database is empty.
-- Passwords are securely hashed using the configured PasswordEncoder.
-- The seeder runs only when the active profile is not prod.
-- The superadmin user is marked as a system user and cannot be deleted.
-- Additional SUPERADMIN users created later can be deleted normally.
-
-## 🚀 Initial Users (Seed Data)
-
-The application automatically seeds initial users when running in **non‑production environments** (`dev`, `test`).  
-This allows developers to test authentication, roles, and permissions immediately.
-
-### ✔ Seeded Users
-
-| Username     | Role        | Password        | Notes |
-|--------------|-------------|-----------------|-------|
-| `superadmin` | SUPERADMIN  | `SuperAdmin1!`  | **System user — cannot be deleted** |
-| `admin`      | ADMIN       | `Admin123!`     | Can be deleted |
-| `manager`    | MANAGER     | `Manager123!`   | Can be deleted |
-| `employee`   | EMPLOYEE    | `Employee123!`  | Can be deleted |
-
-### ✔ Behavior
-
-- Users are created **only if the database is empty**.
-- Passwords are **securely hashed** using the configured `PasswordEncoder`.
-- The seeder runs only when the active profile is **not** `prod`.
-- The `superadmin` user is marked as a **system user** and **cannot be deleted**.
-- Additional SUPERADMIN users created later **can** be deleted normally.
-
-### ✔ Production Safety
-
-The seeder is annotated with:
-
-```java
-@Profile("!prod")
-```
-
-This guarantees:
-
-- **No test users are ever created in production**
-- Production data remains clean and controlled
+Key features include:
+- Multi-tenant architecture supporting multiple companies
+- Automatic shift generation based on templates and employee availability
+- Employee availability and preference management
+- Blackout days and special opening hours configuration
+- Comprehensive role-based access control
+- JWT-based authentication and authorization
+- RESTful API with pagination and filtering capabilities
 
 ---
 
-## 🏗️ Tech Stack
-- **Backend**: Spring Boot **4.0.2** + Java 21 + Spring Security JWT + JPA/**MySQL** + **SpringDoc Swagger**
-- **Frontend**: Angular 18 + Angular Material + JWT Interceptor
-- **Architecture**: **Modular Monolith DDD** (bounded context packages: `company`, `employees`, `shifts`, `schedules`)
+💻 **Technologies Used**
 
-## 📊 Data Model (MySQL)
-```
-Company(id, name, opening="10:00", closing="21:00")
-User(id, username, role, company_id)
-Employee(id, name, position="SELLER|MANAGER|ADMIN", senior=boolean, languages[], prefsDays[], prefsShift, maxWeeklyHours=40, user_id)
-Shift(id, company_id, type, start, end, totalCount=4, minEnglish=2, minChinese=1, minManagers=1)
-Schedule(id, date, shift_id, employee_id)
-HolidayRequest(id, employee_id, date, status=PENDING)
-```
+- **Java 21** - Programming language
+- **Spring Boot 4.0.2** - Application framework
+- **Spring Security** - Authentication and authorization
+- **Spring Data JPA** - Data persistence layer
+- **MySQL 8.0** - Production database
+- **H2 Database** - In-memory database for unit tests
+- **JWT (JJWT 0.11.5)** - JSON Web Token for authentication
+- **Lombok** - Code generation and boilerplate reduction
+- **Maven** - Build and dependency management
+- **Testcontainers** - Integration testing with Docker containers
+- **JUnit 5** - Testing framework
+- **AssertJ** - Fluent assertions for testing
+- **Jackson** - JSON serialization/deserialization
+- **Docker & Docker Compose** - Containerization and local development
 
-## 🔌 API Endpoints (Swagger `/swagger-ui.html`)
-| Role | Endpoint | Method | Description |
-|------|----------|--------|-------------|
-| SUPERADMIN | `/api/superadmin/admins` | POST | Create ADMIN + company |
-| All | `/api/auth/login` | POST | JWT token |
-| ADMIN | `/api/companies/{id}/config` | GET/PUT | Company profile + shifts |
-| ADMIN/MANAGER | `/api/companies/{id}/employees` | GET | List |
-| ADMIN/MANAGER | `/api/employees/{id}` | GET | Detail |
-| ADMIN | `/api/employees/{id}` | PUT/DELETE | Full CRUD |
-| MANAGER | `/api/employees/{id}/prefs` | PUT | Schedule preferences |
-| ADMIN/MANAGER | `/api/companies/{id}/schedules/generate?month=2026-02` | POST | Generate 1‑month |
-| ADMIN/MANAGER | `/api/schedules/{id}` | PUT | Manual changes |
-| EMPLOYEE | `/api/companies/{id}/global-calendar` | GET | All shifts |
-| EMPLOYEE | `/api/employees/me/profile` | GET/PUT | Profile + photo |
-| EMPLOYEE | `/api/employees/me/schedules` | GET | My schedules |
+---
 
-## ⚙️ Installation
-```bash
-# Backend
-mvn spring-boot:run
-# Swagger: localhost:8080/swagger-ui.html
+📋 **Requirements**
 
-# Frontend
-ng serve -o
-```
+- **Java 21** or higher
+- **Maven 3.6+** (or use included Maven Wrapper)
+- **MySQL 8.0** (for production and development)
+- **Docker** (optional, for running MySQL via Docker Compose)
+- **Git** (for cloning the repository)
 
+---
+
+🛠️ **Installation**
+
+1. **Clone this repository:**
+   ```bash
+   git clone https://github.com/username/shifterizator-backend.git
+   ```
+
+2. **Navigate to the project directory:**
+   ```bash
+   cd shifterizator-backend
+   ```
+
+3. **Set up MySQL database:**
+   
+   **Option A: Using Docker Compose (Recommended for development)**
+   ```bash
+   docker-compose up -d
+   ```
+   This will start a MySQL container on port 3307 with:
+   - Database: `shifterizator_dev`
+   - Username: `root`
+   - Password: `root`
+
+   **Option B: Using local MySQL**
+   - Create a MySQL database named `shifterizator_dev`
+   - Update connection details in `src/main/resources/application-dev.yml` if needed
+
+4. **Install dependencies:**
+   ```bash
+   ./mvnw clean install
+   ```
+   Or if you have Maven installed:
+   ```bash
+   mvn clean install
+   ```
+
+---
+
+▶️ **Execution**
+
+1. **Development mode:**
+   ```bash
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+   ```
+   Or:
+   ```bash
+   mvn spring-boot:run -Dspring-boot.run.profiles=dev
+   ```
+
+   The application will start on `http://localhost:8080`
+
+2. **Using Maven Wrapper (Windows):**
+   ```bash
+   mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev
+   ```
+
+3. **Running tests:**
+   ```bash
+   # Run all tests (unit + integration)
+   ./mvnw verify
+   
+   # Run only unit tests
+   ./mvnw test
+   
+   # Run only integration tests
+   ./mvnw verify -DskipTests
+   ```
+
+4. **Default seeded users:**
+   After the first run, the following users are automatically created:
+   - **SUPERADMIN**: `superadmin` / `SuperAdmin1!`
+   - **COMPANYADMIN**: `admin` / `Admin123!`
+   - **SHIFTMANAGER**: `manager` / `Manager123!`
+   - **EMPLOYEE**: `employee` / `Employee123!`
+
+---
+
+🌐 **Deployment**
+
+1. **Prepare the production environment:**
+   - Set up a MySQL 8.0 database server
+   - Configure environment variables for database connection:
+     - `MYSQLHOST` - Database host
+     - `MYSQLPORT` - Database port
+     - `MYSQLDATABASE` - Database name
+     - `MYSQLUSER` - Database username
+     - `MYSQLPASSWORD` - Database password
+     - `PORT` - Application port (default: 8080)
+
+2. **Build the application:**
+   ```bash
+   ./mvnw clean package -DskipTests
+   ```
+   This creates a JAR file in `target/shifterizator-backend-0.0.1-SNAPSHOT.jar`
+
+3. **Run the application:**
+   ```bash
+   java -jar target/shifterizator-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
+   ```
+
+4. **Using Docker (alternative):**
+   ```bash
+   # Build Docker image
+   docker build -t shifterizator-backend .
+   
+   # Run container
+   docker run -p 8080:8080 \
+     -e SPRING_PROFILES_ACTIVE=prod \
+     -e MYSQLHOST=your-db-host \
+     -e MYSQLPORT=3306 \
+     -e MYSQLDATABASE=shifterizator_prod \
+     -e MYSQLUSER=your-user \
+     -e MYSQLPASSWORD=your-password \
+     shifterizator-backend
+   ```
+
+5. **Health check:**
+   Once deployed, verify the application is running:
+   ```bash
+   curl http://localhost:8080/api/health
+   ```
+
+---
+
+🤝 **Contributions**
+
+Contributions are welcome! Please follow these steps to contribute:
+
+1. **Fork the repository**
+
+2. **Create a new branch:**
+   ```bash
+   git checkout -b feature/NewFeature
+   ```
+
+3. **Make your changes and commit them:**
+   ```bash
+   git add .
+   git commit -m 'Add New Feature'
+   ```
+
+4. **Push changes to your branch:**
+   ```bash
+   git push origin feature/NewFeature
+   ```
+
+5. **Create a pull request**
+
+**Guidelines:**
+- Follow the existing code style and conventions
+- Write unit tests for new features
+- Write integration tests for API endpoints
+- Update documentation as needed
+- Ensure all tests pass (`mvn verify`)
+- Follow the role-based access control patterns established in the codebase
+
+---
+
+## 📚 Additional Resources
+
+
+---
+
+## 🔐 Security
+
+This application uses JWT-based authentication. Access tokens expire after 15 minutes, and refresh tokens expire after 7 days. All endpoints are protected by role-based access control (RBAC) with the following hierarchy:
+
+- **SUPERADMIN** → Full system access
+- **COMPANYADMIN** → Company-level access
+- **SHIFTMANAGER** → Location-level access
+- **READONLYMANAGER** → Read-only location access
+- **EMPLOYEE** → Self-service access
+
+---
+
+## 📝 License
+
+See the [LICENSE](LICENSE) file for details.
