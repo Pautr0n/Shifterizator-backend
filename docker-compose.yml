@@ -1,19 +1,75 @@
-version: "3.9"
-
 services:
+  # MySQL Database Container
   shifterizator-mysql:
     image: mysql:8.0
     container_name: shifterizator-mysql
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: shifterizator_dev
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-shifterizator_prod}
+      MYSQL_USER: ${MYSQL_USER:-shifterizator}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-changeme}
     ports:
-      - "3307:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - shifterizator_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Spring Boot Application Container
+  shifterizator-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shifterizator-backend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # Database Connection (uses service name from docker-compose network)
+      MYSQLHOST: shifterizator-mysql
+      MYSQLPORT: 3306
+      MYSQLDATABASE: ${MYSQL_DATABASE:-shifterizator_prod}
+      MYSQLUSER: ${MYSQL_USER:-shifterizator}
+      MYSQLPASSWORD: ${MYSQL_PASSWORD:-changeme}
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-900000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-604800000}
+      
+      # Database SSL (optional)
+      MYSQL_USE_SSL: ${MYSQL_USE_SSL:-false}
+      MYSQL_ALLOW_PUBLIC_KEY_RETRIEVAL: ${MYSQL_ALLOW_PUBLIC_KEY_RETRIEVAL:-true}
+      
+      # JPA DDL Auto Mode
+      DDL_AUTO: ${DDL_AUTO:-validate}
+      
+      # CORS Configuration (optional)
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:8080}
+      CORS_ALLOWED_METHODS: ${CORS_ALLOWED_METHODS:-GET,POST,PUT,PATCH,DELETE,OPTIONS}
+      CORS_ALLOWED_HEADERS: ${CORS_ALLOWED_HEADERS:-*}
+      CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-true}
+      CORS_MAX_AGE: ${CORS_MAX_AGE:-3600}
+      
+      # Application Port
+      PORT: 8080
+    depends_on:
+      shifterizator-mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 volumes:
   shifterizator_mysql_data:
