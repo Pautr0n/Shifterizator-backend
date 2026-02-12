@@ -1,11 +1,11 @@
 package com.shifterizator.shifterizatorbackend.config;
 
 import com.shifterizator.shifterizatorbackend.auth.jwt.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,39 +13,59 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
-@RequiredArgsConstructor
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final Environment environment;
+    private final CorsConfigurationSource corsConfigurationSource;
 
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, 
+                         Environment environment,
+                         CorsConfigurationSource corsConfigurationSource) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.environment = environment;
+        this.corsConfigurationSource = corsConfigurationSource;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         log.info("Configuring SecurityFilterChain");
 
+        boolean isProd = environment.matchesProfiles("prod");
+        log.info("Active profile: {}", isProd ? "prod" : "dev/test");
+
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm ->
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth ->
-                        auth
-                                // Public endpoints
-                                .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/health")
-                                .permitAll()
-                                // Swagger / OpenAPI documentation (no auth required to view docs)
-                                .requestMatchers(
-                                        "/swagger-ui.html",
-                                        "/swagger-ui/**",
-                                        "/v3/api-docs",
-                                        "/v3/api-docs/**"
-                                )
-                                .permitAll()
+                .authorizeHttpRequests(auth -> {
+                    auth
+                            // Public endpoints
+                            .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/health")
+                            .permitAll();
+                    
+                    // Swagger / OpenAPI documentation - only enabled in non-prod environments
+                    if (!isProd) {
+                        auth.requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**"
+                        ).permitAll();
+                        log.info("Swagger UI enabled (non-prod environment)");
+                    } else {
+                        log.info("Swagger UI disabled (production environment)");
+                    }
+                    
+                    auth
 
                                 // Companies: POST only SUPERADMIN, DELETE only SUPERADMIN, activate/deactivate only SUPERADMIN
                                 // GET/PUT for SUPERADMIN+COMPANYADMIN (method-level checks needed for company ownership)
@@ -176,9 +196,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/auth/**").authenticated()
 
                                 // Default: all other requests require authentication
-                                .anyRequest().authenticated()
-
-                )
+                                .anyRequest().authenticated();
+                })
                 .exceptionHandling(ex ->
                         ex.authenticationEntryPoint((
                                 req,
