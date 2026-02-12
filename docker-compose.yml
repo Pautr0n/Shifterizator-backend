@@ -50,7 +50,12 @@ services:
       MYSQL_ALLOW_PUBLIC_KEY_RETRIEVAL: ${MYSQL_ALLOW_PUBLIC_KEY_RETRIEVAL:-true}
       
       # JPA DDL Auto Mode
-      DDL_AUTO: ${DDL_AUTO:-validate}
+      DDL_AUTO: ${DDL_AUTO:-update}
+      
+      # Presentation/Demo Data Seeding
+      # Set to 'true' to automatically populate database with demo data on first startup
+      # Only runs if database is empty (no users exist)
+      ENABLE_DEMO_DATA: ${ENABLE_DEMO_DATA:-true}
       
       # CORS Configuration (optional)
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:8080}
