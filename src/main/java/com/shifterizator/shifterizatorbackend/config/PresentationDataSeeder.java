@@ -242,20 +242,26 @@ public class PresentationDataSeeder implements CommandLineRunner {
     }
 
     private void createEmployeeCompany(Employee employee, Company company) {
+        // Reload employee to avoid stale state
+        Employee freshEmployee = employeeRepository.findById(employee.getId())
+                .orElseThrow(() -> new RuntimeException("Employee not found: " + employee.getId()));
         EmployeeCompany employeeCompany = EmployeeCompany.builder()
-                .employee(employee)
+                .employee(freshEmployee)
                 .company(company)
                 .build();
-        employee.addCompany(employeeCompany);
-        employeeRepository.save(employee);
+        freshEmployee.addCompany(employeeCompany);
+        employeeRepository.save(freshEmployee);
     }
 
     private void createEmployeeLocation(Employee employee, Location location) {
+        // Reload employee to avoid stale state
+        Employee freshEmployee = employeeRepository.findById(employee.getId())
+                .orElseThrow(() -> new RuntimeException("Employee not found: " + employee.getId()));
         EmployeeLocation employeeLocation = EmployeeLocation.builder()
-                .employee(employee)
+                .employee(freshEmployee)
                 .location(location)
                 .build();
-        employee.addLocation(employeeLocation);
-        employeeRepository.save(employee);
+        freshEmployee.addLocation(employeeLocation);
+        employeeRepository.save(freshEmployee);
     }
 }
