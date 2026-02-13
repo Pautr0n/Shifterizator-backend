@@ -53,6 +53,7 @@ public class EmployeeMapper {
                 employee.getSurname(),
                 employee.getEmail(),
                 employee.getPhone(),
+                employee.getPosition() != null ? employee.getPosition().getId() : null,
                 employee.getPosition() != null ? employee.getPosition().getName() : null,
                 extractCompanyIds(employee.getEmployeeCompanies()),
                 extractCompanyNames(employee.getEmployeeCompanies()),

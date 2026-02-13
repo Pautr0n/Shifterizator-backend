@@ -23,6 +23,9 @@ public record EmployeeResponseDto(
         @Schema(description = "Employee phone number", example = "+34612345678")
         String phone,
 
+        @Schema(description = "Position/job title ID", example = "1")
+        Long positionId,
+
         @Schema(description = "Position/job title name", example = "Cashier")
         String position,
 
