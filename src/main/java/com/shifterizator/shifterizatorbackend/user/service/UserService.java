@@ -3,6 +3,7 @@ package com.shifterizator.shifterizatorbackend.user.service;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
+import com.shifterizator.shifterizatorbackend.user.dto.AssignableUserDto;
 import com.shifterizator.shifterizatorbackend.user.dto.UserRequestDto;
 import com.shifterizator.shifterizatorbackend.user.exception.EmailAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.user.exception.ForbiddenOperationException;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -155,6 +158,19 @@ public class UserService {
 
     public List<User> listByCompany(Long companyId) {
         return userRepository.findByCompany_IdAndDeletedAtIsNull(companyId);
+    }
+
+    /**
+     * Returns users that can be assigned to an employee (e.g. in a dropdown).
+     * Only active, non-deleted users whose company is in the given set are returned.
+     */
+    public List<AssignableUserDto> listAssignableByCompanyIds(Set<Long> companyIds) {
+        if (companyIds == null || companyIds.isEmpty()) {
+            return List.of();
+        }
+        return userRepository.findByCompany_IdInAndDeletedAtIsNullAndIsActiveTrue(companyIds).stream()
+                .map(u -> new AssignableUserDto(u.getId(), u.getUsername()))
+                .collect(Collectors.toList());
     }
 
     @Transactional

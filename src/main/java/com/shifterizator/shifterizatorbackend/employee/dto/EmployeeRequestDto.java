@@ -63,7 +63,10 @@ public record EmployeeRequestDto(
                 example = "[5, 3, 7]"
         )
         /** Optional. Ordered list of shift template IDs (first = highest preference). */
-        List<Long> preferredShiftTemplateIds
+        List<Long> preferredShiftTemplateIds,
+
+        /** Optional. ID of the user account to link to this employee. */
+        Long userId
 
 ) {
 }

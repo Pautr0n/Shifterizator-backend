@@ -52,7 +52,7 @@ class EmployeeServiceImplTest {
     void create_shouldCreateEmployeeSuccessfully() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, null
+                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, null, null
         );
 
         Position position = Position.builder().id(1L).name("Waiter").build();
@@ -73,6 +73,7 @@ class EmployeeServiceImplTest {
 
         verify(employeeDomainService).validateEmailUniqueness(dto, null);
         verify(employeeMapper).toEntity(dto, position);
+        verify(employeeDomainService).assignUser(any(Employee.class), eq(dto), eq(null));
         verify(employeeRepository).save(any(Employee.class));
         verify(employeeDomainService).assignCompanies(any(Employee.class), eq(dto));
         verify(employeeDomainService).assignLocations(any(Employee.class), eq(dto));
@@ -86,7 +87,7 @@ class EmployeeServiceImplTest {
     void create_shouldThrowWhenPositionNotFound() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, null
+                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, null, null
         );
 
         when(positionRepository.findById(1L)).thenReturn(Optional.empty());
@@ -100,7 +101,7 @@ class EmployeeServiceImplTest {
     void update_shouldUpdateEmployeeSuccessfully() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, null
+                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, null, null
         );
 
         Position position = Position.builder().id(1L).name("Waiter").build();
@@ -119,6 +120,7 @@ class EmployeeServiceImplTest {
         Employee result = employeeService.update(99L, dto);
 
         verify(employeeDomainService).validateEmailUniqueness(dto, 99L);
+        verify(employeeDomainService).assignUser(employee, dto, 99L);
         verify(employeeDomainService).assignCompanies(employee, dto);
         verify(employeeDomainService).assignLocations(employee, dto);
         verify(employeeDomainService).assignLanguages(employee, dto);
@@ -133,7 +135,7 @@ class EmployeeServiceImplTest {
     void update_shouldThrowWhenEmployeeNotFound() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, null
+                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, null, null
         );
 
         when(employeeRepository.findActiveById(99L)).thenReturn(Optional.empty());

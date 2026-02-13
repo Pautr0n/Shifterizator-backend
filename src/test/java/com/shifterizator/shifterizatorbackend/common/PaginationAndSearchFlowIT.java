@@ -133,7 +133,8 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
                 Set.of(locationId),
                 Set.of(),
                 null,
-                List.of()
+                List.of(),
+                null
         );
         MvcResult result = mockMvc.perform(post("/api/employees")
                         .header("Authorization", adminToken)

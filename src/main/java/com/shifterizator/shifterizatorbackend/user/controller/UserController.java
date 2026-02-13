@@ -1,5 +1,6 @@
 package com.shifterizator.shifterizatorbackend.user.controller;
 
+import com.shifterizator.shifterizatorbackend.user.dto.AssignableUserDto;
 import com.shifterizator.shifterizatorbackend.user.dto.ResetPasswordRequestDto;
 import com.shifterizator.shifterizatorbackend.user.dto.UserRequestDto;
 import com.shifterizator.shifterizatorbackend.user.dto.UserResponseDto;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor
 @RestController
@@ -165,6 +167,18 @@ public class UserController {
             @Parameter(description = "Company ID", required = true) @PathVariable Long companyId) {
         List<User> users = userService.listByCompany(companyId);
         return ResponseEntity.ok(users.stream().map(userMapper::toDto).toList());
+    }
+
+    @Operation(
+            summary = "List assignable users by companies",
+            description = "Returns id and username of active users whose company is in the given list. Use for dropdown when assigning a user to an employee (only same-company users).",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of assignable users (id, username)") })
+    @GetMapping("/assignable")
+    public ResponseEntity<List<AssignableUserDto>> listAssignableUsers(
+            @Parameter(description = "Company IDs (employee's companies). Only users from these companies are returned.") @RequestParam Set<Long> companyIds) {
+        return ResponseEntity.ok(userService.listAssignableByCompanyIds(companyIds));
     }
 
 }

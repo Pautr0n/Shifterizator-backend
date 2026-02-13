@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
@@ -32,5 +33,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     List<User> findByUsernameContainingIgnoreCaseAndIsActive(String username, Boolean isActive);
 
     List<User> findByCompany_IdAndDeletedAtIsNull(Long companyId);
+
+    /** Users whose company is in the given set, not deleted, active. For assignable-user dropdowns. */
+    List<User> findByCompany_IdInAndDeletedAtIsNullAndIsActiveTrue(Set<Long> companyIds);
 
 }

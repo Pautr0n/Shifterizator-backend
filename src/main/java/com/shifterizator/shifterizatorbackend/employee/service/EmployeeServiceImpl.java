@@ -41,6 +41,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDomainService.validateEmailUniqueness(dto, null);
 
         Employee employee = employeeMapper.toEntity(dto, position);
+        employeeDomainService.assignUser(employee, dto, null);
+
         employeeRepository.save(employee);
 
         employeeDomainService.assignCompanies(employee, dto);
@@ -69,6 +71,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setPreferredDayOff(EmployeeMapper.parsePreferredDayOff(dto.preferredDayOff()));
         employee.setPosition(position);
 
+        employeeDomainService.assignUser(employee, dto, id);
         employeeDomainService.assignCompanies(employee, dto);
         employeeDomainService.assignLocations(employee, dto);
         employeeDomainService.assignLanguages(employee, dto);

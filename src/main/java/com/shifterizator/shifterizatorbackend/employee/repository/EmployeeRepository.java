@@ -59,4 +59,16 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
               AND e.deletedAt IS NULL
             """)
     List<Employee> findActiveByLocationId(@Param("locationId") Long locationId);
+
+    /**
+     * Check if a user is already assigned to another employee.
+     * Used to enforce "one user per employee" rule.
+     */
+    @Query("""
+            SELECT e
+            FROM Employee e
+            WHERE e.user.id = :userId
+              AND e.deletedAt IS NULL
+            """)
+    Optional<Employee> findByUserId(@Param("userId") Long userId);
 }

@@ -112,7 +112,8 @@ class AvailabilityFlowIT extends BaseIntegrationTest {
                 Set.of(),
                 Set.of(),
                 null,
-                List.of()
+                List.of(),
+                null
         );
 
         MvcResult result = mockMvc.perform(post("/api/employees")

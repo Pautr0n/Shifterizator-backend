@@ -54,13 +54,16 @@ public class EmployeeMapper {
                 employee.getEmail(),
                 employee.getPhone(),
                 employee.getPosition().getName(),
+                extractCompanyIds(employee.getEmployeeCompanies()),
                 extractCompanyNames(employee.getEmployeeCompanies()),
                 extractLocationNames(employee.getEmployeeLocations()),
                 extractLanguageNames(employee.getEmployeeLanguages()),
                 employee.getPreferredDayOff() != null ? employee.getPreferredDayOff().name() : null,
                 extractPreferredShiftTemplateIds(employee.getShiftPreferences()),
                 employee.getCreatedAt(),
-                employee.getUpdatedAt()
+                employee.getUpdatedAt(),
+                employee.getUser() != null ? employee.getUser().getId() : null,
+                employee.getUser() != null ? employee.getUser().getUsername() : null
         );
     }
 
@@ -79,6 +82,12 @@ public class EmployeeMapper {
                 employee.getPreferredDayOff() != null ? employee.getPreferredDayOff().name() : null,
                 extractPreferredShiftTemplateIds(employee.getShiftPreferences())
         );
+    }
+
+    private Set<Long> extractCompanyIds(Set<EmployeeCompany> employeeCompanies) {
+        return employeeCompanies.stream()
+                .map(ec -> ec.getCompany().getId())
+                .collect(Collectors.toSet());
     }
 
     private Set<String> extractCompanyNames(Set<EmployeeCompany> employeeCompanies) {

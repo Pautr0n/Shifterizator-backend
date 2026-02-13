@@ -140,7 +140,8 @@ class EmployeeLifecycleFlowIT extends BaseIntegrationTest {
                 Set.of(locationId),
                 Set.of(),
                 "FRIDAY",
-                List.of()
+                List.of(),
+                null
         );
 
         MvcResult createResult = mockMvc.perform(post("/api/employees")

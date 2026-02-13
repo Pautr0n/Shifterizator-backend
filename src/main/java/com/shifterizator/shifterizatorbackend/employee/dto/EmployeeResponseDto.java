@@ -26,6 +26,9 @@ public record EmployeeResponseDto(
         @Schema(description = "Position/job title name", example = "Cashier")
         String position,
 
+        @Schema(description = "Set of company IDs the employee belongs to", example = "[1, 2]")
+        Set<Long> companyIds,
+
         @Schema(description = "Set of company names the employee belongs to", example = "[\"Acme Corp\", \"Beta Ltd\"]")
         Set<String> companies,
 
@@ -54,7 +57,13 @@ public record EmployeeResponseDto(
         LocalDateTime createdAt,
 
         @Schema(description = "Last update timestamp")
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+
+        @Schema(description = "ID of the linked user account, or null if none", nullable = true)
+        Long userId,
+
+        @Schema(description = "Username of the linked user account, or null if none", nullable = true)
+        String linkedUsername
 
 ) {
 }
