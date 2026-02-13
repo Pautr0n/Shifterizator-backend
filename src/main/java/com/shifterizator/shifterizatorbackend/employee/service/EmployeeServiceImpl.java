@@ -50,6 +50,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDomainService.assignLanguages(employee, dto);
         employeeDomainService.assignShiftPreferences(employee, dto);
 
+        initializeAssociationsForResponse(employee);
         return employee;
     }
 
@@ -77,7 +78,20 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDomainService.assignLanguages(employee, dto);
         employeeDomainService.assignShiftPreferences(employee, dto);
 
+        initializeAssociationsForResponse(employee);
         return employee;
+    }
+
+    /** Initializes lazy associations so that toResponse(employee) can run after the transaction commits. */
+    private void initializeAssociationsForResponse(Employee employee) {
+        if (employee.getUser() != null) {
+            employee.getUser().getUsername();
+        }
+        employee.getPosition().getName();
+        employee.getEmployeeCompanies().size();
+        employee.getEmployeeLocations().size();
+        employee.getEmployeeLanguages().size();
+        employee.getShiftPreferences().forEach(esp -> esp.getShiftTemplate().getId());
     }
 
     @Override
@@ -99,7 +113,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee findById(Long id) {
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
-
+        initializeAssociationsForResponse(employee);
         return employee;
     }
 
@@ -129,8 +143,9 @@ public class EmployeeServiceImpl implements EmployeeService {
             spec = spec.and(EmployeeSpecs.byPosition(position));
         }
 
-        return employeeRepository.findAll(spec, pageable);
-
+        Page<Employee> page = employeeRepository.findAll(spec, pageable);
+        page.getContent().forEach(this::initializeAssociationsForResponse);
+        return page;
     }
 
     @Override
