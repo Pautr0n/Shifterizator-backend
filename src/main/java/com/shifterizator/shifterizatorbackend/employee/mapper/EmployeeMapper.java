@@ -53,7 +53,7 @@ public class EmployeeMapper {
                 employee.getSurname(),
                 employee.getEmail(),
                 employee.getPhone(),
-                employee.getPosition().getName(),
+                employee.getPosition() != null ? employee.getPosition().getName() : null,
                 extractCompanyIds(employee.getEmployeeCompanies()),
                 extractCompanyNames(employee.getEmployeeCompanies()),
                 extractLocationNames(employee.getEmployeeLocations()),
@@ -85,24 +85,36 @@ public class EmployeeMapper {
     }
 
     private Set<Long> extractCompanyIds(Set<EmployeeCompany> employeeCompanies) {
+        if (employeeCompanies == null || employeeCompanies.isEmpty()) {
+            return Set.of();
+        }
         return employeeCompanies.stream()
                 .map(ec -> ec.getCompany().getId())
                 .collect(Collectors.toSet());
     }
 
     private Set<String> extractCompanyNames(Set<EmployeeCompany> employeeCompanies) {
+        if (employeeCompanies == null || employeeCompanies.isEmpty()) {
+            return Set.of();
+        }
         return employeeCompanies.stream()
                 .map(ec -> ec.getCompany().getName())
                 .collect(Collectors.toSet());
     }
 
     private Set<String> extractLocationNames(Set<EmployeeLocation> employeeLocations) {
+        if (employeeLocations == null || employeeLocations.isEmpty()) {
+            return Set.of();
+        }
         return employeeLocations.stream()
                 .map(el -> el.getLocation().getName())
                 .collect(Collectors.toSet());
     }
 
     private Set<String> extractLanguageNames(Set<EmployeeLanguage> employeeLanguages) {
+        if (employeeLanguages == null || employeeLanguages.isEmpty()) {
+            return Set.of();
+        }
         return employeeLanguages.stream()
                 .map(el -> el.getLanguage().getName())
                 .collect(Collectors.toSet());

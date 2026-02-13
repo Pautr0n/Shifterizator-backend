@@ -82,16 +82,26 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employee;
     }
 
-    /** Initializes lazy associations so that toResponse(employee) can run after the transaction commits. */
+    /** Initializes lazy associations (and nested refs) so that toResponse(employee) can run after the transaction commits. */
     private void initializeAssociationsForResponse(Employee employee) {
         if (employee.getUser() != null) {
             employee.getUser().getUsername();
         }
-        employee.getPosition().getName();
-        employee.getEmployeeCompanies().size();
-        employee.getEmployeeLocations().size();
-        employee.getEmployeeLanguages().size();
-        employee.getShiftPreferences().forEach(esp -> esp.getShiftTemplate().getId());
+        if (employee.getPosition() != null) {
+            employee.getPosition().getName();
+        }
+        if (employee.getEmployeeCompanies() != null) {
+            employee.getEmployeeCompanies().forEach(ec -> ec.getCompany().getId());
+        }
+        if (employee.getEmployeeLocations() != null) {
+            employee.getEmployeeLocations().forEach(el -> el.getLocation().getId());
+        }
+        if (employee.getEmployeeLanguages() != null) {
+            employee.getEmployeeLanguages().forEach(el -> el.getLanguage().getId());
+        }
+        if (employee.getShiftPreferences() != null) {
+            employee.getShiftPreferences().forEach(esp -> esp.getShiftTemplate().getId());
+        }
     }
 
     @Override

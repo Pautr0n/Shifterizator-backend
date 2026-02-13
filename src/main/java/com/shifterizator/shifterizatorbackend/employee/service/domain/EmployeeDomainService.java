@@ -5,6 +5,7 @@ import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFound
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
+import com.shifterizator.shifterizatorbackend.employee.exception.UserAlreadyAssignedToEmployeeException;
 import com.shifterizator.shifterizatorbackend.employee.model.*;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
@@ -184,8 +185,8 @@ public class EmployeeDomainService {
                 .ifPresent(existingEmployee -> {
                     // If updating the same employee, allow it
                     if (!existingEmployee.getId().equals(currentEmployeeId)) {
-                        throw new IllegalStateException(
-                                "User with id " + dto.userId() + " is already assigned to employee " + existingEmployee.getId()
+                        throw new UserAlreadyAssignedToEmployeeException(
+                                "This user is already assigned to another employee. Please choose a different user or unassign them from the other employee first."
                         );
                     }
                 });
