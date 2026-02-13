@@ -21,6 +21,7 @@ import com.shifterizator.shifterizatorbackend.user.exception.UserNotInEmployeeCo
 import com.shifterizator.shifterizatorbackend.user.exception.UserNotFoundException;
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import com.shifterizator.shifterizatorbackend.user.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class EmployeeDomainService {
 
+    private final EntityManager entityManager;
     private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final LocationRepository locationRepository;
@@ -68,6 +70,7 @@ public class EmployeeDomainService {
     public void assignCompanies(Employee employee, EmployeeRequestDto dto) {
 
         employee.getEmployeeCompanies().clear();
+        entityManager.flush(); // Execute DELETEs before INSERTs to avoid unique constraint violation
 
         for (Long companyId : dto.companyIds()) {
             Company company = companyRepository.findByIdAndDeletedAtIsNull(companyId)
@@ -85,6 +88,7 @@ public class EmployeeDomainService {
     public void assignLocations(Employee employee, EmployeeRequestDto dto) {
 
         employee.getEmployeeLocations().clear();
+        entityManager.flush();
 
         if (dto.locationIds() == null) return;
 
@@ -103,6 +107,7 @@ public class EmployeeDomainService {
 
     public void assignLanguages(Employee employee, EmployeeRequestDto dto) {
         employee.getEmployeeLanguages().clear();
+        entityManager.flush();
 
         if (dto.languageIds() == null) return;
 
@@ -129,6 +134,7 @@ public class EmployeeDomainService {
      */
     public void assignShiftPreferencesFromIds(Employee employee, List<Long> templateIds) {
         employee.getShiftPreferences().clear();
+        entityManager.flush();
 
         if (templateIds == null || templateIds.isEmpty()) {
             return;
