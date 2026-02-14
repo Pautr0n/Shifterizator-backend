@@ -33,6 +33,9 @@ public record ShiftTemplateRequestDto(
         Integer idealEmployees,
 
         @NotNull(message = "Is active flag is required")
-        Boolean isActive
+        Boolean isActive,
+
+        /** Scheduler priority: lower = higher priority. Null = no preference. */
+        Integer priority
 ) {
 }

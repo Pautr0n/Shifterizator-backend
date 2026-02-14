@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class ShiftTemplateServiceImpl implements ShiftTemplateService {
+public class    ShiftTemplateServiceImpl implements ShiftTemplateService {
 
     private final ShiftTemplateRepository shiftTemplateRepository;
     private final ShiftTemplateMapper shiftTemplateMapper;
@@ -62,6 +62,7 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         existing.setIdealEmployees(dto.idealEmployees());
         existing.setRequiredLanguages(languages);
         existing.setIsActive(dto.isActive() != null ? dto.isActive() : true);
+        existing.setPriority(dto.priority());
 
         shiftTemplateDomainService.buildPositionRequirements(existing, dto.requiredPositions());
         shiftTemplateDomainService.validateIdealEmployees(existing.getRequiredEmployees(), existing.getIdealEmployees());
@@ -105,6 +106,6 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
     @Override
     @Transactional(readOnly = true)
     public List<ShiftTemplate> findByLocation(Long locationId) {
-        return shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(locationId);
+        return shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId);
     }
 }

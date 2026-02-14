@@ -11,4 +11,6 @@ import java.util.List;
 public interface ShiftTemplateRepository extends JpaRepository<ShiftTemplate, Long>, JpaSpecificationExecutor<ShiftTemplate> {
 
     List<ShiftTemplate> findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(Long locationId);
+    List<ShiftTemplate> findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(Long locationId);
+
 }

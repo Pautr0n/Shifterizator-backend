@@ -54,6 +54,7 @@ public class ShiftTemplateMapper {
                 template.getDescription(),
                 languages,
                 template.getIsActive(),
+                template.getPriority(),
                 template.getCreatedAt(),
                 template.getUpdatedAt(),
                 template.getCreatedBy(),
@@ -70,6 +71,7 @@ public class ShiftTemplateMapper {
                 .idealEmployees(dto.idealEmployees())
                 .requiredLanguages(languages != null ? languages : Set.of())
                 .isActive(dto.isActive() != null ? dto.isActive() : true)
+                .priority(dto.priority())
                 .build();
     }
 }

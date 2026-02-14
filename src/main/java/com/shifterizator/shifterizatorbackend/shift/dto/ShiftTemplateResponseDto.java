@@ -17,6 +17,7 @@ public record ShiftTemplateResponseDto(
         String description,
         Set<String> requiredLanguages,
         Boolean isActive,
+        Integer priority,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         String createdBy,

@@ -66,6 +66,13 @@ public class ShiftTemplate {
     @Builder.Default
     private Boolean isActive = true;
 
+    /**
+     * Scheduler priority: lower value = higher priority (e.g. 1 = afternoon first).
+     * Null = lowest priority; used as tie-breaker with start time.
+     */
+    @Column(name = "priority_order")
+    private Integer priority;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

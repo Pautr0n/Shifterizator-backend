@@ -6,6 +6,7 @@ import com.shifterizator.shifterizatorbackend.availability.repository.EmployeeAv
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLanguage;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeLanguageRepository;
+import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftAssignment;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
@@ -79,7 +80,7 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
     @Override
     public void validateLanguageRequirements(Employee employee, ShiftInstance shiftInstance) {
         Set<Long> requiredLanguageIds = shiftInstance.getShiftTemplate().getRequiredLanguages().stream()
-                .map(lang -> lang.getId())
+                .map(Language::getId)
                 .collect(Collectors.toSet());
 
         if (requiredLanguageIds.isEmpty()) {
@@ -91,8 +92,9 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
                 .map(el -> el.getLanguage().getId())
                 .collect(Collectors.toSet());
 
-        if (!employeeLanguageIds.containsAll(requiredLanguageIds)) {
-            throw new ShiftValidationException("Employee does not meet language requirements for this shift");
+        boolean hasAtLeastOne = requiredLanguageIds.stream().anyMatch(employeeLanguageIds::contains);
+        if (!hasAtLeastOne) {
+            throw new ShiftValidationException("Employee does not speak any of the required languages for this shift");
         }
     }
 
