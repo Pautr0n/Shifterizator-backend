@@ -43,7 +43,7 @@ public class EmployeeMapper {
         }
     }
 
-    public EmployeeResponseDto toResponse(Employee employee) {
+    public EmployeeResponseDto toDto(Employee employee) {
         return new EmployeeResponseDto(
                 employee.getId(),
                 employee.getName(),

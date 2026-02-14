@@ -6,18 +6,18 @@ import com.shifterizator.shifterizatorbackend.user.exception.InvalidPasswordExce
 import com.shifterizator.shifterizatorbackend.user.mapper.UserMapper;
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import com.shifterizator.shifterizatorbackend.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class ChangePasswordUserService {
 
-    private UserRepository userRepository;
-    private UserMapper userMapper;
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public void changeOwnPassword(User authenticatedUser, ChangePasswordRequestDto dto) {

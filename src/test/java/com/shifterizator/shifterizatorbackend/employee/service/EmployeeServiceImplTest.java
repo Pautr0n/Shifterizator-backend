@@ -45,6 +45,9 @@ class EmployeeServiceImplTest {
     @Mock
     private EmployeeDomainService employeeDomainService;
 
+    @Mock
+    private EmployeeResponseInitializer responseInitializer;
+
     @InjectMocks
     private EmployeeServiceImpl employeeService;
 

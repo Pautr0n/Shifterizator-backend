@@ -62,7 +62,7 @@ class EmployeeMapperTest {
     }
 
     @Test
-    void toResponse_shouldMapAllFieldsAndCollections() {
+    void toDto_shouldMapAllFieldsAndCollections() {
         Company company1 = new Company();
         Company company2 = new Company();
         company1.setId(1L);
@@ -104,7 +104,7 @@ class EmployeeMapperTest {
         employee.addLanguage(eLang1);
         employee.addLanguage(eLang2);
 
-        EmployeeResponseDto dto = mapper.toResponse(employee);
+        EmployeeResponseDto dto = mapper.toDto(employee);
 
         assertThat(dto.id()).isEqualTo(99L);
         assertThat(dto.name()).isEqualTo("John");
@@ -121,7 +121,7 @@ class EmployeeMapperTest {
     }
 
     @Test
-    void toResponse_shouldMapEmptyLanguagesWhenNone() {
+    void toDto_shouldMapEmptyLanguagesWhenNone() {
         Position position = Position.builder().id(5L).name("Waiter").build();
         Employee employee = Employee.builder()
                 .id(99L)
@@ -132,7 +132,7 @@ class EmployeeMapperTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        EmployeeResponseDto dto = mapper.toResponse(employee);
+        EmployeeResponseDto dto = mapper.toDto(employee);
 
         assertThat(dto.languages()).isEmpty();
     }

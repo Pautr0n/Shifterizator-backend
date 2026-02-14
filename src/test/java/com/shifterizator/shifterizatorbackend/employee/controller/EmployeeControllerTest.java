@@ -8,6 +8,7 @@ import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesRe
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
+import com.shifterizator.shifterizatorbackend.employee.access.EmployeeAccessPolicy;
 import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
@@ -66,6 +67,9 @@ class EmployeeControllerTest {
 
     @MockitoBean
     private CurrentUserService currentUserService;
+
+    @MockitoBean
+    private EmployeeAccessPolicy employeeAccessPolicy;
 
     @Autowired
     private ObjectMapper mapper;
@@ -140,7 +144,7 @@ class EmployeeControllerTest {
     @Test
     void create_should_return_201() throws Exception {
         when(employeeService.create(any())).thenReturn(employee);
-        when(employeeMapper.toResponse(any(Employee.class))).thenReturn(responseDto);
+        when(employeeMapper.toDto(any(Employee.class))).thenReturn(responseDto);
 
         mvc.perform(post("/api/employees")
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
@@ -162,7 +166,7 @@ class EmployeeControllerTest {
                 .andExpect(jsonPath("$.updatedAt").exists());
 
         verify(employeeService).create(any());
-        verify(employeeMapper).toResponse(employee);
+        verify(employeeMapper).toDto(employee);
     }
 
 
@@ -207,14 +211,14 @@ class EmployeeControllerTest {
     @Test
     void findById_shouldReturn200WhenOk() throws Exception {
         when(employeeService.findById(99L)).thenReturn(employee);
-        when(employeeMapper.toResponse(any(Employee.class))).thenReturn(responseDto);
+        when(employeeMapper.toDto(any(Employee.class))).thenReturn(responseDto);
 
         mvc.perform(get("/api/employees/99"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(99));
 
         verify(employeeService).findById(99L);
-        verify(employeeMapper).toResponse(employee);
+        verify(employeeMapper).toDto(employee);
     }
 
     @Test
@@ -252,7 +256,7 @@ class EmployeeControllerTest {
     @Test
     void update_should_return_200_when_success() throws Exception {
         when(employeeService.update(eq(99L), any())).thenReturn(employee);
-        when(employeeMapper.toResponse(any(Employee.class))).thenReturn(responseDto);
+        when(employeeMapper.toDto(any(Employee.class))).thenReturn(responseDto);
 
         mvc.perform(put("/api/employees/99")
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
@@ -263,7 +267,7 @@ class EmployeeControllerTest {
                 .andExpect(jsonPath("$.name").value("John"));
 
         verify(employeeService).update(eq(99L), any());
-        verify(employeeMapper).toResponse(employee);
+        verify(employeeMapper).toDto(employee);
     }
 
     @Test
@@ -303,7 +307,7 @@ class EmployeeControllerTest {
         Page<Employee> page = new PageImpl<>(List.of(employee));
 
         when(employeeService.search(any(), any(), any(), any(), any())).thenReturn(page);
-        when(employeeMapper.toResponse(any(Employee.class))).thenReturn(responseDto);
+        when(employeeMapper.toDto(any(Employee.class))).thenReturn(responseDto);
 
         mvc.perform(get("/api/employees")
                         .param("name", "john")
@@ -334,7 +338,7 @@ class EmployeeControllerTest {
         Page<Employee> page = new PageImpl<>(List.of(employee));
 
         when(employeeService.search(eq(1L), eq(10L), eq("john"), eq("Waiter"), any())).thenReturn(page);
-        when(employeeMapper.toResponse(any(Employee.class))).thenReturn(responseDto);
+        when(employeeMapper.toDto(any(Employee.class))).thenReturn(responseDto);
 
         mvc.perform(get("/api/employees")
                         .param("companyId", "1")

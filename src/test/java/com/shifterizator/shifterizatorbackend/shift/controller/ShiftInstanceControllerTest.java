@@ -12,7 +12,6 @@ import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFo
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftInstanceMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
-import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftInstanceService;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftSchedulerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,9 +52,6 @@ class ShiftInstanceControllerTest {
 
     @MockitoBean
     private ShiftInstanceMapper shiftInstanceMapper;
-
-    @MockitoBean
-    private ShiftInstanceRepository shiftInstanceRepository;
 
     @MockitoBean
     private ShiftGenerationService shiftGenerationService;
@@ -133,7 +129,7 @@ class ShiftInstanceControllerTest {
     @Test
     void create_shouldReturn201AndBody() throws Exception {
         when(shiftInstanceService.create(any())).thenReturn(instance);
-        when(shiftInstanceRepository.countActiveAssignments(99L)).thenReturn(0);
+        when(shiftInstanceService.getAssignedCount(99L)).thenReturn(0);
         when(shiftInstanceMapper.toDto(instance, 0)).thenReturn(responseDto);
 
         mockMvc.perform(post("/api/shift-instances")
@@ -150,7 +146,7 @@ class ShiftInstanceControllerTest {
     @Test
     void findById_shouldReturn200AndBody() throws Exception {
         when(shiftInstanceService.findById(99L)).thenReturn(instance);
-        when(shiftInstanceRepository.countActiveAssignments(99L)).thenReturn(2);
+        when(shiftInstanceService.getAssignedCount(99L)).thenReturn(2);
         when(shiftInstanceMapper.toDto(instance, 2)).thenReturn(responseDto);
 
         mockMvc.perform(get("/api/shift-instances/99").with(csrf()))
@@ -164,7 +160,7 @@ class ShiftInstanceControllerTest {
     @Test
     void findByLocationAndDate_shouldReturnList() throws Exception {
         when(shiftInstanceService.findByLocationAndDate(10L, DATE)).thenReturn(List.of(instance));
-        when(shiftInstanceRepository.countActiveAssignments(99L)).thenReturn(2);
+        when(shiftInstanceService.getAssignedCount(99L)).thenReturn(2);
         when(shiftInstanceMapper.toDto(instance, 2)).thenReturn(responseDto);
 
         mockMvc.perform(get("/api/shift-instances/by-location/10/date/" + DATE.toString()).with(csrf()))
@@ -177,7 +173,7 @@ class ShiftInstanceControllerTest {
     @Test
     void generateMonth_shouldReturn201AndListOfInstances() throws Exception {
         when(shiftGenerationService.generateMonth(10L, YearMonth.of(2025, 2))).thenReturn(List.of(instance));
-        when(shiftInstanceRepository.countActiveAssignments(99L)).thenReturn(0);
+        when(shiftInstanceService.getAssignedCount(99L)).thenReturn(0);
         when(shiftInstanceMapper.toDto(instance, 0)).thenReturn(responseDto);
 
         mockMvc.perform(post("/api/shift-instances/generate-month")

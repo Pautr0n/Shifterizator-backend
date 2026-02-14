@@ -236,7 +236,7 @@ public class CompanyController {
             @PathVariable Long id
     ) {
         List<Employee> employees = companyService.getCompanyEmployees(id);
-        return ResponseEntity.ok(employees.stream().map(employeeMapper::toResponse).toList());
+        return ResponseEntity.ok(employees.stream().map(employeeMapper::toDto).toList());
     }
 
     @Operation(

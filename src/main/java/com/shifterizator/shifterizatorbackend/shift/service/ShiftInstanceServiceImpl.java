@@ -115,4 +115,10 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
     public List<ShiftInstance> findByLocationAndDateRange(Long locationId, LocalDate startDate, LocalDate endDate) {
         return shiftInstanceRepository.findByLocation_IdAndDateBetweenAndDeletedAtIsNullOrderByDateAscStartTimeAsc(locationId, startDate, endDate);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getAssignedCount(Long shiftInstanceId) {
+        return shiftInstanceRepository.countActiveAssignments(shiftInstanceId);
+    }
 }

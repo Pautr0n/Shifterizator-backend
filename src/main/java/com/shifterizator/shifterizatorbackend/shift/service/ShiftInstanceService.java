@@ -23,4 +23,9 @@ public interface ShiftInstanceService {
     List<ShiftInstance> findByLocationAndDate(Long locationId, LocalDate date);
 
     List<ShiftInstance> findByLocationAndDateRange(Long locationId, LocalDate startDate, LocalDate endDate);
+
+    /**
+     * Returns the number of active (non-deleted) assignments for the given shift instance.
+     */
+    int getAssignedCount(Long shiftInstanceId);
 }

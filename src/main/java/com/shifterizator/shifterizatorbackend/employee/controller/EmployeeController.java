@@ -2,6 +2,7 @@ package com.shifterizator.shifterizatorbackend.employee.controller;
 
 
 import com.shifterizator.shifterizatorbackend.auth.service.CurrentUserService;
+import com.shifterizator.shifterizatorbackend.employee.access.EmployeeAccessPolicy;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
@@ -9,7 +10,6 @@ import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.service.EmployeeService;
-import com.shifterizator.shifterizatorbackend.user.exception.ForbiddenOperationException;
 import com.shifterizator.shifterizatorbackend.user.model.Role;
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,31 +43,7 @@ public class EmployeeController {
     private final EmployeeMapper employeeMapper;
     private final EmployeeService employeeService;
     private final CurrentUserService currentUserService;
-
-    /** COMPANYADMIN can only access employees that belong to their company. */
-    private void ensureCanAccessEmployee(Employee employee, User currentUser) {
-        if (currentUser.getRole() != Role.COMPANYADMIN || currentUser.getCompany() == null) {
-            return;
-        }
-        Long userCompanyId = currentUser.getCompany().getId();
-        boolean belongs = employee.getEmployeeCompanies() != null
-                && employee.getEmployeeCompanies().stream()
-                .anyMatch(ec -> ec.getCompany() != null && userCompanyId.equals(ec.getCompany().getId()));
-        if (!belongs) {
-            throw new ForbiddenOperationException("You can only view and manage employees of your own company.");
-        }
-    }
-
-    /** COMPANYADMIN can only create employees for their own company. */
-    private void ensureCompanyScopeForCreate(EmployeeRequestDto dto, User currentUser) {
-        if (currentUser.getRole() != Role.COMPANYADMIN || currentUser.getCompany() == null) {
-            return;
-        }
-        Long userCompanyId = currentUser.getCompany().getId();
-        if (dto.companyIds() == null || dto.companyIds().size() != 1 || !dto.companyIds().contains(userCompanyId)) {
-            throw new ForbiddenOperationException("You can only create employees for your own company.");
-        }
-    }
+    private final EmployeeAccessPolicy employeeAccessPolicy;
 
     @Operation(
             summary = "Create a new employee",
@@ -103,9 +79,9 @@ public class EmployeeController {
     })
     @PostMapping
     public ResponseEntity<EmployeeResponseDto> create(@Valid @RequestBody EmployeeRequestDto dto) {
-        ensureCompanyScopeForCreate(dto, currentUserService.getCurrentUser());
+        employeeAccessPolicy.ensureCompanyScopeForCreate(dto, currentUserService.getCurrentUser());
         Employee employee = employeeService.create(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(employeeMapper.toResponse(employee));
+        return ResponseEntity.status(HttpStatus.CREATED).body(employeeMapper.toDto(employee));
     }
 
     @Operation(
@@ -137,9 +113,9 @@ public class EmployeeController {
             @PathVariable Long id,
             @Valid @RequestBody EmployeeRequestDto dto
     ) {
-        ensureCanAccessEmployee(employeeService.findById(id), currentUserService.getCurrentUser());
+        employeeAccessPolicy.ensureCanAccessEmployee(employeeService.findById(id), currentUserService.getCurrentUser());
         Employee employee = employeeService.update(id, dto);
-        return ResponseEntity.ok((employeeMapper.toResponse(employee)));
+        return ResponseEntity.ok((employeeMapper.toDto(employee)));
     }
 
     @Operation(
@@ -174,7 +150,7 @@ public class EmployeeController {
             @Parameter(description = "If true, performs hard delete (permanent). Default: false", example = "false")
             @RequestParam(defaultValue = "false") boolean hardDelete
     ) {
-        ensureCanAccessEmployee(employeeService.findById(id), currentUserService.getCurrentUser());
+        employeeAccessPolicy.ensureCanAccessEmployee(employeeService.findById(id), currentUserService.getCurrentUser());
         employeeService.delete(id, hardDelete);
         return ResponseEntity.noContent().build();
     }
@@ -207,8 +183,8 @@ public class EmployeeController {
             @PathVariable Long id
     ) {
         Employee employee = employeeService.findById(id);
-        ensureCanAccessEmployee(employee, currentUserService.getCurrentUser());
-        return ResponseEntity.ok(employeeMapper.toResponse(employee));
+        employeeAccessPolicy.ensureCanAccessEmployee(employee, currentUserService.getCurrentUser());
+        return ResponseEntity.ok(employeeMapper.toDto(employee));
     }
 
     @Operation(
@@ -228,7 +204,7 @@ public class EmployeeController {
             @Parameter(description = "Employee ID", example = "1", required = true)
             @PathVariable Long id
     ) {
-        ensureCanAccessEmployee(employeeService.findById(id), currentUserService.getCurrentUser());
+        employeeAccessPolicy.ensureCanAccessEmployee(employeeService.findById(id), currentUserService.getCurrentUser());
         return ResponseEntity.ok(employeeService.getPreferences(id));
     }
 
@@ -261,7 +237,7 @@ public class EmployeeController {
             @PathVariable Long id,
             @Valid @RequestBody EmployeePreferencesRequestDto dto
     ) {
-        ensureCanAccessEmployee(employeeService.findById(id), currentUserService.getCurrentUser());
+        employeeAccessPolicy.ensureCanAccessEmployee(employeeService.findById(id), currentUserService.getCurrentUser());
         return ResponseEntity.ok(employeeService.updatePreferences(id, dto));
     }
 
@@ -314,7 +290,7 @@ public class EmployeeController {
                         name,
                         position,
                         pageable)
-                .map(employeeMapper::toResponse);
+                .map(employeeMapper::toDto);
         return ResponseEntity.ok(result);
     }
 }

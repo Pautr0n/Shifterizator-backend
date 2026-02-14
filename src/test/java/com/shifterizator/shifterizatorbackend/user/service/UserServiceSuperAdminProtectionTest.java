@@ -32,7 +32,7 @@ public class UserServiceSuperAdminProtectionTest {
     private CompanyRepository companyRepository;
 
     @InjectMocks
-    private UserService service;
+    private UserServiceImpl service;
 
     @Test
     void deleteUser_should_throw_when_user_is_system_user() {

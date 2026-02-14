@@ -31,6 +31,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final PositionRepository positionRepository;
     private final EmployeeMapper employeeMapper;
     private final EmployeeDomainService employeeDomainService;
+    private final EmployeeResponseInitializer responseInitializer;
 
     @Override
     public Employee create(EmployeeRequestDto dto) {
@@ -50,7 +51,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDomainService.assignLanguages(employee, dto);
         employeeDomainService.assignShiftPreferences(employee, dto);
 
-        initializeAssociationsForResponse(employee);
+        responseInitializer.initializeForResponse(employee);
         return employee;
     }
 
@@ -79,30 +80,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDomainService.assignLanguages(employee, dto);
         employeeDomainService.assignShiftPreferences(employee, dto);
 
-        initializeAssociationsForResponse(employee);
+        responseInitializer.initializeForResponse(employee);
         return employee;
-    }
-
-    /** Initializes lazy associations (and nested refs) so that toResponse(employee) can run after the transaction commits. */
-    private void initializeAssociationsForResponse(Employee employee) {
-        if (employee.getUser() != null) {
-            employee.getUser().getUsername();
-        }
-        if (employee.getPosition() != null) {
-            employee.getPosition().getName();
-        }
-        if (employee.getEmployeeCompanies() != null) {
-            employee.getEmployeeCompanies().forEach(ec -> ec.getCompany().getId());
-        }
-        if (employee.getEmployeeLocations() != null) {
-            employee.getEmployeeLocations().forEach(el -> el.getLocation().getId());
-        }
-        if (employee.getEmployeeLanguages() != null) {
-            employee.getEmployeeLanguages().forEach(el -> el.getLanguage().getId());
-        }
-        if (employee.getShiftPreferences() != null) {
-            employee.getShiftPreferences().forEach(esp -> esp.getShiftTemplate().getId());
-        }
     }
 
     @Override
@@ -124,7 +103,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee findById(Long id) {
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
-        initializeAssociationsForResponse(employee);
+        responseInitializer.initializeForResponse(employee);
         return employee;
     }
 
@@ -155,7 +134,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         Page<Employee> page = employeeRepository.findAll(spec, pageable);
-        page.getContent().forEach(this::initializeAssociationsForResponse);
+        page.getContent().forEach(responseInitializer::initializeForResponse);
         return page;
     }
 

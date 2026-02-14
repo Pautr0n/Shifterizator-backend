@@ -6,7 +6,7 @@ import com.shifterizator.shifterizatorbackend.company.exception.CompanyValidatio
 import com.shifterizator.shifterizatorbackend.company.mapper.CompanyMapper;
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
-import com.shifterizator.shifterizatorbackend.company.service.CompanyService;
+import com.shifterizator.shifterizatorbackend.company.service.CompanyServiceImpl;
 import com.shifterizator.shifterizatorbackend.company.service.domain.CompanyDomainService;
 import com.shifterizator.shifterizatorbackend.employee.service.EmployeeService;
 import com.shifterizator.shifterizatorbackend.company.service.LocationService;
@@ -51,7 +51,7 @@ class CompanyServiceTest {
     private CompanyDomainService companyDomainService;
 
     @InjectMocks
-    private CompanyService companyService;
+    private CompanyServiceImpl companyService;
 
 
     private final CompanyRequestDto REQUEST_DTO = new CompanyRequestDto("Company 1"

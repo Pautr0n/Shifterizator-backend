@@ -6,7 +6,6 @@ import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftInstanceMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
-import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftGenerationService;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftInstanceService;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftSchedulerService;
@@ -41,7 +40,6 @@ public class ShiftInstanceController {
 
     private final ShiftInstanceService shiftInstanceService;
     private final ShiftInstanceMapper shiftInstanceMapper;
-    private final ShiftInstanceRepository shiftInstanceRepository;
     private final ShiftGenerationService shiftGenerationService;
     private final ShiftSchedulerService shiftSchedulerService;
 
@@ -60,7 +58,7 @@ public class ShiftInstanceController {
         YearMonth yearMonth = YearMonth.of(dto.year(), dto.month());
         List<ShiftInstance> instances = shiftGenerationService.generateMonth(dto.locationId(), yearMonth);
         List<ShiftInstanceResponseDto> body = instances.stream()
-                .map(i -> shiftInstanceMapper.toDto(i, shiftInstanceRepository.countActiveAssignments(i.getId())))
+                .map(i -> shiftInstanceMapper.toDto(i, shiftInstanceService.getAssignedCount(i.getId())))
                 .toList();
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
@@ -110,7 +108,7 @@ public class ShiftInstanceController {
     @PostMapping
     public ResponseEntity<ShiftInstanceResponseDto> create(@Valid @RequestBody ShiftInstanceRequestDto dto) {
         ShiftInstance instance = shiftInstanceService.create(dto);
-        int assignedCount = shiftInstanceRepository.countActiveAssignments(instance.getId());
+        int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(shiftInstanceMapper.toDto(instance, assignedCount));
     }
 
@@ -129,7 +127,7 @@ public class ShiftInstanceController {
             @Parameter(description = "Shift instance ID", required = true) @PathVariable Long id,
             @Valid @RequestBody ShiftInstanceRequestDto dto) {
         ShiftInstance instance = shiftInstanceService.update(id, dto);
-        int assignedCount = shiftInstanceRepository.countActiveAssignments(instance.getId());
+        int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
         return ResponseEntity.ok(shiftInstanceMapper.toDto(instance, assignedCount));
     }
 
@@ -163,7 +161,7 @@ public class ShiftInstanceController {
     public ResponseEntity<ShiftInstanceResponseDto> findById(
             @Parameter(description = "Shift instance ID", required = true) @PathVariable Long id) {
         ShiftInstance instance = shiftInstanceService.findById(id);
-        int assignedCount = shiftInstanceRepository.countActiveAssignments(instance.getId());
+        int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
         return ResponseEntity.ok(shiftInstanceMapper.toDto(instance, assignedCount));
     }
 
@@ -184,7 +182,7 @@ public class ShiftInstanceController {
     ) {
         Page<ShiftInstance> page = shiftInstanceService.search(locationId, startDate, endDate, pageable);
         return ResponseEntity.ok(page.map(instance -> {
-            int assignedCount = shiftInstanceRepository.countActiveAssignments(instance.getId());
+            int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
             return shiftInstanceMapper.toDto(instance, assignedCount);
         }));
     }
@@ -204,7 +202,7 @@ public class ShiftInstanceController {
     ) {
         List<ShiftInstance> list = shiftInstanceService.findByLocationAndDate(locationId, date);
         return ResponseEntity.ok(list.stream().map(instance -> {
-            int assignedCount = shiftInstanceRepository.countActiveAssignments(instance.getId());
+            int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
             return shiftInstanceMapper.toDto(instance, assignedCount);
         }).toList());
     }
@@ -225,7 +223,7 @@ public class ShiftInstanceController {
     ) {
         List<ShiftInstance> list = shiftInstanceService.findByLocationAndDateRange(locationId, startDate, endDate);
         return ResponseEntity.ok(list.stream().map(instance -> {
-            int assignedCount = shiftInstanceRepository.countActiveAssignments(instance.getId());
+            int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
             return shiftInstanceMapper.toDto(instance, assignedCount);
         }).toList());
     }

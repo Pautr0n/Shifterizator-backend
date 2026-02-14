@@ -47,7 +47,7 @@ class UserServiceTest {
     @Mock
     private  CompanyRepository companyRepository;
     @InjectMocks
-    private UserService service;
+    private UserServiceImpl service;
 
     // ---------------------------------------------------------
     // CREATE USER
