@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class    ShiftTemplateServiceImpl implements ShiftTemplateService {
+public class ShiftTemplateServiceImpl implements ShiftTemplateService {
 
     private final ShiftTemplateRepository shiftTemplateRepository;
     private final ShiftTemplateMapper shiftTemplateMapper;
@@ -31,10 +31,10 @@ public class    ShiftTemplateServiceImpl implements ShiftTemplateService {
     public ShiftTemplate create(ShiftTemplateRequestDto dto) {
         Location location = shiftTemplateDomainService.resolveLocation(dto.locationId());
         shiftTemplateDomainService.validateTimes(dto.startTime(), dto.endTime());
-        
+
         var languages = shiftTemplateDomainService.resolveLanguages(dto.requiredLanguageIds());
         ShiftTemplate template = shiftTemplateMapper.toEntity(dto, location, languages);
-        
+
         shiftTemplateDomainService.buildPositionRequirements(template, dto.requiredPositions());
         shiftTemplateDomainService.validateIdealEmployees(template.getRequiredEmployees(), template.getIdealEmployees());
 

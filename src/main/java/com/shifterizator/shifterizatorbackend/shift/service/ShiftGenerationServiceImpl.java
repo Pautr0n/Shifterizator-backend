@@ -11,7 +11,6 @@ import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepo
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceDomainService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.aot.generate.GenerationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,7 +72,7 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
                 .collect(Collectors.toMap(SpecialOpeningHours::getDate, soh -> soh, (a, b) -> a));
 
         List<ShiftTemplate> templates = shiftTemplateRepository
-                .findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(locationId);
+                .findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId);
         LocalDate firstDay = yearMonth.atDay(1);
         LocalDate lastDay = yearMonth.atEndOfMonth();
         LocalDateTime deletedAt = LocalDateTime.now();
