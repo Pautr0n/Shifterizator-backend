@@ -11,9 +11,11 @@ import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepo
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceDomainService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.aot.generate.GenerationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -47,8 +49,11 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
             }
 
             SpecialOpeningHours special = ctx.specialByDate().get(date);
+
             if (special != null) {
                 createInstancesForSpecialDay(ctx, date, special, created);
+            } else if(isWeekdayClosedForLocation(ctx.location(),date)){
+                continue;
             } else {
                 createInstancesForNormalDay(ctx, date, created);
             }
@@ -83,6 +88,14 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
                 lastDay,
                 deletedAt
         );
+    }
+
+    private boolean isWeekdayClosedForLocation(Location location, LocalDate date) {
+        Set<DayOfWeek> openDays = location.getOpenDaysOfWeek();
+        if (openDays == null || openDays.isEmpty()) {
+            return false;
+        }
+        return !openDays.contains(date.getDayOfWeek());
     }
 
     private void createInstancesForSpecialDay(GenerationContext ctx, LocalDate date, SpecialOpeningHours special,
