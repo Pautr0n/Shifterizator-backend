@@ -1,10 +1,11 @@
 package com.shifterizator.shifterizatorbackend.company.dto;
 
-public record LocationResponseDto(
+import java.util.Set;public record LocationResponseDto(
         Long id,
         String name,
         String address,
-        Long companyId
+        Long companyId,
+        Set<String> openDaysOfWeek
 
 ) {
 }

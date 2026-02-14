@@ -7,7 +7,9 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -43,11 +45,19 @@ public class Location {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "location_open_days", joinColumns = @JoinColumn(name = "location_id"))
+    @Column(name = "day_of_week", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Set<DayOfWeek> openDaysOfWeek;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+
 
 }
