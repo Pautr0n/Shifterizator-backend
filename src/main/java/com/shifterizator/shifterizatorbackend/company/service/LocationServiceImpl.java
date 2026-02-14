@@ -3,7 +3,7 @@ package com.shifterizator.shifterizatorbackend.company.service;
 import com.shifterizator.shifterizatorbackend.company.dto.LocationRequestDto;
 import com.shifterizator.shifterizatorbackend.company.exception.CompanyNotFoundException;
 import com.shifterizator.shifterizatorbackend.company.exception.LocationNotFoundException;
-import com.shifterizator.shifterizatorbackend.company.model.Company;
+import com.shifterizator.shifterizatorbackend.company.mapper.LocationMapper;import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.company.repository.CompanyRepository;
 import com.shifterizator.shifterizatorbackend.company.repository.LocationRepository;
@@ -30,6 +30,7 @@ public class LocationServiceImpl implements LocationService {
                 .name(dto.name())
                 .address(dto.address())
                 .company(company)
+                .openDaysOfWeek(LocationMapper.toOpenDaysOfWeek(dto.openDaysOfWeek()))
                 .build();
 
         return locationRepository.save(location);
@@ -42,6 +43,7 @@ public class LocationServiceImpl implements LocationService {
 
         location.setName(dto.name());
         location.setAddress(dto.address());
+        location.setOpenDaysOfWeek(LocationMapper.toOpenDaysOfWeek(dto.openDaysOfWeek()));
 
         return location;
     }
