@@ -61,7 +61,8 @@ class ShiftTemplateServiceImplTest {
                 "Morning shift",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Company company = new Company("Skynet",
@@ -114,7 +115,8 @@ class ShiftTemplateServiceImplTest {
                 "Test",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         when(shiftTemplateDomainService.resolveLocation(999L))
@@ -135,7 +137,8 @@ class ShiftTemplateServiceImplTest {
                 "Test",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
@@ -163,7 +166,8 @@ class ShiftTemplateServiceImplTest {
                 "Test",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
@@ -189,7 +193,8 @@ class ShiftTemplateServiceImplTest {
                 "Test",
                 Set.of(),
                 0, // ideal < required (1)
-                true
+                true,
+                null
         );
 
         Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
@@ -222,7 +227,8 @@ class ShiftTemplateServiceImplTest {
                 "Test",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
@@ -254,7 +260,8 @@ class ShiftTemplateServiceImplTest {
                 "Updated shift",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Company company = new Company("Skynet",
@@ -314,7 +321,8 @@ class ShiftTemplateServiceImplTest {
                 "Test",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         when(shiftTemplateRepository.findById(99L)).thenReturn(Optional.empty());

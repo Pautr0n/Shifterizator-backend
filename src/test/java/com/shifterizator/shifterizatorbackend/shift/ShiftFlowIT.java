@@ -95,7 +95,9 @@ class ShiftFlowIT extends BaseIntegrationTest {
         LocationRequestDto request = new LocationRequestDto(
                 "Loc-" + suffix,
                 "Address " + suffix,
-                companyId
+                companyId,
+                null,
+                null
         );
         MvcResult result = mockMvc.perform(post("/api/locations")
                         .header("Authorization", adminToken)
@@ -137,6 +139,7 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 Set.of(locationId),
                 Set.of(),
                 null,
+                5,
                 List.of(),
                 null
         );
@@ -172,7 +175,8 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 "Morning shift",
                 null,
                 null,
-                true
+                true,
+                null
         );
 
         MvcResult createTemplateResult = mockMvc.perform(post("/api/shift-templates")
@@ -251,7 +255,8 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 "Assign shift",
                 null,
                 null,
-                true
+                true,
+                null
         );
         mockMvc.perform(post("/api/shift-templates")
                         .header("Authorization", adminToken)
@@ -326,7 +331,8 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 "Dup shift",
                 null,
                 null,
-                true
+                true,
+                null
         );
         mockMvc.perform(post("/api/shift-templates")
                         .header("Authorization", adminToken)
@@ -385,7 +391,8 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 "Block shift",
                 null,
                 null,
-                true
+                true,
+                null
         );
         mockMvc.perform(post("/api/shift-templates")
                         .header("Authorization", adminToken)

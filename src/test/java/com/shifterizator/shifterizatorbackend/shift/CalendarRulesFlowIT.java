@@ -91,7 +91,9 @@ class CalendarRulesFlowIT extends BaseIntegrationTest {
         LocationRequestDto request = new LocationRequestDto(
                 "CalLoc-" + suffix,
                 "Address " + suffix,
-                companyId
+                companyId,
+                null,
+                null
         );
         MvcResult result = mockMvc.perform(post("/api/locations")
                         .header("Authorization", adminToken)
@@ -140,7 +142,8 @@ class CalendarRulesFlowIT extends BaseIntegrationTest {
                 "Regular shift",
                 null,
                 null,
-                true
+                true,
+                null
         );
         mockMvc.perform(post("/api/shift-templates")
                         .header("Authorization", adminToken)

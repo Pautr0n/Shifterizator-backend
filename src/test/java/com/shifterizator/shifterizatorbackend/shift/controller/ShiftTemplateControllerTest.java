@@ -109,6 +109,7 @@ class ShiftTemplateControllerTest {
                 "Morning shift",
                 Set.of(),
                 true,
+                1,
                 null,
                 null,
                 null,

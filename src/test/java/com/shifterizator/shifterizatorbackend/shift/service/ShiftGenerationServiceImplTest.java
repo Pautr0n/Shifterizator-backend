@@ -19,10 +19,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,6 +53,12 @@ class ShiftGenerationServiceImplTest {
         Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
         company.setId(1L);
         return Location.builder().id(id).name("HQ").address("Main").company(company).build();
+    }
+
+    private static Location locationWithOpenDays(long id, Set<DayOfWeek> openDays) {
+        Location loc = location(id);
+        loc.setOpenDaysOfWeek(openDays);
+        return loc;
     }
 
     private static ShiftTemplate template(long id, Location location, LocalTime start, LocalTime end) {
@@ -88,7 +97,7 @@ class ShiftGenerationServiceImplTest {
         when(shiftInstanceDomainService.resolveLocation(locationId)).thenReturn(loc);
         when(blackoutDayService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
         when(specialOpeningHoursService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
-        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(locationId))
+        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId))
                 .thenReturn(List.of(t1, t2));
         when(shiftInstanceRepository.softDeleteByLocationAndDate(any(), any(), any())).thenReturn(0);
         when(shiftInstanceRepository.save(any(ShiftInstance.class))).thenAnswer(inv -> {
@@ -129,7 +138,7 @@ class ShiftGenerationServiceImplTest {
         when(shiftInstanceDomainService.resolveLocation(locationId)).thenReturn(loc);
         when(blackoutDayService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of(blackout));
         when(specialOpeningHoursService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
-        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(locationId))
+        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId))
                 .thenReturn(List.of(t1));
         when(shiftInstanceRepository.softDeleteByLocationAndDate(any(), any(), any())).thenReturn(0);
         when(shiftInstanceRepository.save(any(ShiftInstance.class))).thenAnswer(inv -> {
@@ -161,7 +170,7 @@ class ShiftGenerationServiceImplTest {
         when(shiftInstanceDomainService.resolveLocation(locationId)).thenReturn(loc);
         when(blackoutDayService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
         when(specialOpeningHoursService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of(special));
-        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(locationId))
+        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId))
                 .thenReturn(List.of(t1));
         when(shiftInstanceRepository.softDeleteByLocationAndDate(any(), any(), any())).thenReturn(0);
         ArgumentCaptor<ShiftInstance> savedCaptor = ArgumentCaptor.forClass(ShiftInstance.class);
@@ -194,7 +203,7 @@ class ShiftGenerationServiceImplTest {
         when(shiftInstanceDomainService.resolveLocation(locationId)).thenReturn(loc);
         when(blackoutDayService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
         when(specialOpeningHoursService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of(special));
-        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByStartTimeAsc(locationId))
+        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId))
                 .thenReturn(List.of());
         when(shiftInstanceRepository.softDeleteByLocationAndDate(any(), any(), any())).thenReturn(0);
 
@@ -202,5 +211,66 @@ class ShiftGenerationServiceImplTest {
 
         assertThat(result).isEmpty();
         verify(shiftInstanceRepository, never()).save(any());
+    }
+
+    @Test
+    void generateMonth_shouldSkipClosedWeekdaysWhenLocationHasOpenDays() {
+        Long locationId = 1L;
+        Set<DayOfWeek> monToSat = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.SATURDAY);
+        Location loc = locationWithOpenDays(locationId, monToSat);
+        ShiftTemplate t1 = template(1L, loc, LocalTime.of(9, 0), LocalTime.of(17, 0));
+        YearMonth yearMonth = YearMonth.of(2025, 1); // January 2025 has 5 Sundays
+
+        when(shiftInstanceDomainService.resolveLocation(locationId)).thenReturn(loc);
+        when(blackoutDayService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
+        when(specialOpeningHoursService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
+        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId))
+                .thenReturn(List.of(t1));
+        when(shiftInstanceRepository.softDeleteByLocationAndDate(any(), any(), any())).thenReturn(0);
+        when(shiftInstanceRepository.save(any(ShiftInstance.class))).thenAnswer(inv -> {
+            ShiftInstance i = inv.getArgument(0);
+            return ShiftInstance.builder().id(100L).shiftTemplate(i.getShiftTemplate()).location(i.getLocation())
+                    .date(i.getDate()).startTime(i.getStartTime()).endTime(i.getEndTime()).requiredEmployees(i.getRequiredEmployees()).build();
+        });
+
+        List<ShiftInstance> result = service.generateMonth(locationId, yearMonth);
+
+        // January 2025: 31 days - 4 Sundays = 27 open days (Mon-Sat), 1 instance each
+        assertThat(result).hasSize(27);
+        assertThat(result).noneMatch(i -> i.getDate().getDayOfWeek() == DayOfWeek.SUNDAY);
+    }
+
+    @Test
+    void generateMonth_shouldCreateInstanceOnClosedWeekdayWhenSpecialOpeningHours() {
+        Long locationId = 1L;
+        Set<DayOfWeek> monToSat = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.SATURDAY);
+        Location loc = locationWithOpenDays(locationId, monToSat);
+        ShiftTemplate t1 = template(1L, loc, LocalTime.of(9, 0), LocalTime.of(17, 0));
+        YearMonth yearMonth = YearMonth.of(2025, 1);
+        LocalDate sunday = yearMonth.atDay(5); // Jan 5, 2025 is Sunday
+        SpecialOpeningHours special = SpecialOpeningHours.builder()
+                .id(1L).location(loc).date(sunday)
+                .openTime(LocalTime.of(10, 0)).closeTime(LocalTime.of(18, 0))
+                .reason("Special event").build();
+
+        when(shiftInstanceDomainService.resolveLocation(locationId)).thenReturn(loc);
+        when(blackoutDayService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
+        when(specialOpeningHoursService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of(special));
+        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId))
+                .thenReturn(List.of(t1));
+        when(shiftInstanceRepository.softDeleteByLocationAndDate(any(), any(), any())).thenReturn(0);
+        when(shiftInstanceRepository.save(any(ShiftInstance.class))).thenAnswer(inv -> {
+            ShiftInstance i = inv.getArgument(0);
+            return ShiftInstance.builder().id(100L).shiftTemplate(i.getShiftTemplate()).location(i.getLocation())
+                    .date(i.getDate()).startTime(i.getStartTime()).endTime(i.getEndTime()).requiredEmployees(i.getRequiredEmployees()).build();
+        });
+
+        List<ShiftInstance> result = service.generateMonth(locationId, yearMonth);
+
+        // 27 normal open days (Mon-Sat in Jan 2025) + 1 special Sunday = 28 instances
+        assertThat(result).hasSize(28);
+        ShiftInstance onSunday = result.stream().filter(i -> i.getDate().equals(sunday)).findFirst().orElseThrow();
+        assertThat(onSunday.getStartTime()).isEqualTo(LocalTime.of(10, 0));
+        assertThat(onSunday.getEndTime()).isEqualTo(LocalTime.of(18, 0));
     }
 }

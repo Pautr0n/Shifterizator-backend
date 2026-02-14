@@ -4,12 +4,14 @@ import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import com.shifterizator.shifterizatorbackend.language.model.Language;
+import com.shifterizator.shifterizatorbackend.shift.dto.PositionRequirementDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +36,7 @@ class ShiftTemplateMapperTest {
                 .endTime(LocalTime.of(17, 0))
                 .description("Morning shift")
                 .isActive(true)
+                .priority(1)
                 .build();
 
         ShiftTemplatePosition stp1 = ShiftTemplatePosition.builder()
@@ -58,6 +61,7 @@ class ShiftTemplateMapperTest {
         assertThat(dto.requiredPositions()).hasSize(2);
         assertThat(dto.totalRequiredEmployees()).isEqualTo(3);
         assertThat(dto.requiredLanguages()).contains("English");
+        assertThat(dto.priority()).isEqualTo(1);
     }
 
     @Test
@@ -68,13 +72,14 @@ class ShiftTemplateMapperTest {
 
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 1L,
-                null,
+                List.of(new PositionRequirementDto(1L, 1, null)),
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 "Morning shift",
                 Set.of(),
                 null,
-                true
+                true,
+                2
         );
 
         ShiftTemplate entity = mapper.toEntity(dto, location, Set.of());
@@ -84,5 +89,6 @@ class ShiftTemplateMapperTest {
         assertThat(entity.getEndTime()).isEqualTo(LocalTime.of(17, 0));
         assertThat(entity.getDescription()).isEqualTo("Morning shift");
         assertThat(entity.getIsActive()).isTrue();
+        assertThat(entity.getPriority()).isEqualTo(2);
     }
 }

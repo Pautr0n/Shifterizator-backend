@@ -23,6 +23,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Set;
+
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -81,8 +83,8 @@ class LocationControllerTest {
                 .company(company)
                 .build();
 
-        responseDto = new LocationResponseDto(10L, "Headquarters", "Main Street 1", 1L);
-        requestDto = new LocationRequestDto("Headquarters", "Main Street 1", 1L);
+        responseDto = new LocationResponseDto(10L, "Headquarters", "Main Street 1", 1L, null, null);
+        requestDto = new LocationRequestDto("Headquarters", "Main Street 1", 1L, null, null);
     }
 
     @Test
@@ -122,7 +124,7 @@ class LocationControllerTest {
 
     @Test
     void create_should_return_400_when_validation_error() throws Exception {
-        LocationRequestDto invalidDto = new LocationRequestDto("", "addr", null);
+        LocationRequestDto invalidDto = new LocationRequestDto("", "addr", null, null, null);
 
         mockMvc.perform(post("/api/locations")
                         .with(csrf())
@@ -168,7 +170,7 @@ class LocationControllerTest {
 
     @Test
     void update_should_return_400_when_validation_error() throws Exception {
-        LocationRequestDto invalidDto = new LocationRequestDto("ab", "addr", 1L);
+        LocationRequestDto invalidDto = new LocationRequestDto("ab", "addr", 1L, null, null);
 
         mockMvc.perform(put("/api/locations/10")
                         .with(csrf())

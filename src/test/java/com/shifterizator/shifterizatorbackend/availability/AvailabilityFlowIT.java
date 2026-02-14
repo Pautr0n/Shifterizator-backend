@@ -112,6 +112,7 @@ class AvailabilityFlowIT extends BaseIntegrationTest {
                 Set.of(),
                 Set.of(),
                 null,
+                5,
                 List.of(),
                 null
         );

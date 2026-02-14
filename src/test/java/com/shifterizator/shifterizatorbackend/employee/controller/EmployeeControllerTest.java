@@ -3,6 +3,7 @@ package com.shifterizator.shifterizatorbackend.employee.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shifterizator.shifterizatorbackend.auth.jwt.JwtAuthenticationFilter;
 import com.shifterizator.shifterizatorbackend.auth.jwt.JwtUtil;
+import com.shifterizator.shifterizatorbackend.auth.service.CurrentUserService;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
@@ -13,6 +14,8 @@ import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.model.Position;
 import com.shifterizator.shifterizatorbackend.employee.service.EmployeeService;
 import com.shifterizator.shifterizatorbackend.user.exception.EmailAlreadyExistsException;
+import com.shifterizator.shifterizatorbackend.user.model.Role;
+import com.shifterizator.shifterizatorbackend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +64,9 @@ class EmployeeControllerTest {
     @MockitoBean
     private EmployeeMapper employeeMapper;
 
+    @MockitoBean
+    private CurrentUserService currentUserService;
+
     @Autowired
     private ObjectMapper mapper;
 
@@ -79,6 +85,9 @@ class EmployeeControllerTest {
 
     @BeforeEach
     void setUp() {
+        User currentUser = User.builder().id(1L).username("admin").role(Role.SUPERADMIN).company(null).build();
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+
         requestDto = new EmployeeRequestDto(
                 "John",
                 "Doe",
@@ -89,6 +98,7 @@ class EmployeeControllerTest {
                 Set.of(20L),
                 Set.of(1L),
                 null,
+                5,
                 null,
                 null
         );
@@ -111,14 +121,19 @@ class EmployeeControllerTest {
                 "Doe",
                 "john@example.com",
                 "123456789",
+                1L,
                 "Manager",
+                Set.of(10L),
                 Set.of("Company A", "Company B"),
                 Set.of("Barcelona", "Madrid"),
                 Set.of("English", "Spanish"),
                 null,
+                5,
                 List.of(),
                 LocalDateTime.of(2024, 1, 1, 10, 0),
-                LocalDateTime.of(2024, 1, 2, 12, 0)
+                LocalDateTime.of(2024, 1, 2, 12, 0),
+                null,
+                null
         );
     }
 
@@ -155,7 +170,7 @@ class EmployeeControllerTest {
     void create_shouldReturn400_whenInvalidDto() throws Exception {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "", "", "invalid", "123",
-                null, Set.of(), null, null, null, null, null
+                null, Set.of(), null, null, null, null, null, null
         );
 
         mvc.perform(post("/api/employees")
@@ -171,7 +186,7 @@ class EmployeeControllerTest {
     void createEmployee_should_return_409_when_email_exists() throws Exception {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), null, null, null, null
+                1L, Set.of(1L), Set.of(10L), null, null, 5, null, null
         );
 
         when(employeeService.create(any()))
@@ -336,7 +351,7 @@ class EmployeeControllerTest {
 
     @Test
     void getPreferences_should_return_200_with_preferences() throws Exception {
-        EmployeePreferencesResponseDto preferencesDto = new EmployeePreferencesResponseDto("WEDNESDAY", List.of(1L, 2L));
+        EmployeePreferencesResponseDto preferencesDto = new EmployeePreferencesResponseDto("WEDNESDAY", List.of(1L, 2L), 5);
         when(employeeService.getPreferences(99L)).thenReturn(preferencesDto);
 
         mvc.perform(get("/api/employees/99/preferences"))
@@ -361,8 +376,8 @@ class EmployeeControllerTest {
 
     @Test
     void updatePreferences_should_return_200_with_updated_preferences() throws Exception {
-        EmployeePreferencesRequestDto requestDto = new EmployeePreferencesRequestDto("FRIDAY", List.of(2L, 3L));
-        EmployeePreferencesResponseDto responseDto = new EmployeePreferencesResponseDto("FRIDAY", List.of(2L, 3L));
+        EmployeePreferencesRequestDto requestDto = new EmployeePreferencesRequestDto("FRIDAY", List.of(2L, 3L), 5);
+        EmployeePreferencesResponseDto responseDto = new EmployeePreferencesResponseDto("FRIDAY", List.of(2L, 3L), 5);
         when(employeeService.updatePreferences(eq(99L), any(EmployeePreferencesRequestDto.class))).thenReturn(responseDto);
 
         mvc.perform(put("/api/employees/99/preferences")
@@ -379,7 +394,7 @@ class EmployeeControllerTest {
 
     @Test
     void updatePreferences_should_return_404_when_employee_not_found() throws Exception {
-        EmployeePreferencesRequestDto requestDto = new EmployeePreferencesRequestDto(null, List.of());
+        EmployeePreferencesRequestDto requestDto = new EmployeePreferencesRequestDto(null, List.of(), null);
         when(employeeService.updatePreferences(eq(999L), any(EmployeePreferencesRequestDto.class)))
                 .thenThrow(new EmployeeNotFoundException("Employee not found"));
 

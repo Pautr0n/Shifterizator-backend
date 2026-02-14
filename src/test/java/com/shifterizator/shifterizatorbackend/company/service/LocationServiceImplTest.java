@@ -38,7 +38,7 @@ class LocationServiceImplTest {
     @Test
     void create_shouldCreateLocationSuccessfully() {
         LocationRequestDto dto = new LocationRequestDto(
-                "HQ", "Main Street 1", 1L
+                "HQ", "Main Street 1", 1L, null, null
         );
 
         Company company = new Company();
@@ -60,7 +60,7 @@ class LocationServiceImplTest {
     @Test
     void create_shouldThrowWhenCompanyNotFound() {
         LocationRequestDto dto = new LocationRequestDto(
-                "HQ", "Main Street 1", 1L
+                "HQ", "Main Street 1", 1L, null, null
         );
 
         when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
@@ -73,7 +73,7 @@ class LocationServiceImplTest {
     @Test
     void update_shouldUpdateLocationSuccessfully() {
         LocationRequestDto dto = new LocationRequestDto(
-                "New HQ", "New Address", 1L
+                "New HQ", "New Address", 1L, null, null
         );
 
         Company company = new Company();
@@ -95,7 +95,7 @@ class LocationServiceImplTest {
     @Test
     void update_shouldThrowWhenLocationNotFound() {
         LocationRequestDto dto = new LocationRequestDto(
-                "New HQ", "New Address", 1L
+                "New HQ", "New Address", 1L, null, null
         );
 
         when(locationRepository.findById(10L)).thenReturn(Optional.empty());

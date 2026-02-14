@@ -91,7 +91,9 @@ class EmployeeLifecycleFlowIT extends BaseIntegrationTest {
         LocationRequestDto request = new LocationRequestDto(
                 "EmpLoc-" + suffix,
                 "Address " + suffix,
-                companyId
+                companyId,
+                null,
+                null
         );
         MvcResult result = mockMvc.perform(post("/api/locations")
                         .header("Authorization", adminToken)
@@ -140,6 +142,7 @@ class EmployeeLifecycleFlowIT extends BaseIntegrationTest {
                 Set.of(locationId),
                 Set.of(),
                 "FRIDAY",
+                5,
                 List.of(),
                 null
         );
@@ -171,7 +174,8 @@ class EmployeeLifecycleFlowIT extends BaseIntegrationTest {
                 "Morning shift",
                 null,
                 null,
-                true
+                true,
+                null
         );
         MvcResult templateResult = mockMvc.perform(post("/api/shift-templates")
                         .header("Authorization", adminToken)
@@ -187,7 +191,8 @@ class EmployeeLifecycleFlowIT extends BaseIntegrationTest {
 
         EmployeePreferencesRequestDto preferencesRequest = new EmployeePreferencesRequestDto(
                 "WEDNESDAY",
-                List.of(templateId)
+                List.of(templateId),
+                5
         );
         MvcResult preferencesResult = mockMvc.perform(put("/api/employees/{id}/preferences", employeeId)
                         .header("Authorization", adminToken)

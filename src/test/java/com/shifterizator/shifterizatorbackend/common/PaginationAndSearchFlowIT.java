@@ -93,7 +93,9 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
         LocationRequestDto request = new LocationRequestDto(
                 name,
                 "Address " + name,
-                companyId
+                companyId,
+                null,
+                null
         );
         MvcResult result = mockMvc.perform(post("/api/locations")
                         .header("Authorization", adminToken)
@@ -133,6 +135,7 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
                 Set.of(locationId),
                 Set.of(),
                 null,
+                5,
                 List.of(),
                 null
         );
@@ -281,7 +284,8 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
                 "Search shift",
                 null,
                 null,
-                true
+                true,
+                null
         );
         mockMvc.perform(post("/api/shift-templates")
                         .header("Authorization", adminToken)

@@ -36,7 +36,8 @@ class ShiftTemplateRequestDtoTest {
                 "Morning shift",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Set<ConstraintViolation<ShiftTemplateRequestDto>> violations = validator.validate(dto);
@@ -54,7 +55,8 @@ class ShiftTemplateRequestDtoTest {
                 "Test",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Set<ConstraintViolation<ShiftTemplateRequestDto>> violations = validator.validate(dto);
@@ -73,7 +75,8 @@ class ShiftTemplateRequestDtoTest {
                 "Test",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Set<ConstraintViolation<ShiftTemplateRequestDto>> violations = validator.validate(dto);
@@ -92,7 +95,8 @@ class ShiftTemplateRequestDtoTest {
                 "Test",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Set<ConstraintViolation<ShiftTemplateRequestDto>> violations = validator.validate(dto);
@@ -111,7 +115,8 @@ class ShiftTemplateRequestDtoTest {
                 "Test",
                 Set.of(),
                 null,
-                true
+                true,
+                null
         );
 
         Set<ConstraintViolation<ShiftTemplateRequestDto>> violations = validator.validate(dto);
@@ -129,6 +134,7 @@ class ShiftTemplateRequestDtoTest {
                 anyEndTime(),
                 "Test",
                 Set.of(),
+                null,
                 null,
                 null
         );

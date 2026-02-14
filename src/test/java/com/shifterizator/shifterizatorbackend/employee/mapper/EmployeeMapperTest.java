@@ -33,6 +33,7 @@ class EmployeeMapperTest {
                 Set.of(2L),
                 Set.of(1L),
                 null,
+                5,
                 null,
                 null
         );
@@ -52,7 +53,7 @@ class EmployeeMapperTest {
         Position position = Position.builder().id(5L).name("Waiter").build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                5L, Set.of(1L), Set.of(2L), Set.of(1L), "WEDNESDAY", null, null
+                5L, Set.of(1L), Set.of(2L), Set.of(1L), "WEDNESDAY", 5, null, null
         );
 
         Employee employee = mapper.toEntity(dto, position);
@@ -81,6 +82,7 @@ class EmployeeMapperTest {
                 .email("john@example.com")
                 .phone("123456789")
                 .position(position)
+                .shiftsPerWeek(5)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -113,6 +115,7 @@ class EmployeeMapperTest {
         assertThat(dto.companies()).containsExactlyInAnyOrder("Skynet", "Cyberdyne");
         assertThat(dto.locations()).containsExactlyInAnyOrder("HQ", "Branch");
         assertThat(dto.languages()).containsExactlyInAnyOrder("English", "Spanish");
+        assertThat(dto.shiftsPerWeek()).isEqualTo(5);
         assertThat(dto.createdAt()).isNotNull();
         assertThat(dto.updatedAt()).isNotNull();
     }
