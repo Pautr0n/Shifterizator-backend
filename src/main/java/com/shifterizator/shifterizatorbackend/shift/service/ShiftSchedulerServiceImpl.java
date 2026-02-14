@@ -1,6 +1,5 @@
 package com.shifterizator.shifterizatorbackend.shift.service;
 
-import com.shifterizator.shifterizatorbackend.availability.model.AvailabilityType;
 import com.shifterizator.shifterizatorbackend.availability.model.EmployeeAvailability;
 import com.shifterizator.shifterizatorbackend.availability.repository.EmployeeAvailabilityRepository;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
@@ -8,8 +7,10 @@ import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeReposi
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
+import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftAssignmentRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
+import com.shifterizator.shifterizatorbackend.shift.service.advisor.ShiftCandidateTierService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,17 +30,17 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
 
-    private static final String MANAGER_POSITION_NAME = "manager";
 
     private final ShiftInstanceRepository shiftInstanceRepository;
     private final ShiftAssignmentRepository shiftAssignmentRepository;
     private final EmployeeRepository employeeRepository;
     private final EmployeeAvailabilityRepository employeeAvailabilityRepository;
     private final ShiftAssignmentService shiftAssignmentService;
+    private final ShiftCandidateTierService shiftCandidateTierService;
 
     @Override
     public void scheduleDay(Long locationId, LocalDate date) {
-        List<ShiftInstance> instances = loadShiftInstancesForDay(locationId, date);
+        List<ShiftInstance> instances = loadAndSortInstancesByPriority(locationId, date);
         if (instances.isEmpty()) {
             return;
         }
@@ -50,8 +52,7 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
 
         fillMinimumsForAllShifts(instances, candidates, date, locationId);
-        fillAfternoonShiftsFirst(instances, candidates, date, locationId);
-        ensureManagerPresent(instances, candidates, date, locationId);
+        fillUpToIdealByPriority(instances, candidates, date, locationId);
         improveLanguageDistribution(instances, candidates, date, locationId);
     }
 
@@ -65,20 +66,29 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
     }
 
     /**
-     * Shift instances for the location and date, ordered by start time (morning first).
+     * Instances for the day, ordered by template priority (lower = higher priority) then start time.
+     * Null priority is treated as lowest (sorted last).
      */
-    private List<ShiftInstance> loadShiftInstancesForDay(Long locationId, LocalDate date) {
-        return shiftInstanceRepository.findByLocation_IdAndDateAndDeletedAtIsNullOrderByStartTimeAsc(locationId, date);
+    private List<ShiftInstance> loadAndSortInstancesByPriority(Long locationId, LocalDate date) {
+        List<ShiftInstance> list = shiftInstanceRepository
+                .findByLocation_IdAndDateAndDeletedAtIsNullOrderByStartTimeAsc(locationId, date);
+        return list.stream()
+                .sorted(Comparator
+                        .comparing(ShiftInstance::getShiftTemplate,
+                                Comparator.nullsLast(Comparator.comparing(ShiftTemplate::getPriority, Comparator.nullsLast(Integer::compareTo))))
+                        .thenComparing(ShiftInstance::getStartTime))
+                .toList();
     }
 
     /**
-     * Employees at the location who are available on the date (no blocking availability).
+     * Candidates at the location, available on the date, with shift preferences loaded for tier computation.
      */
     private List<Employee> loadCandidatesForDay(Long locationId, LocalDate date) {
-        List<Employee> atLocation = employeeRepository.findActiveByLocationId(locationId);
-        return atLocation.stream()
-                .filter(employee -> isAvailableOnDate(employee.getId(), date))
+        List<Employee> withPreferences = employeeRepository.findActiveByLocationIdWithShiftPreferences(locationId);
+        List<Employee> available = withPreferences.stream()
+                .filter(e -> isAvailableOnDate(e.getId(), date))
                 .toList();
+        return available;
     }
 
     private boolean isAvailableOnDate(Long employeeId, LocalDate date) {
@@ -93,14 +103,19 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
             return Set.of();
         }
         List<Long> instanceIds = instances.stream().map(ShiftInstance::getId).toList();
-        return shiftAssignmentRepository.findAssignedEmployeeIdsByShiftInstanceIdIn(instanceIds)
-                .stream()
-                .collect(Collectors.toSet());
+        return new HashSet<>(shiftAssignmentRepository.findAssignedEmployeeIdsByShiftInstanceIdIn(instanceIds));
     }
 
     private List<Employee> unassignedCandidates(List<Employee> candidates, Set<Long> assignedIds) {
         return candidates.stream()
                 .filter(e -> !assignedIds.contains(e.getId()))
+                .toList();
+    }
+
+    /** Candidates sorted by tier for the given shift (best first). */
+    private List<Employee> candidatesByTier(List<Employee> candidates, ShiftInstance instance, LocalDate date) {
+        return candidates.stream()
+                .sorted(Comparator.comparingInt(e -> shiftCandidateTierService.getTier(e, instance, date)))
                 .toList();
     }
 
@@ -113,9 +128,6 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         return current < targetCount;
     }
 
-    /**
-     * Attempts to assign the employee to the shift. Returns true if assigned, false if validation failed.
-     */
     private boolean tryAssign(Long shiftInstanceId, Long employeeId) {
         try {
             shiftAssignmentService.assign(new ShiftAssignmentRequestDto(shiftInstanceId, employeeId));
@@ -126,9 +138,7 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /**
-     * Priority 0: Fill every shift up to its required minimum (requiredEmployees).
-     */
+    /** Phase 1: Fill every shift up to requiredEmployees using tier-ordered candidates. Higher-priority shifts processed first. */
     private void fillMinimumsForAllShifts(List<ShiftInstance> instances, List<Employee> candidates,
                                           LocalDate date, Long locationId) {
         for (ShiftInstance instance : instances) {
@@ -140,14 +150,19 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
                                LocalDate date, Long locationId, List<ShiftInstance> allInstances) {
         Set<Long> assigned = getAssignedEmployeeIdsForDay(allInstances);
         List<Employee> available = unassignedCandidates(candidates, assigned);
+        List<Employee> byTier = candidatesByTier(available, instance, date);
 
-        while (shiftNeedsMore(instance, targetCount) && !available.isEmpty()) {
+        while (shiftNeedsMore(instance, targetCount) && !byTier.isEmpty()) {
             boolean assignedSomeone = false;
-            for (Employee employee : available) {
+            for (Employee employee : byTier) {
+                if (assigned.contains(employee.getId())) {
+                    continue;
+                }
                 if (tryAssign(instance.getId(), employee.getId())) {
                     assignedSomeone = true;
                     assigned.add(employee.getId());
                     available = unassignedCandidates(candidates, assigned);
+                    byTier = candidatesByTier(available, instance, date);
                     break;
                 }
             }
@@ -157,16 +172,10 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /**
-     * Fill toward ideal per shift (idealEmployees or required if null), afternoon shifts first.
-     */
-    private void fillAfternoonShiftsFirst(List<ShiftInstance> instances, List<Employee> candidates,
+    /** Phase 2: Fill up to ideal per shift, higher-priority shifts first. */
+    private void fillUpToIdealByPriority(List<ShiftInstance> instances, List<Employee> candidates,
                                          LocalDate date, Long locationId) {
-        List<ShiftInstance> afternoonFirst = instances.stream()
-                .sorted(Comparator.comparing(ShiftInstance::getStartTime).reversed())
-                .toList();
-
-        for (ShiftInstance instance : afternoonFirst) {
+        for (ShiftInstance instance : instances) {
             int target = getIdealTarget(instance);
             if (!shiftNeedsMore(instance, target)) {
                 continue;
@@ -175,50 +184,7 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /**
-     * Priority 3: Ensure at least one manager is present during the day, preferably in the afternoon.
-     */
-    private void ensureManagerPresent(List<ShiftInstance> instances, List<Employee> candidates,
-                                      LocalDate date, Long locationId) {
-        Set<Long> assigned = getAssignedEmployeeIdsForDay(instances);
-        boolean managerAlreadyAssigned = candidates.stream()
-                .filter(e -> assigned.contains(e.getId()))
-                .anyMatch(this::isManager);
-
-        if (managerAlreadyAssigned) {
-            return;
-        }
-
-        List<Employee> managerCandidates = unassignedCandidates(candidates, assigned).stream()
-                .filter(this::isManager)
-                .toList();
-
-        if (managerCandidates.isEmpty()) {
-            log.debug("No manager available for location {} on {}", locationId, date);
-            return;
-        }
-
-        List<ShiftInstance> afternoonFirst = instances.stream()
-                .sorted(Comparator.comparing(ShiftInstance::getStartTime).reversed())
-                .toList();
-
-        for (ShiftInstance instance : afternoonFirst) {
-            for (Employee manager : managerCandidates) {
-                if (tryAssign(instance.getId(), manager.getId())) {
-                    return;
-                }
-            }
-        }
-    }
-
-    private boolean isManager(Employee employee) {
-        return employee.getPosition() != null
-                && MANAGER_POSITION_NAME.equalsIgnoreCase(employee.getPosition().getName());
-    }
-
-    /**
-     * Priority 4: Try to assign employees who meet language requirements and spread them across shifts.
-     */
+    /** Phase 4: Fill remaining slots with language-qualified employees, spread across shifts (tier-ordered). */
     private void improveLanguageDistribution(List<ShiftInstance> instances, List<Employee> candidates,
                                              LocalDate date, Long locationId) {
         Set<Long> assigned = getAssignedEmployeeIdsForDay(instances);
@@ -228,7 +194,8 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
             if (!shiftNeedsMore(instance, getIdealTarget(instance))) {
                 continue;
             }
-            for (Employee employee : available) {
+            List<Employee> byTier = candidatesByTier(available, instance, date);
+            for (Employee employee : byTier) {
                 if (tryAssign(instance.getId(), employee.getId())) {
                     assigned.add(employee.getId());
                     available = unassignedCandidates(candidates, assigned);

@@ -61,6 +61,20 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
     List<Employee> findActiveByLocationId(@Param("locationId") Long locationId);
 
     /**
+     * Same as findActiveByLocationId but with shiftPreferences and their shiftTemplate loaded
+     * for scheduler tier computation. Avoids N+1 when evaluating preferences.
+     */
+    @Query("""
+        SELECT DISTINCT e FROM Employee e
+        JOIN e.employeeLocations el
+        LEFT JOIN FETCH e.shiftPreferences sp
+        LEFT JOIN FETCH sp.shiftTemplate
+        WHERE el.location.id = :locationId
+          AND e.deletedAt IS NULL
+        """)
+    List<Employee> findActiveByLocationIdWithShiftPreferences(@Param("locationId") Long locationId);
+
+    /**
      * Check if a user is already assigned to another employee.
      * Used to enforce "one user per employee" rule.
      */
