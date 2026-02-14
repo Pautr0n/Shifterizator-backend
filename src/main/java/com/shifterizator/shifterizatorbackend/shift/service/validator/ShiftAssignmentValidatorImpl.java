@@ -115,7 +115,6 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
     public void validatePositionCapacity(Employee employee, ShiftInstance shiftInstance) {
         Long employeePositionId = employee.getPosition().getId();
 
-        // Find required count and cap (ideal if set, else required) for this position
         var positionReq = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
                 .filter(stp -> stp.getPosition().getId().equals(employeePositionId))
                 .findFirst()
@@ -128,14 +127,12 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
         int requiredCount = positionReq.getRequiredCount();
         int cap = positionReq.getIdealCount() != null ? positionReq.getIdealCount() : requiredCount;
 
-        // Count how many employees of this position are already assigned
         List<ShiftAssignment> assignments = shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(
                 shiftInstance.getId());
         long assignedCountForPosition = assignments.stream()
                 .filter(a -> a.getEmployee().getPosition().getId().equals(employeePositionId))
                 .count();
 
-        // Throw only when exceeding cap (allow assignments up to cap)
         if (assignedCountForPosition + 1 > cap) {
             throw new ShiftValidationException(
                     String.format("Position capacity reached: %d employees already assigned (max: %d)",
@@ -143,18 +140,10 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
         }
     }
 
-    /**
-     * Checks if two shift instances overlap in time.
-     *
-     * @param shift1 the first shift instance
-     * @param shift2 the second shift instance
-     * @return true if shifts overlap, false otherwise
-     */
     private boolean isOverlapping(ShiftInstance shift1, ShiftInstance shift2) {
         if (!shift1.getDate().equals(shift2.getDate())) {
             return false;
         }
-        // Check if time ranges overlap
         return !shift1.getEndTime().isBefore(shift2.getStartTime())
                 && !shift1.getStartTime().isAfter(shift2.getEndTime());
     }

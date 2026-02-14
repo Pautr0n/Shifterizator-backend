@@ -69,9 +69,6 @@ class UserControllerTest {
         }
     }
 
-    // ---------------------------------------------------------
-    // CREATE
-    // ---------------------------------------------------------
     @Test
     @WithMockUser
     void createUser_should_return_201_and_userResponse() throws Exception {
@@ -133,9 +130,6 @@ class UserControllerTest {
     }
 
 
-    // ---------------------------------------------------------
-    // UPDATE
-    // ---------------------------------------------------------
     @Test
     @WithMockUser
     void updateUser_should_return_200_and_updated_user() throws Exception {
@@ -193,9 +187,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("Email already exists: duplicate@mail.com"));
     }
 
-    // ---------------------------------------------------------
-    // ACTIVATE-DEACTIVATE
-    // ---------------------------------------------------------
     @Test
     @WithMockUser
     void activateUser_should_return_200_and_userResponse() throws Exception {
@@ -238,9 +229,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.isActive").value(false));
     }
 
-    // ---------------------------------------------------------
-    // DELETE
-    // ---------------------------------------------------------
     @Test
     @WithMockUser
     void deleteUser_should_return_204() throws Exception {
@@ -266,9 +254,6 @@ class UserControllerTest {
     }
 
 
-    // ---------------------------------------------------------
-    // GET BY ID
-    // ---------------------------------------------------------
     @Test
     @WithMockUser
     void getUser_should_return_200_and_user() throws Exception {
@@ -302,9 +287,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("User not found with id: 99"));
     }
 
-    // ---------------------------------------------------------
-    // LIST ALL
-    // ---------------------------------------------------------
     @Test
     @WithMockUser
     void listUsers_should_return_200_and_paginated_content() throws Exception {

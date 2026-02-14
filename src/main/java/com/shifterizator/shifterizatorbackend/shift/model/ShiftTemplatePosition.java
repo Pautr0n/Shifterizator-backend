@@ -42,7 +42,6 @@ public class ShiftTemplatePosition {
     @Column(nullable = false)
     private Integer requiredCount;
 
-    /** Target count when enough staff available; must be >= requiredCount if set. */
     @Column(name = "ideal_count")
     private Integer idealCount;
 }

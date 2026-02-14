@@ -23,19 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Centralized role/access matrix integration test.
- *
- * It verifies that the HTTP endpoints are protected according to the
- * current {@link com.shifterizator.shifterizatorbackend.config.SecurityConfig}
- * and {@link com.shifterizator.shifterizatorbackend.config.SecurityBeanConfig}
- * (role hierarchy).
- *
- * Focus:
- * - Representative GET endpoints per URL pattern
- * - For each endpoint, verify which roles are allowed or forbidden
- * - Anonymous users must be rejected on protected endpoints
- */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RoleAccessMatrixIT extends BaseIntegrationTest {
 
@@ -66,10 +53,7 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    // Representative protected endpoints grouped by URL pattern and HTTP method.
-    // These sets reflect the effective access rules from SecurityConfig + role hierarchy.
     private final List<EndpointExpectation> protectedEndpoints = List.of(
-            // Companies: GET/PUT for SUPERADMIN+COMPANYADMIN, POST/DELETE only SUPERADMIN
             new EndpointExpectation(
                     "Companies search",
                     "GET",
@@ -88,7 +72,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/companies/1",
                     Set.of(TestRole.SUPERADMIN)
             ),
-            // Availability: GET all authenticated, POST/PUT/DELETE SUPERADMIN+COMPANYADMIN+SHIFTMANAGER
             new EndpointExpectation(
                     "Availability search",
                     "GET",
@@ -101,7 +84,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/availability",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER)
             ),
-            // Employees: GET all authenticated, POST/DELETE SUPERADMIN+COMPANYADMIN+SHIFTMANAGER, PUT also EMPLOYEE
             new EndpointExpectation(
                     "Employees search",
                     "GET",
@@ -120,7 +102,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/employees/1",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER, TestRole.EMPLOYEE)
             ),
-            // Positions: GET all authenticated, POST/PUT/DELETE SUPERADMIN+COMPANYADMIN
             new EndpointExpectation(
                     "Positions by company",
                     "GET",
@@ -133,7 +114,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/positions",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN)
             ),
-            // Users: GET all authenticated, POST/PUT/DELETE SUPERADMIN+COMPANYADMIN
             new EndpointExpectation(
                     "Users search",
                     "GET",
@@ -146,7 +126,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/users",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN)
             ),
-            // Locations: GET all authenticated, POST/PUT/DELETE SUPERADMIN+COMPANYADMIN
             new EndpointExpectation(
                     "Locations by company",
                     "GET",
@@ -159,7 +138,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/locations",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN)
             ),
-            // Shift templates: GET all authenticated, POST/DELETE SUPERADMIN+COMPANYADMIN, PUT SUPERADMIN+COMPANYADMIN+SHIFTMANAGER
             new EndpointExpectation(
                     "Shift templates search",
                     "GET",
@@ -178,7 +156,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/shift-templates/1",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER)
             ),
-            // Shift instances: GET all authenticated, POST/PUT/DELETE SUPERADMIN+COMPANYADMIN+SHIFTMANAGER
             new EndpointExpectation(
                     "Shift instances search",
                     "GET",
@@ -191,7 +168,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/shift-instances/generate-month",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER)
             ),
-            // Shift assignments: GET all authenticated, POST/DELETE SUPERADMIN+COMPANYADMIN+SHIFTMANAGER
             new EndpointExpectation(
                     "Shift assignments by employee",
                     "GET",
@@ -204,7 +180,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/shift-assignments",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER)
             ),
-            // Blackout days: GET all authenticated, POST/PUT/DELETE SUPERADMIN+COMPANYADMIN+SHIFTMANAGER
             new EndpointExpectation(
                     "Blackout days search",
                     "GET",
@@ -217,7 +192,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/blackout-days",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER)
             ),
-            // Opening hours: GET all authenticated, POST/PUT/DELETE SUPERADMIN+COMPANYADMIN+SHIFTMANAGER
             new EndpointExpectation(
                     "Special opening hours search",
                     "GET",
@@ -230,7 +204,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/opening-hours",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER)
             ),
-            // Languages: GET all authenticated, POST/PUT/DELETE SUPERADMIN+COMPANYADMIN
             new EndpointExpectation(
                     "Languages list",
                     "GET",
@@ -243,14 +216,12 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     "/api/languages",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN)
             ),
-            // Auth endpoints
             new EndpointExpectation(
                     "Auth me",
                     "GET",
                     "/api/auth/me",
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER, TestRole.EMPLOYEE)
             ),
-            // Role test endpoints
             new EndpointExpectation(
                     "Test SUPERADMIN endpoint",
                     "GET",
@@ -277,7 +248,6 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
             )
     );
 
-    // Public GET endpoints (permitAll in SecurityConfig)
     private final List<String> publicGetEndpoints = List.of(
             "/api/health"
     );
@@ -331,7 +301,7 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     case "GET" -> requestBuilder = get(endpoint.path());
                     case "POST" -> requestBuilder = post(endpoint.path())
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{}"); // Empty JSON body for POST requests
+                            .content("{}");
                     case "PUT" -> requestBuilder = put(endpoint.path())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{}");

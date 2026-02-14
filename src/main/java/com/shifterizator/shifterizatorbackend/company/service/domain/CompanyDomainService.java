@@ -14,62 +14,29 @@ public class CompanyDomainService {
 
     private final CompanyRepository companyRepository;
 
-    /**
-     * Validates that a company exists and returns it.
-     *
-     * @param id the company ID
-     * @return the Company entity
-     * @throws CompanyNotFoundException if company is not found
-     */
     public Company validateCompanyExistsAndReturn(Long id) {
         return companyRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new CompanyNotFoundException("Company not found with id: " + id));
     }
 
-    /**
-     * Validates that company name is unique (among non-deleted companies).
-     *
-     * @param name the company name to validate
-     * @throws CompanyValidationException if name already exists
-     */
     public void validateUniqueName(String name) {
         if (companyRepository.findByNameAndDeletedAtIsNull(name).isPresent()) {
             throw new CompanyValidationException("Company name already exists: " + name);
         }
     }
 
-    /**
-     * Validates that company tax ID is unique (among non-deleted companies).
-     *
-     * @param taxId the tax ID to validate
-     * @throws CompanyValidationException if tax ID already exists
-     */
     public void validateUniqueTaxId(String taxId) {
         if (companyRepository.findByTaxIdAndDeletedAtIsNull(taxId).isPresent()) {
             throw new CompanyValidationException("Company tax id already exists: " + taxId);
         }
     }
 
-    /**
-     * Validates that company email is unique (among non-deleted companies).
-     *
-     * @param email the email to validate
-     * @throws CompanyValidationException if email already exists
-     */
     public void validateUniqueEmail(String email) {
         if (companyRepository.findByEmailAndDeletedAtIsNull(email).isPresent()) {
             throw new CompanyValidationException("Company email already exists: " + email);
         }
     }
 
-    /**
-     * Validates update constraints for company uniqueness.
-     * Checks if changed fields (name, email, taxId) are unique when different from current values.
-     *
-     * @param requestDto the update request DTO
-     * @param company the existing company entity
-     * @throws CompanyValidationException if any unique constraint would be violated
-     */
     public void validateUpdateConstraints(CompanyRequestDto requestDto, Company company) {
         if (!requestDto.name().equalsIgnoreCase(company.getName())) {
             if (companyRepository.existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull(requestDto.name(), company.getId())) {

@@ -52,11 +52,9 @@ public record EmployeeRequestDto(
                 example = "FRIDAY",
                 allowableValues = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"}
         )
-        /** Optional. Preferred weekday off (e.g. WEDNESDAY, FRIDAY). Must be a valid DayOfWeek name. */
         String preferredDayOff,
 
         @Schema(description = "Shifts per week (1-7); null = use default", example = "5", nullable = true)
-        /** Shifts per week; null = use default (e.g. 5). */
         @Positive(message = "Shift per week must be positive")
         @Min(1) @Max(7)
         Integer shiftsPerWeek,
@@ -65,10 +63,8 @@ public record EmployeeRequestDto(
                 description = "Ordered list of preferred shift template IDs (first = highest preference)",
                 example = "[5, 3, 7]"
         )
-        /** Optional. Ordered list of shift template IDs (first = highest preference). */
         List<Long> preferredShiftTemplateIds,
 
-        /** Optional. ID of the user account to link to this employee. */
         Long userId
 
 ) {

@@ -49,9 +49,6 @@ class UserServiceTest {
     @InjectMocks
     private UserServiceImpl service;
 
-    // ---------------------------------------------------------
-    // CREATE USER
-    // ---------------------------------------------------------
     @Test
     void createUser_should_create_user_when_valid() {
 
@@ -176,9 +173,6 @@ class UserServiceTest {
         verify(userRepository, never()).save(any());
     }
 
-    // ---------------------------------------------------------
-    // UPDATE USER
-    // ---------------------------------------------------------
     @Test
     void updateUser_should_update_when_valid() {
 
@@ -301,9 +295,6 @@ class UserServiceTest {
                 .hasMessage("Company not found with id: 99");
     }
 
-    // ---------------------------------------------------------
-    // ACTIVATE / DEACTIVATE
-    // ---------------------------------------------------------
     @Test
     void deactivateUser_should_set_isActive_false() {
 
@@ -333,9 +324,6 @@ class UserServiceTest {
         assertThat(result.getIsActive()).isTrue();
     }
 
-    // ---------------------------------------------------------
-    // DELETE
-    // ---------------------------------------------------------
     @Test
     void deleteUser_should_logical_delete_when_exists() {
 
@@ -361,9 +349,6 @@ class UserServiceTest {
                 .hasMessage("User not found with id: 10");
     }
 
-    // ---------------------------------------------------------
-    // GET USER
-    // ---------------------------------------------------------
     @Test
     void getUser_should_return_user_when_exists() {
 
@@ -386,9 +371,6 @@ class UserServiceTest {
                 .hasMessage("User not found with id: 10");
     }
 
-    // ---------------------------------------------------------
-    // SEARCH (paginated with filters: role, companyId, username, email, isActive)
-    // ---------------------------------------------------------
     @Test
     void search_should_return_page_with_no_filters() {
         User user = new User("john", "john@mail.com", "hash", Role.EMPLOYEE, null);

@@ -7,14 +7,9 @@ import com.shifterizator.shifterizatorbackend.user.model.Role;
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import org.springframework.stereotype.Component;
 
-/**
- * Encapsulates authorization rules for employee access.
- * COMPANYADMIN can only access employees of their own company and create employees for their company only.
- */
 @Component
 public class EmployeeAccessPolicy {
 
-    /** COMPANYADMIN can only access employees that belong to their company. */
     public void ensureCanAccessEmployee(Employee employee, User currentUser) {
         if (currentUser.getRole() != Role.COMPANYADMIN || currentUser.getCompany() == null) {
             return;
@@ -28,7 +23,6 @@ public class EmployeeAccessPolicy {
         }
     }
 
-    /** COMPANYADMIN can only create employees for their own company. */
     public void ensureCompanyScopeForCreate(EmployeeRequestDto dto, User currentUser) {
         if (currentUser.getRole() != Role.COMPANYADMIN || currentUser.getCompany() == null) {
             return;

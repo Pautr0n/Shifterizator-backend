@@ -34,10 +34,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Integration tests for calendar rules (blackout days and special opening hours):
- * blackout days prevent shift generation, special opening hours override template times.
- */
 class CalendarRulesFlowIT extends BaseIntegrationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -61,7 +57,6 @@ class CalendarRulesFlowIT extends BaseIntegrationTest {
     }
 
     private Long createCompany(String adminToken, String suffix) throws Exception {
-        // Company creation is restricted to SUPERADMIN only
         String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         String taxId = suffix.length() <= 2 ? "S" + suffix + "23456789" : suffix.substring(0, 1).toUpperCase() + "12345678";
         if (taxId.length() > 12) taxId = taxId.substring(0, 12);

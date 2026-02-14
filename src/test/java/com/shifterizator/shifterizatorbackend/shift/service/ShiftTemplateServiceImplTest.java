@@ -192,7 +192,7 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(17, 0),
                 "Test",
                 Set.of(),
-                0, // ideal < required (1)
+                0,
                 true,
                 null
         );
@@ -221,7 +221,7 @@ class ShiftTemplateServiceImplTest {
     void create_shouldThrowWhenPositionIdealCountLessThanRequiredCount() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 1L,
-                List.of(new PositionRequirementDto(1L, 2, 1)), // ideal 1 < required 2
+                List.of(new PositionRequirementDto(1L, 2, 1)),
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 "Test",
@@ -288,7 +288,6 @@ class ShiftTemplateServiceImplTest {
         doAnswer(invocation -> {
             ShiftTemplate template = invocation.getArgument(0);
             List<PositionRequirementDto> requirements = invocation.getArgument(1);
-            // Simulate building position requirements
             template.getRequiredPositions().clear();
             for (PositionRequirementDto req : requirements) {
                 Position pos = req.positionId() == 1L ? position1 : position2;

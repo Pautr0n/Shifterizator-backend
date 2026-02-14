@@ -114,8 +114,6 @@ class AuthServiceTest {
         when(jwtUtil.getUsername("refreshToken")).thenReturn("john");
         when(userRepository.findByUsername("john")).thenReturn(Optional.empty());
 
-        // UserNotFoundException is caught and converted to InvalidRefreshTokenException
-        // for security reasons (to avoid leaking user existence information)
         assertThatThrownBy(() -> authService.refresh(dto))
                 .isInstanceOf(InvalidRefreshTokenException.class);
     }

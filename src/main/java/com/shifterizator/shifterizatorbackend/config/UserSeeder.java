@@ -24,7 +24,6 @@ public class UserSeeder implements CommandLineRunner {
             return;
         }
 
-        // SUPERADMIN
         User superAdmin = new User(
                 "superadmin",
                 "superadmin@system.local",
@@ -36,7 +35,6 @@ public class UserSeeder implements CommandLineRunner {
         superAdmin.setIsSystemUser(true);
         userRepository.save(superAdmin);
 
-        // ADMIN
         User admin = new User(
                 "admin",
                 "admin@test.com",
@@ -48,7 +46,6 @@ public class UserSeeder implements CommandLineRunner {
         admin.setIsSystemUser(false);
         userRepository.save(admin);
 
-        // SHIFTMANAGER
         User manager = new User(
                 "manager",
                 "manager@test.com",
@@ -60,7 +57,6 @@ public class UserSeeder implements CommandLineRunner {
         manager.setIsSystemUser(false);
         userRepository.save(manager);
 
-        // EMPLOYEE
         User employee = new User(
                 "employee",
                 "employee@test.com",

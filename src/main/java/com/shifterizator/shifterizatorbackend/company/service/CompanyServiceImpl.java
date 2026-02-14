@@ -85,28 +85,18 @@ public class CompanyServiceImpl implements CompanyService {
         return companyDomainService.validateCompanyExistsAndReturn(id);
     }
 
-    /**
-     * Returns all employees belonging to the given company. Throws if company does not exist.
-     */
     @Override
     public List<Employee> getCompanyEmployees(Long companyId) {
         companyDomainService.validateCompanyExistsAndReturn(companyId);
         return employeeService.search(companyId, null, null, null, Pageable.unpaged()).getContent();
     }
 
-    /**
-     * Returns all locations of the given company. Throws if company does not exist.
-     */
     @Override
     public List<Location> getCompanyLocations(Long companyId) {
         companyDomainService.validateCompanyExistsAndReturn(companyId);
         return locationService.findByCompany(companyId);
     }
 
-    /**
-     * Paginated search with optional filters: name, country, email, taxId, isActive.
-     * Excludes soft-deleted companies.
-     */
     @Override
     public Page<Company> search(String name, String country, String email, String taxId, Boolean isActive, Pageable pageable) {
         Specification<Company> spec = CompanySpecs.deletedAtIsNull();

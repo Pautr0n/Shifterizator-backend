@@ -23,7 +23,6 @@ class AuthFlowIT extends BaseIntegrationTest {
     @Test
     @DisplayName("Superadmin can log in and access a protected endpoint")
     void superadminLoginAndAccessProtectedEndpoint() throws Exception {
-        // Login with seeded SUPERADMIN user
         LoginRequestDto loginRequest = new LoginRequestDto("superadmin", "SuperAdmin1!");
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
@@ -41,13 +40,11 @@ class AuthFlowIT extends BaseIntegrationTest {
 
         String bearerToken = "Bearer " + tokenResponse.accessToken();
 
-        // Call /api/auth/me to verify the authenticated user
         mockMvc.perform(get("/api/auth/me")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("superadmin"));
 
-        // Call a role-protected endpoint requiring SUPERADMIN
         mockMvc.perform(get("/api/test/superadmin")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
@@ -57,7 +54,6 @@ class AuthFlowIT extends BaseIntegrationTest {
     @Test
     @DisplayName("Employee cannot access SUPERADMIN-protected endpoint")
     void employeeCannotAccessSuperadminEndpoint() throws Exception {
-        // Login with seeded EMPLOYEE user
         LoginRequestDto loginRequest = new LoginRequestDto("employee", "Employee123!");
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
@@ -74,7 +70,6 @@ class AuthFlowIT extends BaseIntegrationTest {
 
         String bearerToken = "Bearer " + tokenResponse.accessToken();
 
-        // Employee should not have access to SUPERADMIN-only endpoint
         mockMvc.perform(get("/api/test/superadmin")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isForbidden());

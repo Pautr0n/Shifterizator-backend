@@ -27,11 +27,6 @@ public class EmployeeMapper {
                 .build();
     }
 
-    /**
-     * Parses preferred day off from DTO string (e.g. "WEDNESDAY"). Returns null if null or blank.
-     *
-     * @throws IllegalArgumentException if the value is not a valid DayOfWeek name
-     */
     public static DayOfWeek parsePreferredDayOff(String value) {
         if (value == null || value.isBlank()) {
             return null;

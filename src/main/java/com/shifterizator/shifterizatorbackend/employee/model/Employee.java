@@ -44,10 +44,6 @@ public class Employee {
     @Column(name = "preferred_day_off", length = 10)
     private DayOfWeek preferredDayOff;
 
-    /**
-     * Number of shifts this employee can be assigned per week.
-     * Null = use application default (e.g. 5).
-     */
     @Column(name = "shifts_per_week")
     private Integer shiftsPerWeek;
 
@@ -58,7 +54,7 @@ public class Employee {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", unique = true)
-    private User user; // opcional
+    private User user;
 
     @OneToMany(
             mappedBy = "employee",

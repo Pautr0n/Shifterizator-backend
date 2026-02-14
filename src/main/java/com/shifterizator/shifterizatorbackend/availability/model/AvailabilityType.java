@@ -11,10 +11,6 @@ public enum AvailabilityType {
     UNJUSTIFIED_ABSENCE,
     UNAVAILABLE;
 
-    /**
-     * Availability types that should block scheduling and manual assignment.
-     * Centralised here so all modules share the same behaviour.
-     */
     public static Set<AvailabilityType> blockingTypes() {
         return EnumSet.of(
                 VACATION,
@@ -25,9 +21,6 @@ public enum AvailabilityType {
         );
     }
 
-    /**
-     * Whether this availability should block scheduling / assignment.
-     */
     public boolean isBlocking() {
         return blockingTypes().contains(this);
     }

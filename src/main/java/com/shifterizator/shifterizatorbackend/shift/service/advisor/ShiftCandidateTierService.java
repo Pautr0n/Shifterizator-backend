@@ -11,17 +11,12 @@ import java.time.LocalDate;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Assigns a tier (1=best .. 5=fallback) to a candidate for a given shift and date.
- * Used by the scheduler to order candidates: Tier 1 first, then 2a, 2b, 2c, then 3.
- */
 @Service
 @RequiredArgsConstructor
 public class ShiftCandidateTierService {
 
     private final EmployeeLanguageRepository employeeLanguageRepository;
 
-    /** Lower = better. 1 = Tier 1, 2 = 2a, 3 = 2b, 4 = 2c, 5 = Tier 3. */
     public int getTier(Employee employee, ShiftInstance shiftInstance, LocalDate date) {
         boolean notPreferredDayOff = employee.getPreferredDayOff() == null
                 || date.getDayOfWeek() != employee.getPreferredDayOff();

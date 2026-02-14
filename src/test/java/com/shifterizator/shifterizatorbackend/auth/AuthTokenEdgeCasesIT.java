@@ -24,11 +24,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Integration tests for authentication and token edge cases:
- * - missing / invalid / expired JWT in Authorization header
- * - refresh token flow and invalid refresh token handling.
- */
 class AuthTokenEdgeCasesIT extends BaseIntegrationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -76,7 +71,6 @@ class AuthTokenEdgeCasesIT extends BaseIntegrationTest {
     @Test
     @DisplayName("Refresh token flow returns new access token that can access protected endpoint")
     void refreshTokenFlowReturnsNewAccessToken() throws Exception {
-        // Login and obtain tokens
         LoginRequestDto loginRequest = new LoginRequestDto("superadmin", "SuperAdmin1!");
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
@@ -92,7 +86,6 @@ class AuthTokenEdgeCasesIT extends BaseIntegrationTest {
                 TokenResponseDto.class
         );
 
-        // Use refresh token to obtain a new access token
         RefreshTokenRequestDto refreshRequest =
                 new RefreshTokenRequestDto(initialTokens.refreshToken());
 
@@ -111,7 +104,6 @@ class AuthTokenEdgeCasesIT extends BaseIntegrationTest {
         assertThat(refreshedTokens.accessToken()).isNotBlank();
         assertThat(refreshedTokens.refreshToken()).isEqualTo(initialTokens.refreshToken());
 
-        // New access token should allow access to protected endpoint
         String bearerToken = "Bearer " + refreshedTokens.accessToken();
 
         mockMvc.perform(get("/api/auth/me")
@@ -123,7 +115,6 @@ class AuthTokenEdgeCasesIT extends BaseIntegrationTest {
     @Test
     @DisplayName("Using access token as refresh token returns 401 and INVALID_REFRESH_TOKEN error")
     void usingAccessTokenAsRefreshTokenReturns401() throws Exception {
-        // Login and obtain tokens
         LoginRequestDto loginRequest = new LoginRequestDto("superadmin", "SuperAdmin1!");
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
@@ -139,7 +130,6 @@ class AuthTokenEdgeCasesIT extends BaseIntegrationTest {
                 TokenResponseDto.class
         );
 
-        // Try to use the access token as if it were a refresh token
         RefreshTokenRequestDto badRefreshRequest =
                 new RefreshTokenRequestDto(initialTokens.accessToken());
 

@@ -92,7 +92,7 @@ class ShiftGenerationServiceImplTest {
         Location loc = location(locationId);
         ShiftTemplate t1 = template(1L, loc, LocalTime.of(9, 0), LocalTime.of(17, 0));
         ShiftTemplate t2 = template(2L, loc, LocalTime.of(12, 0), LocalTime.of(20, 0));
-        YearMonth yearMonth = YearMonth.of(2025, 1); // 31 days
+        YearMonth yearMonth = YearMonth.of(2025, 1);
 
         when(shiftInstanceDomainService.resolveLocation(locationId)).thenReturn(loc);
         when(blackoutDayService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
@@ -120,7 +120,7 @@ class ShiftGenerationServiceImplTest {
         List<ShiftInstance> result = service.generateMonth(locationId, yearMonth);
 
         int expectedDays = 31;
-        int expectedPerDay = 2; // 2 templates
+        int expectedPerDay = 2;
         assertThat(result).hasSize(expectedDays * expectedPerDay);
         verify(shiftInstanceRepository, times(expectedDays)).softDeleteByLocationAndDate(eq(locationId), any(LocalDate.class), any());
         verify(shiftInstanceRepository, times(expectedDays * expectedPerDay)).save(any(ShiftInstance.class));
@@ -149,7 +149,6 @@ class ShiftGenerationServiceImplTest {
 
         List<ShiftInstance> result = service.generateMonth(locationId, yearMonth);
 
-        // 31 days - 1 blackout = 30 days with 1 instance each
         assertThat(result).hasSize(30);
         assertThat(result).noneMatch(i -> i.getDate().equals(blackoutDate));
         verify(shiftInstanceRepository, times(31)).softDeleteByLocationAndDate(eq(locationId), any(LocalDate.class), any());
@@ -182,7 +181,7 @@ class ShiftGenerationServiceImplTest {
 
         List<ShiftInstance> result = service.generateMonth(locationId, yearMonth);
 
-        assertThat(result).hasSize(31); // 30 normal days (1 per template) + 1 special day (1 instance)
+        assertThat(result).hasSize(31);
         List<ShiftInstance> saved = savedCaptor.getAllValues();
         ShiftInstance onSpecialDay = saved.stream().filter(i -> i.getDate().equals(specialDate)).findFirst().orElseThrow();
         assertThat(onSpecialDay.getStartTime()).isEqualTo(LocalTime.of(10, 0));
@@ -219,7 +218,7 @@ class ShiftGenerationServiceImplTest {
         Set<DayOfWeek> monToSat = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.SATURDAY);
         Location loc = locationWithOpenDays(locationId, monToSat);
         ShiftTemplate t1 = template(1L, loc, LocalTime.of(9, 0), LocalTime.of(17, 0));
-        YearMonth yearMonth = YearMonth.of(2025, 1); // January 2025 has 5 Sundays
+        YearMonth yearMonth = YearMonth.of(2025, 1);
 
         when(shiftInstanceDomainService.resolveLocation(locationId)).thenReturn(loc);
         when(blackoutDayService.findByLocationAndMonth(locationId, yearMonth)).thenReturn(List.of());
@@ -235,7 +234,6 @@ class ShiftGenerationServiceImplTest {
 
         List<ShiftInstance> result = service.generateMonth(locationId, yearMonth);
 
-        // January 2025: 31 days - 4 Sundays = 27 open days (Mon-Sat), 1 instance each
         assertThat(result).hasSize(27);
         assertThat(result).noneMatch(i -> i.getDate().getDayOfWeek() == DayOfWeek.SUNDAY);
     }
@@ -247,7 +245,7 @@ class ShiftGenerationServiceImplTest {
         Location loc = locationWithOpenDays(locationId, monToSat);
         ShiftTemplate t1 = template(1L, loc, LocalTime.of(9, 0), LocalTime.of(17, 0));
         YearMonth yearMonth = YearMonth.of(2025, 1);
-        LocalDate sunday = yearMonth.atDay(5); // Jan 5, 2025 is Sunday
+        LocalDate sunday = yearMonth.atDay(5);
         SpecialOpeningHours special = SpecialOpeningHours.builder()
                 .id(1L).location(loc).date(sunday)
                 .openTime(LocalTime.of(10, 0)).closeTime(LocalTime.of(18, 0))
@@ -267,7 +265,6 @@ class ShiftGenerationServiceImplTest {
 
         List<ShiftInstance> result = service.generateMonth(locationId, yearMonth);
 
-        // 27 normal open days (Mon-Sat in Jan 2025) + 1 special Sunday = 28 instances
         assertThat(result).hasSize(28);
         ShiftInstance onSunday = result.stream().filter(i -> i.getDate().equals(sunday)).findFirst().orElseThrow();
         assertThat(onSunday.getStartTime()).isEqualTo(LocalTime.of(10, 0));

@@ -3,10 +3,6 @@ package com.shifterizator.shifterizatorbackend.employee.service;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import org.springframework.stereotype.Component;
 
-/**
- * Initializes lazy associations (and nested refs) on an employee so that mapping to DTO
- * (e.g. toDto(employee)) can run correctly after the transaction commits or in a detached context.
- */
 @Component
 public class EmployeeResponseInitializer {
 

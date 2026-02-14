@@ -43,7 +43,6 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
         Employee employee = employeeRepository.findById(dto.employeeId())
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
-        // Validate assignment
         shiftAssignmentValidator.validateNotAlreadyAssigned(dto.shiftInstanceId(), dto.employeeId());
         shiftAssignmentValidator.validateEmployeeCompanyAndLocation(employee, shiftInstance);
         shiftAssignmentValidator.validateEmployeeAvailability(employee.getId(), shiftInstance.getDate());
@@ -60,7 +59,6 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
 
         ShiftAssignment saved = shiftAssignmentRepository.save(assignment);
 
-        // Update shift instance completeness
         shiftInstanceCompletenessService.updateCompleteness(shiftInstance);
 
         List<String> warnings = shiftAssignmentPreferenceAdvisor.getWarnings(saved.getEmployee(), saved.getShiftInstance());

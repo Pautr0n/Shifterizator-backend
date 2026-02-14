@@ -26,9 +26,6 @@ public interface ShiftAssignmentRepository extends JpaRepository<ShiftAssignment
             """)
     List<ShiftAssignment> findByEmployeeAndDate(@Param("employeeId") Long employeeId, @Param("date") LocalDate date);
 
-    /**
-     * Active assignments for an employee where the shift instance date falls within the given range (inclusive).
-     */
     List<ShiftAssignment> findByEmployee_IdAndShiftInstance_DateBetweenAndDeletedAtIsNull(
             Long employeeId, LocalDate startDate, LocalDate endDate);
 
@@ -46,9 +43,6 @@ public interface ShiftAssignmentRepository extends JpaRepository<ShiftAssignment
 
     Optional<ShiftAssignment> findByShiftInstance_IdAndEmployee_IdAndDeletedAtIsNull(Long shiftInstanceId, Long employeeId);
 
-    /**
-     * Employee IDs currently assigned to any of the given shift instances (for scheduler to exclude from pool).
-     */
     @Query("""
             SELECT sa.employee.id FROM ShiftAssignment sa
             WHERE sa.shiftInstance.id IN :shiftInstanceIds

@@ -34,7 +34,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     List<User> findByCompany_IdAndDeletedAtIsNull(Long companyId);
 
-    /** Users whose company is in the given set, not deleted, active. For assignable-user dropdowns. */
     List<User> findByCompany_IdInAndDeletedAtIsNullAndIsActiveTrue(Set<Long> companyIds);
 
 }

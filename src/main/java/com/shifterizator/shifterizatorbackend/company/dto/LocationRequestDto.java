@@ -15,7 +15,6 @@ public record LocationRequestDto(
         @NotNull(message = "Company ID is required")
         Long companyId,
         Set<@ValidDayOfWeek String> openDaysOfWeek,
-        /** First day of week: MONDAY, TUESDAY, ... SUNDAY. Null = MONDAY (ISO). */
         String firstDayOfWeek
 
 ) {

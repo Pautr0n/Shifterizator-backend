@@ -34,10 +34,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Integration tests for pagination and search/filter behavior:
- * verify pagination metadata and filters work correctly across endpoints.
- */
 class PaginationAndSearchFlowIT extends BaseIntegrationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -61,7 +57,6 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
     }
 
     private Long createCompany(String adminToken, String name, String country) throws Exception {
-        // Company creation is restricted to SUPERADMIN only
         String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         String unique = name + country;
         String hash = String.valueOf(unique.hashCode()).replace("-", "");
@@ -157,16 +152,13 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
     void companySearchWithFiltersAndPagination() throws Exception {
         String adminToken = loginAndGetBearerToken("admin", "Admin123!");
 
-        // Use unique suffix to avoid conflicts with other tests (company name must be 4-20 chars)
-        String uniqueSuffix = String.valueOf(System.currentTimeMillis()).substring(9); // Last 4 digits
+        String uniqueSuffix = String.valueOf(System.currentTimeMillis()).substring(9);
         Long company1Id = createCompany(adminToken, "Alpha" + uniqueSuffix, "Spain");
         Long company2Id = createCompany(adminToken, "Beta" + uniqueSuffix, "France");
         Long company3Id = createCompany(adminToken, "Gamma" + uniqueSuffix, "Spain");
 
-        // Company activation/deactivation is restricted to SUPERADMIN only
         String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         
-        // Deactivate company3 and verify it was deactivated
         MvcResult deactivateResult = mockMvc.perform(patch("/api/companies/{id}/deactivate", company3Id)
                         .header("Authorization", superAdminToken))
                 .andExpect(status().isOk())
@@ -174,14 +166,11 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.isActive").value(false))
                 .andReturn();
 
-        // Verify company3 is actually inactive by fetching it directly
         mockMvc.perform(get("/api/companies/{id}", company3Id)
                         .header("Authorization", adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isActive").value(false));
 
-        // Now search for active companies in Spain - should return at least company1, but not company3
-        // Note: There might be other companies from other tests, so we verify our specific companies
         MvcResult result = mockMvc.perform(get("/api/companies")
                         .header("Authorization", adminToken)
                         .param("country", "Spain")
@@ -198,7 +187,6 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
         String responseBody = result.getResponse().getContentAsString();
         com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(responseBody);
         
-        // Verify company1 is in the results and is active
         boolean foundCompany1 = false;
         boolean foundCompany3 = false;
         for (com.fasterxml.jackson.databind.JsonNode company : root.get("content")) {
@@ -213,7 +201,6 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
             }
         }
         
-        // Verify our expectations: company1 should be found, company3 should NOT be found
         assertThat(foundCompany1).as("Company1 (active, Spain) should be in search results").isTrue();
         assertThat(foundCompany3).as("Company3 (deactivated) should NOT be in active search results").isFalse();
     }

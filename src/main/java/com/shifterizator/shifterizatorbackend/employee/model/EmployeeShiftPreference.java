@@ -5,10 +5,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-/**
- * Represents an employee's preference for a shift template.
- * Optional priorityOrder (1 = first choice, 2 = second, etc.) allows ordering preferred shifts.
- */
 @Entity
 @Table(
         name = "employee_shift_preferences",
@@ -40,9 +36,6 @@ public class EmployeeShiftPreference {
     @JoinColumn(name = "shift_template_id", nullable = false)
     private ShiftTemplate shiftTemplate;
 
-    /**
-     * Priority order: 1 = first choice, 2 = second, etc. Lower number = higher preference.
-     */
     @Column(name = "priority_order")
     private Integer priorityOrder;
 

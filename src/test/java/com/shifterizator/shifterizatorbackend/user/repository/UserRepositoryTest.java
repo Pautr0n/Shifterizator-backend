@@ -51,9 +51,6 @@ class UserRepositoryTest {
         repository.save(sampleUser);
     }
 
-    // ---------------------------------------------------------
-    // existsByUsername
-    // ---------------------------------------------------------
     @Test
     void existsByUsername_should_return_true_when_username_exists() {
         boolean exists = repository.existsByUsername("john123");
@@ -66,9 +63,6 @@ class UserRepositoryTest {
         assertFalse(exists);
     }
 
-    // ---------------------------------------------------------
-    // existsByEmail
-    // ---------------------------------------------------------
     @Test
     void existsByEmail_should_return_true_when_email_exists() {
         boolean exists = repository.existsByEmail("john@mail.com");
@@ -81,9 +75,6 @@ class UserRepositoryTest {
         assertFalse(exists);
     }
 
-    // ---------------------------------------------------------
-    // findByUsernameContainingIgnoreCase
-    // ---------------------------------------------------------
     @Test
     void findByUsernameContainingIgnoreCase_should_return_entities_when_match_exists() {
 
@@ -112,9 +103,6 @@ class UserRepositoryTest {
         assertTrue(resultSet.isEmpty());
     }
 
-    // ---------------------------------------------------------
-    // findByIsActive
-    // ---------------------------------------------------------
     @Test
     void findByIsActive_should_return_active_users() {
 
@@ -144,9 +132,6 @@ class UserRepositoryTest {
         assertTrue(resultSet.isEmpty());
     }
 
-    // ---------------------------------------------------------
-    // findByUsernameContainingIgnoreCaseAndIsActive
-    // ---------------------------------------------------------
     @Test
     void findByUsernameContainingIgnoreCaseAndIsActive_should_return_matching_active_users() {
 

@@ -30,25 +30,11 @@ public class ShiftTemplateDomainService {
     private final PositionRepository positionRepository;
     private final LanguageRepository languageRepository;
 
-    /**
-     * Resolves and validates a Location entity by ID.
-     *
-     * @param locationId the location ID to resolve
-     * @return the Location entity
-     * @throws LocationNotFoundException if location is not found
-     */
     public Location resolveLocation(Long locationId) {
         return locationRepository.findById(locationId)
                 .orElseThrow(() -> new LocationNotFoundException("Location not found"));
     }
 
-    /**
-     * Resolves Language entities from a set of language IDs.
-     *
-     * @param languageIds the set of language IDs to resolve
-     * @return the set of Language entities
-     * @throws LanguageNotFoundException if any language is not found
-     */
     public Set<Language> resolveLanguages(Set<Long> languageIds) {
         if (languageIds == null || languageIds.isEmpty()) {
             return new HashSet<>();
@@ -60,13 +46,6 @@ public class ShiftTemplateDomainService {
                 .collect(Collectors.toSet());
     }
 
-    /**
-     * Builds and assigns position requirements to a shift template.
-     *
-     * @param template the shift template to assign positions to
-     * @param requirements the list of position requirements from DTO
-     * @throws PositionNotFoundException if any position is not found
-     */
     public void buildPositionRequirements(ShiftTemplate template, List<PositionRequirementDto> requirements) {
         Set<ShiftTemplatePosition> positions = new HashSet<>();
 
@@ -87,9 +66,6 @@ public class ShiftTemplateDomainService {
         template.setRequiredPositions(positions);
     }
 
-    /**
-     * Validates that ideal count is not less than required count when both are set.
-     */
     public void validateIdealCount(Integer requiredCount, Integer idealCount) {
         if (idealCount != null && requiredCount != null && idealCount < requiredCount) {
             throw new ShiftValidationException(
@@ -97,26 +73,12 @@ public class ShiftTemplateDomainService {
         }
     }
 
-    /**
-     * Validates that end time is after start time.
-     *
-     * @param startTime the start time
-     * @param endTime the end time
-     * @throws ShiftValidationException if end time is not after start time
-     */
     public void validateTimes(LocalTime startTime, LocalTime endTime) {
         if (!endTime.isAfter(startTime)) {
             throw new ShiftValidationException("End time must be after start time");
         }
     }
 
-    /**
-     * Validates that ideal employees is not less than required employees when both are set.
-     *
-     * @param requiredEmployees minimum required (must be non-null when ideal is set)
-     * @param idealEmployees    target when enough staff available
-     * @throws ShiftValidationException if ideal is set and ideal &lt; required
-     */
     public void validateIdealEmployees(Integer requiredEmployees, Integer idealEmployees) {
         if (idealEmployees != null && requiredEmployees != null && idealEmployees < requiredEmployees) {
             throw new ShiftValidationException(

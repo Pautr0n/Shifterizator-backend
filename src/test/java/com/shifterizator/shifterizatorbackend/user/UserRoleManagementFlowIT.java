@@ -22,10 +22,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Integration tests for user and role management:
- * create user → update role/activation → system user protection → role-based access.
- */
 class UserRoleManagementFlowIT extends BaseIntegrationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -49,7 +45,6 @@ class UserRoleManagementFlowIT extends BaseIntegrationTest {
     }
 
     private Long createCompany(String adminToken, String suffix) throws Exception {
-        // Company creation is restricted to SUPERADMIN only
         String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         String taxId = suffix.length() <= 2 ? "S" + suffix + "23456789" : suffix.substring(0, 1).toUpperCase() + "12345678";
         if (taxId.length() > 12) taxId = taxId.substring(0, 12);
@@ -199,14 +194,12 @@ class UserRoleManagementFlowIT extends BaseIntegrationTest {
                 null
         );
 
-        // Employee cannot create users (POST requires SUPERADMIN or COMPANYADMIN)
         mockMvc.perform(post("/api/users")
                         .header("Authorization", employeeToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isForbidden());
 
-        // Employee can read users (GET is allowed for all authenticated)
         mockMvc.perform(get("/api/users")
                         .header("Authorization", employeeToken)
                         .param("page", "0")

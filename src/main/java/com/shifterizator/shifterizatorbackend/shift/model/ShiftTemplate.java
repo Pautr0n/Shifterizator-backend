@@ -46,7 +46,6 @@ public class ShiftTemplate {
     @Builder.Default
     private Integer requiredEmployees = 1;
 
-    /** Target headcount when enough staff available; must be >= requiredEmployees if set. */
     @Column(name = "ideal_employees")
     private Integer idealEmployees;
 
@@ -66,10 +65,6 @@ public class ShiftTemplate {
     @Builder.Default
     private Boolean isActive = true;
 
-    /**
-     * Scheduler priority: lower value = higher priority (e.g. 1 = afternoon first).
-     * Null = lowest priority; used as tie-breaker with start time.
-     */
     @Column(name = "priority_order")
     private Integer priority;
 

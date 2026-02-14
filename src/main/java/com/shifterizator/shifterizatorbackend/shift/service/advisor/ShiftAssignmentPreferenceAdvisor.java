@@ -8,17 +8,9 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Provides non-blocking warnings when an assignment conflicts with employee preferences
- * (preferred day off or preferred shift template).
- */
 @Component
 public class ShiftAssignmentPreferenceAdvisor {
 
-    /**
-     * Returns warning messages if the assignment conflicts with the employee's preferences.
-     * Does not block the assignment; for informational use only.
-     */
     public List<String> getWarnings(Employee employee, ShiftInstance shiftInstance) {
         List<String> warnings = new ArrayList<>();
 

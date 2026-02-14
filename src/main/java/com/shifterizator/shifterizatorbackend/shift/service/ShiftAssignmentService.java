@@ -13,10 +13,6 @@ public interface ShiftAssignmentService {
 
     void unassign(Long shiftInstanceId, Long employeeId);
 
-    /**
-     * Unassigns the employee from all shifts in the given date range (e.g. when blocking availability is created/updated).
-     * Each affected shift instance's completeness is updated after unassign.
-     */
     void unassignEmployeeFromShiftsInDateRange(Long employeeId, LocalDate startDate, LocalDate endDate);
 
     ShiftAssignment findById(Long id);

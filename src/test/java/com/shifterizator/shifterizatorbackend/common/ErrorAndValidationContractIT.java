@@ -17,10 +17,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Integration tests to verify the standardized error/validation contract
- * exposed by GlobalExceptionHandler and bean validation.
- */
 class ErrorAndValidationContractIT extends BaseIntegrationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -76,16 +72,14 @@ class ErrorAndValidationContractIT extends BaseIntegrationTest {
     @Test
     @DisplayName("Creating company with invalid data returns 400 ApiErrorDto with VALIDATION_ERROR")
     void creatingCompanyWithInvalidDataReturnsValidationError() throws Exception {
-        // Company creation is restricted to SUPERADMIN only
         String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
 
-        // Invalid company request: blank name, short taxId, invalid email
         CompanyRequestDto invalidRequest = new CompanyRequestDto(
-                "   ",            // name - blank
-                "L",              // legalName too short
-                "123",            // taxId too short
-                "not-an-email",   // invalid email
-                "123",            // phone too short
+                "   ",
+                "L",
+                "123",
+                "not-an-email",
+                "123",
                 "ES"
         );
 
@@ -100,7 +94,6 @@ class ErrorAndValidationContractIT extends BaseIntegrationTest {
                 .andReturn();
 
         String body = result.getResponse().getContentAsString();
-        // The message should mention at least one of the invalid fields
         assertThat(body).contains("VALIDATION_ERROR");
     }
 
@@ -121,7 +114,6 @@ class ErrorAndValidationContractIT extends BaseIntegrationTest {
     @Test
     @DisplayName("Accessing protected endpoint without auth header returns 401")
     void accessingProtectedEndpointWithoutAuthReturnsUnauthorized() throws Exception {
-        // JwtAuthenticationFilter currently returns 401 without a JSON body
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized());
     }

@@ -78,10 +78,6 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /**
-     * Instances for the day, ordered by template priority (lower = higher priority) then start time.
-     * Null priority is treated as lowest (sorted last).
-     */
     private List<ShiftInstance> loadAndSortInstancesByPriority(Long locationId, LocalDate date) {
         List<ShiftInstance> list = shiftInstanceRepository
                 .findByLocation_IdAndDateAndDeletedAtIsNullOrderByStartTimeAsc(locationId, date);
@@ -93,9 +89,6 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
                 .toList();
     }
 
-    /**
-     * Candidates at the location, available on the date, with shift preferences loaded for tier computation.
-     */
     private List<Employee> loadCandidatesForDay(Long locationId, LocalDate date) {
         List<Employee> withPreferences = employeeRepository.findActiveByLocationIdWithShiftPreferences(locationId);
         List<Employee> available = withPreferences.stream()
@@ -104,10 +97,6 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         return available;
     }
 
-    /**
-     * Excludes employees who already have at least MAX_SHIFTS_PER_WEEK assignments
-     * in the week containing {@code date}. Week boundaries use location's firstDayOfWeek (null = Monday).
-     */
     private List<Employee> filterByMaxShiftsPerWeek(
             List<Employee> candidates,
             LocalDate date,
@@ -149,9 +138,6 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
                 .toList();
     }
 
-    /**
-     * Candidates sorted by tier for the given shift (best first).
-     */
     private List<Employee> candidatesByTier(List<Employee> candidates, ShiftInstance instance, LocalDate date) {
         return candidates.stream()
                 .sorted(Comparator.comparingInt(e -> shiftCandidateTierService.getTier(e, instance, date)))
@@ -177,9 +163,6 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /**
-     * Phase 1: Fill every shift up to requiredEmployees using tier-ordered candidates. Higher-priority shifts processed first.
-     */
     private void fillMinimumsForAllShifts(List<ShiftInstance> instances, List<Employee> candidates,
                                           LocalDate date, Long locationId) {
         for (ShiftInstance instance : instances) {
@@ -213,9 +196,6 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /**
-     * Phase 2: Fill up to ideal per shift, higher-priority shifts first.
-     */
     private void fillUpToIdealByPriority(List<ShiftInstance> instances, List<Employee> candidates,
                                          LocalDate date, Long locationId) {
         for (ShiftInstance instance : instances) {
@@ -227,9 +207,6 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /**
-     * Phase 4: Fill remaining slots with language-qualified employees, spread across shifts (tier-ordered).
-     */
     private void improveLanguageDistribution(List<ShiftInstance> instances, List<Employee> candidates,
                                              LocalDate date, Long locationId) {
         Set<Long> assigned = getAssignedEmployeeIdsForDay(instances);

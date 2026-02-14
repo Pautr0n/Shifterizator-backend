@@ -70,7 +70,7 @@ public class EmployeeDomainService {
     public void assignCompanies(Employee employee, EmployeeRequestDto dto) {
 
         employee.getEmployeeCompanies().clear();
-        entityManager.flush(); // Execute DELETEs before INSERTs to avoid unique constraint violation
+        entityManager.flush();
 
         for (Long companyId : dto.companyIds()) {
             Company company = companyRepository.findByIdAndDeletedAtIsNull(companyId)
@@ -129,9 +129,6 @@ public class EmployeeDomainService {
                 dto.preferredShiftTemplateIds() == null ? List.of() : dto.preferredShiftTemplateIds());
     }
 
-    /**
-     * Clears and reassigns shift preferences from an ordered list of template IDs.
-     */
     public void assignShiftPreferencesFromIds(Employee employee, List<Long> templateIds) {
         employee.getShiftPreferences().clear();
         entityManager.flush();
@@ -156,19 +153,8 @@ public class EmployeeDomainService {
         }
     }
 
-    /**
-     * Assigns a user to an employee if userId is provided in the DTO.
-     * Validates that:
-     * - User exists
-     * - User is not already assigned to another employee (unless it's the same employee being updated)
-     *
-     * @param employee The employee to assign the user to
-     * @param dto The request DTO containing optional userId
-     * @param currentEmployeeId The ID of the employee being updated (null for create)
-     */
     public void assignUser(Employee employee, EmployeeRequestDto dto, Long currentEmployeeId) {
         if (dto.userId() == null) {
-            // If userId is null, remove the user assignment (set to null)
             employee.setUser(null);
             return;
         }
@@ -176,7 +162,6 @@ public class EmployeeDomainService {
         User user = userRepository.findByIdAndDeletedAtIsNull(dto.userId())
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + dto.userId()));
 
-        // User must belong to one of the employee's companies
         if (user.getCompany() == null) {
             throw new UserNotInEmployeeCompanyException("User must belong to a company to be assigned to an employee");
         }
@@ -186,10 +171,8 @@ public class EmployeeDomainService {
                     "User must belong to the same company as the employee. Only users from the employee's companies can be assigned.");
         }
 
-        // Check if user is already assigned to another employee
         employeeRepository.findByUserId(dto.userId())
                 .ifPresent(existingEmployee -> {
-                    // If updating the same employee, allow it
                     if (!existingEmployee.getId().equals(currentEmployeeId)) {
                         throw new UserAlreadyAssignedToEmployeeException(
                                 "This user is already assigned to another employee. Please choose a different user or unassign them from the other employee first."

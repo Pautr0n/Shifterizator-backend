@@ -71,14 +71,12 @@ public class Company {
 
     private LocalDateTime deletedAt;
 
-    // Convenience constructor for backward compatibility
     public Company(String name, String legalName, String taxId, String email, String phone) {
         this(null, name, legalName, taxId, email, phone, null, true,
              new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(),
              null, null, null, null, null);
     }
 
-    // Helper methods for bidirectional relationship management
     public void addLocation(Location location) {
         locations.add(location);
         location.setCompany(this);

@@ -121,7 +121,6 @@ class ShiftAssignmentServiceImplTest {
         when(shiftInstanceRepository.findById(99L)).thenReturn(Optional.of(shiftInstance));
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
         when(shiftAssignmentRepository.save(any(ShiftAssignment.class))).thenReturn(assignment);
-        // Validator passes all validations (no exceptions thrown)
         doNothing().when(shiftAssignmentValidator).validateNotAlreadyAssigned(any(), any());
         doNothing().when(shiftAssignmentValidator).validateEmployeeCompanyAndLocation(any(), any());
         doNothing().when(shiftAssignmentValidator).validateEmployeeAvailability(any(), any());

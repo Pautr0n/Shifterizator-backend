@@ -66,7 +66,6 @@ public class User {
     private String updatedBy;
     private LocalDateTime deletedAt;
 
-    /** Convenience constructor for creation with required fields only. */
     public User(String username, String email, String password, Role role, Company company) {
         this(null, username, false, email, null, password, role, company, null, true, null, null, null, null, null);
     }

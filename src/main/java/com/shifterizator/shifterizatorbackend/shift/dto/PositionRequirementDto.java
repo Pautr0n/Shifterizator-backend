@@ -11,7 +11,6 @@ public record PositionRequirementDto(
         @Positive(message = "Required count must be positive")
         Integer requiredCount,
 
-        /** Target count when enough staff; must be >= requiredCount if set. */
         Integer idealCount
 ) {
 }

@@ -22,7 +22,6 @@ public final class AvailabilitySpecs {
         return (root, query, cb) -> cb.equal(root.get("type"), type);
     }
 
-    /** Range filter: availability overlaps [rangeStart, rangeEnd] (endDate >= rangeStart AND startDate <= rangeEnd). */
     public static Specification<EmployeeAvailability> inDateRange(LocalDate rangeStart, LocalDate rangeEnd) {
         return (root, query, cb) -> cb.and(
                 cb.greaterThanOrEqualTo(root.get("endDate"), rangeStart),
@@ -30,9 +29,6 @@ public final class AvailabilitySpecs {
         );
     }
 
-    /**
-     * Filter by location: availabilities of employees who work at the given location.
-     */
     public static Specification<EmployeeAvailability> byEmployeeLocation(Long locationId) {
         return (root, query, cb) -> {
             var employeeJoin = root.join("employee");

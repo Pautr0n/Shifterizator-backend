@@ -69,7 +69,6 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(requestDto.password()));
         }
 
-        // Opcional: permitir cambiar company solo para SUPERADMIN (lo haremos cuando tengamos seguridad)
         if (requestDto.companyId() != null) {
             Company company = companyRepository.findByIdAndDeletedAtIsNull(requestDto.companyId())
                     .orElseThrow(() -> new CompanyNotFoundException("Company not found with id: " + requestDto.companyId()));
@@ -104,19 +103,12 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    /**
-     * Delete user (logical delete by default). Use {@link #deleteUser(Long, boolean)} for physical delete.
-     */
     @Override
     @Transactional
     public void deleteUser(Long id) {
         deleteUser(id, false);
     }
 
-    /**
-     * Delete user: logical (set deletedAt) when physicalDelete is false, physical when true.
-     * Only SUPERADMIN should call with physicalDelete=true; COMPANYADMIN uses logical delete.
-     */
     @Override
     @Transactional
     public void deleteUser(Long id, boolean physicalDelete) {
@@ -140,9 +132,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
     }
 
-    /**
-     * Paginated search with optional filters: role, companyId, username, email, isActive. Excludes logically deleted users.
-     */
     @Override
     public Page<User> search(String role, Long companyId, String username, String email, Boolean isActive, Pageable pageable) {
         Specification<User> spec = UserSpecs.notDeleted();
@@ -169,10 +158,6 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByCompany_IdAndDeletedAtIsNull(companyId);
     }
 
-    /**
-     * Returns users that can be assigned to an employee (e.g. in a dropdown).
-     * Only active, non-deleted users whose company is in the given set are returned.
-     */
     @Override
     public List<AssignableUserDto> listAssignableByCompanyIds(Set<Long> companyIds) {
         if (companyIds == null || companyIds.isEmpty()) {
@@ -214,7 +199,7 @@ public class UserServiceImpl implements UserService {
 
     private Company resolveCompanyForUser(UserRequestDto requestDto) {
         if (requestDto.companyId() == null) {
-            return null; // SUPERADMIN or system-level user
+            return null;
         }
 
         return companyRepository.findByIdAndDeletedAtIsNull(requestDto.companyId())

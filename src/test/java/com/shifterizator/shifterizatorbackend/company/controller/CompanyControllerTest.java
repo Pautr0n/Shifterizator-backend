@@ -111,9 +111,6 @@ class CompanyControllerTest {
                 , "ES");
     }
 
-    // ---------------------------------------------------------
-    // CREATE
-    // ---------------------------------------------------------
 
     @Test
     void createCompany_should_return_201_and_body() throws Exception {
@@ -148,9 +145,6 @@ class CompanyControllerTest {
     }
 
 
-    // ---------------------------------------------------------
-    // GET BY ID
-    // ---------------------------------------------------------
 
     @Test
     @WithMockUser
@@ -179,9 +173,6 @@ class CompanyControllerTest {
         verify(companyService).getCompany(99L);
     }
 
-    // ---------------------------------------------------------
-    // LIST ALL
-    // ---------------------------------------------------------
 
     @Test
     void listCompanies_should_return_200_and_paginated_content() throws Exception {
@@ -245,9 +236,6 @@ class CompanyControllerTest {
         verify(companyService).search(eq("Comp"), any(), any(), any(), eq(true), any());
     }
 
-    // ---------------------------------------------------------
-    // UPDATE
-    // ---------------------------------------------------------
 
     @Test
     @WithMockUser
@@ -298,9 +286,6 @@ class CompanyControllerTest {
         verify(companyService).updateCompany(eq(1L), any());
     }
 
-    // ---------------------------------------------------------
-    // ACTIVATE
-    // ---------------------------------------------------------
 
     @Test
     @WithMockUser
@@ -328,9 +313,6 @@ class CompanyControllerTest {
         verify(companyService).activateCompany(99L);
     }
 
-    // ---------------------------------------------------------
-    // DEACTIVATE
-    // ---------------------------------------------------------
 
     @Test
     @WithMockUser
@@ -358,9 +340,6 @@ class CompanyControllerTest {
         verify(companyService).deactivateCompany(99L);
     }
 
-    // ---------------------------------------------------------
-    // DELETE
-    // ---------------------------------------------------------
 
     @Test
     @WithMockUser

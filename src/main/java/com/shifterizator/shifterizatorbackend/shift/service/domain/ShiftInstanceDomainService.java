@@ -19,48 +19,23 @@ public class ShiftInstanceDomainService {
     private final ShiftTemplateRepository shiftTemplateRepository;
     private final LocationRepository locationRepository;
 
-    /**
-     * Resolves and validates a ShiftTemplate entity by ID.
-     * Only returns active, non-deleted templates.
-     *
-     * @param templateId the template ID to resolve
-     * @return the ShiftTemplate entity
-     * @throws ShiftTemplateNotFoundException if template is not found or deleted
-     */
     public ShiftTemplate resolveTemplate(Long templateId) {
         return shiftTemplateRepository.findById(templateId)
                 .filter(t -> t.getDeletedAt() == null)
                 .orElseThrow(() -> new ShiftTemplateNotFoundException("Shift template not found"));
     }
 
-    /**
-     * Resolves and validates a Location entity by ID.
-     *
-     * @param locationId the location ID to resolve
-     * @return the Location entity
-     * @throws LocationNotFoundException if location is not found
-     */
     public Location resolveLocation(Long locationId) {
         return locationRepository.findById(locationId)
                 .orElseThrow(() -> new LocationNotFoundException("Location not found"));
     }
 
-    /**
-     * Validates that end time is after start time.
-     *
-     * @param startTime the start time
-     * @param endTime the end time
-     * @throws ShiftValidationException if end time is not after start time
-     */
     public void validateTimes(LocalTime startTime, LocalTime endTime) {
         if (!endTime.isAfter(startTime)) {
             throw new ShiftValidationException("End time must be after start time");
         }
     }
 
-    /**
-     * Validates that ideal employees is not less than required when both are set.
-     */
     public void validateIdealEmployees(Integer requiredEmployees, Integer idealEmployees) {
         if (idealEmployees != null && requiredEmployees != null && idealEmployees < requiredEmployees) {
             throw new ShiftValidationException(

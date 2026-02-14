@@ -48,7 +48,6 @@ class CompanyFlowIT extends BaseIntegrationTest {
     @Test
     @DisplayName("Admin can create and retrieve a company")
     void adminCanCreateAndRetrieveCompany() throws Exception {
-        // Company creation is restricted to SUPERADMIN only
         String superAdminToken = loginAndGetBearerToken("superadmin", "SuperAdmin1!");
         String adminToken = loginAndGetBearerToken("admin", "Admin123!");
 
@@ -61,7 +60,6 @@ class CompanyFlowIT extends BaseIntegrationTest {
                 "Spain"
         );
 
-        // Create company (requires SUPERADMIN)
         MvcResult createResult = mockMvc.perform(post("/api/companies")
                         .header("Authorization", superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -79,7 +77,6 @@ class CompanyFlowIT extends BaseIntegrationTest {
         assertThat(created.id()).isNotNull();
         Long companyId = created.id();
 
-        // Retrieve by id
         mockMvc.perform(get("/api/companies/{id}", companyId)
                         .header("Authorization", adminToken))
                 .andExpect(status().isOk())
@@ -87,7 +84,6 @@ class CompanyFlowIT extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.name").value("TestCo"))
                 .andExpect(jsonPath("$.email").value("testco@example.com"));
 
-        // List active companies (via filter) and ensure our company is present
         MvcResult listResult = mockMvc.perform(get("/api/companies")
                         .param("isActive", "true")
                         .header("Authorization", adminToken))

@@ -11,7 +11,7 @@ class WeekBoundsTest {
 
     @Test
     void weekStart_shouldReturnMondayWhenFirstDayIsMonday() {
-        LocalDate wed = LocalDate.of(2025, 1, 8); // Wednesday
+        LocalDate wed = LocalDate.of(2025, 1, 8);
         LocalDate start = WeekBounds.weekStart(wed, DayOfWeek.MONDAY);
         assertThat(start).isEqualTo(LocalDate.of(2025, 1, 6));
         assertThat(start.getDayOfWeek()).isEqualTo(DayOfWeek.MONDAY);
@@ -26,7 +26,7 @@ class WeekBoundsTest {
 
     @Test
     void weekStart_shouldReturnSundayWhenFirstDayIsSunday() {
-        LocalDate wed = LocalDate.of(2025, 1, 8); // Wednesday -> week start Sunday 5th
+        LocalDate wed = LocalDate.of(2025, 1, 8);
         LocalDate start = WeekBounds.weekStart(wed, DayOfWeek.SUNDAY);
         assertThat(start).isEqualTo(LocalDate.of(2025, 1, 5));
         assertThat(start.getDayOfWeek()).isEqualTo(DayOfWeek.SUNDAY);
