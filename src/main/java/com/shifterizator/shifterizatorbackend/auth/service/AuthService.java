@@ -86,7 +86,6 @@ public class AuthService {
             );
 
         } catch (InvalidRefreshTokenException ex) {
-            // Re-throw to be handled by GlobalExceptionHandler
             throw ex;
         } catch (Exception ex) {
             log.warn("Invalid refresh token", ex);

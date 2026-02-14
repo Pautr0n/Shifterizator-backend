@@ -28,7 +28,6 @@ public class ShiftInstanceCompletenessService {
         List<ShiftAssignment> assignments = shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(
                 shiftInstance.getId());
 
-        // Check if all position requirements are met
         boolean isComplete = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
                 .allMatch(stp -> {
                     long assignedCount = assignments.stream()

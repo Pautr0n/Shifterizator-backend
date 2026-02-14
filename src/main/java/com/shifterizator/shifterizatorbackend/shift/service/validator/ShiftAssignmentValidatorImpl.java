@@ -83,7 +83,7 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
                 .collect(Collectors.toSet());
 
         if (requiredLanguageIds.isEmpty()) {
-            return; // No language requirements
+            return;
         }
 
         List<EmployeeLanguage> employeeLanguages = employeeLanguageRepository.findByEmployee_Id(employee.getId());
