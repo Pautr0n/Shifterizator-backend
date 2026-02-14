@@ -55,6 +55,7 @@ public record EmployeeRequestDto(
         /** Optional. Preferred weekday off (e.g. WEDNESDAY, FRIDAY). Must be a valid DayOfWeek name. */
         String preferredDayOff,
 
+        @Schema(description = "Shifts per week (1-7); null = use default", example = "5", nullable = true)
         /** Shifts per week; null = use default (e.g. 5). */
         @Positive(message = "Shift per week must be positive")
         @Min(1) @Max(7)

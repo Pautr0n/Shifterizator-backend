@@ -49,6 +49,7 @@ public record EmployeeResponseDto(
         /** Preferred weekday off (e.g. WEDNESDAY, FRIDAY), or null if not set. */
         String preferredDayOff,
 
+        @Schema(description = "Number of shifts per week", example = "5", nullable = true)
         Integer shiftsPerWeek,
 
         @Schema(
