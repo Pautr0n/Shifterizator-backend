@@ -3,12 +3,7 @@ package com.shifterizator.shifterizatorbackend.employee.mapper;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
-import com.shifterizator.shifterizatorbackend.employee.model.Employee;
-import com.shifterizator.shifterizatorbackend.employee.model.EmployeeCompany;
-import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLanguage;
-import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLocation;
-import com.shifterizator.shifterizatorbackend.employee.model.EmployeeShiftPreference;
-import com.shifterizator.shifterizatorbackend.employee.model.Position;
+import com.shifterizator.shifterizatorbackend.employee.model.*;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -27,12 +22,14 @@ public class EmployeeMapper {
                 .email(dto.email())
                 .phone(dto.phone())
                 .preferredDayOff(parsePreferredDayOff(dto.preferredDayOff()))
+                .shiftsPerWeek(dto.shiftsPerWeek())
                 .position(position)
                 .build();
     }
 
     /**
      * Parses preferred day off from DTO string (e.g. "WEDNESDAY"). Returns null if null or blank.
+     *
      * @throws IllegalArgumentException if the value is not a valid DayOfWeek name
      */
     public static DayOfWeek parsePreferredDayOff(String value) {
@@ -60,6 +57,7 @@ public class EmployeeMapper {
                 extractLocationNames(employee.getEmployeeLocations()),
                 extractLanguageNames(employee.getEmployeeLanguages()),
                 employee.getPreferredDayOff() != null ? employee.getPreferredDayOff().name() : null,
+                employee.getShiftsPerWeek(),
                 extractPreferredShiftTemplateIds(employee.getShiftPreferences()),
                 employee.getCreatedAt(),
                 employee.getUpdatedAt(),
@@ -81,7 +79,8 @@ public class EmployeeMapper {
     public EmployeePreferencesResponseDto toPreferencesResponse(Employee employee) {
         return new EmployeePreferencesResponseDto(
                 employee.getPreferredDayOff() != null ? employee.getPreferredDayOff().name() : null,
-                extractPreferredShiftTemplateIds(employee.getShiftPreferences())
+                extractPreferredShiftTemplateIds(employee.getShiftPreferences()),
+                employee.getShiftsPerWeek()
         );
     }
 

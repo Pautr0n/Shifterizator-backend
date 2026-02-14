@@ -2,9 +2,13 @@ package com.shifterizator.shifterizatorbackend.shift.service;
 
 import com.shifterizator.shifterizatorbackend.availability.model.EmployeeAvailability;
 import com.shifterizator.shifterizatorbackend.availability.repository.EmployeeAvailabilityRepository;
+import com.shifterizator.shifterizatorbackend.company.model.Location;
+import com.shifterizator.shifterizatorbackend.company.service.LocationService;
+import com.shifterizator.shifterizatorbackend.company.service.domain.WeekBounds;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentRequestDto;
+import com.shifterizator.shifterizatorbackend.shift.exception.ScheduleDaySkippedException;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
@@ -16,13 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +34,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
 
+    private static final int DEFAULT_SHIFTS_PER_WEEK = 5;
 
     private final ShiftInstanceRepository shiftInstanceRepository;
     private final ShiftAssignmentRepository shiftAssignmentRepository;
@@ -37,23 +42,31 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
     private final EmployeeAvailabilityRepository employeeAvailabilityRepository;
     private final ShiftAssignmentService shiftAssignmentService;
     private final ShiftCandidateTierService shiftCandidateTierService;
+    private final LocationService locationService;
 
     @Override
     public void scheduleDay(Long locationId, LocalDate date) {
+        Location location = locationService.findById(locationId);
+
         List<ShiftInstance> instances = loadAndSortInstancesByPriority(locationId, date);
         if (instances.isEmpty()) {
-            return;
+            throw new ScheduleDaySkippedException("No shifts defined for this day.");
         }
 
         List<Employee> candidates = loadCandidatesForDay(locationId, date);
         if (candidates.isEmpty()) {
-            log.debug("No candidates for location {} on {}", locationId, date);
-            return;
+            throw new ScheduleDaySkippedException("No candidates available on: " + date);
         }
 
-        fillMinimumsForAllShifts(instances, candidates, date, locationId);
-        fillUpToIdealByPriority(instances, candidates, date, locationId);
-        improveLanguageDistribution(instances, candidates, date, locationId);
+        List<Employee> candidatesWithinCap = filterByMaxShiftsPerWeek(
+                candidates, date, location.getFirstDayOfWeek());
+        if (candidatesWithinCap.isEmpty()) {
+            throw new ScheduleDaySkippedException("No candidates under 5 shifts/week available on: " + date);
+        }
+
+        fillMinimumsForAllShifts(instances, candidatesWithinCap, date, locationId);
+        fillUpToIdealByPriority(instances, candidatesWithinCap, date, locationId);
+        improveLanguageDistribution(instances, candidatesWithinCap, date, locationId);
     }
 
     @Override
@@ -91,6 +104,30 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         return available;
     }
 
+    /**
+     * Excludes employees who already have at least MAX_SHIFTS_PER_WEEK assignments
+     * in the week containing {@code date}. Week boundaries use location's firstDayOfWeek (null = Monday).
+     */
+    private List<Employee> filterByMaxShiftsPerWeek(
+            List<Employee> candidates,
+            LocalDate date,
+            DayOfWeek firstDayOfWeek) {
+        LocalDate weekStart = WeekBounds.weekStart(date, firstDayOfWeek);
+        LocalDate weekEnd = WeekBounds.weekEnd(date, firstDayOfWeek);
+
+        return candidates.stream()
+                .filter(employee -> {
+                    int maxAllowed = employee.getShiftsPerWeek() != null
+                            ? employee.getShiftsPerWeek()
+                            : DEFAULT_SHIFTS_PER_WEEK;
+                    long count = shiftAssignmentRepository
+                            .countByEmployee_IdAndShiftInstance_DateBetweenAndDeletedAtIsNull(
+                                    employee.getId(), weekStart, weekEnd);
+                    return count < maxAllowed;
+                })
+                .toList();
+    }
+
     private boolean isAvailableOnDate(Long employeeId, LocalDate date) {
         List<EmployeeAvailability> overlapping = employeeAvailabilityRepository.findOverlapping(
                 employeeId, date, date, null);
@@ -112,7 +149,9 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
                 .toList();
     }
 
-    /** Candidates sorted by tier for the given shift (best first). */
+    /**
+     * Candidates sorted by tier for the given shift (best first).
+     */
     private List<Employee> candidatesByTier(List<Employee> candidates, ShiftInstance instance, LocalDate date) {
         return candidates.stream()
                 .sorted(Comparator.comparingInt(e -> shiftCandidateTierService.getTier(e, instance, date)))
@@ -138,7 +177,9 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /** Phase 1: Fill every shift up to requiredEmployees using tier-ordered candidates. Higher-priority shifts processed first. */
+    /**
+     * Phase 1: Fill every shift up to requiredEmployees using tier-ordered candidates. Higher-priority shifts processed first.
+     */
     private void fillMinimumsForAllShifts(List<ShiftInstance> instances, List<Employee> candidates,
                                           LocalDate date, Long locationId) {
         for (ShiftInstance instance : instances) {
@@ -172,7 +213,9 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /** Phase 2: Fill up to ideal per shift, higher-priority shifts first. */
+    /**
+     * Phase 2: Fill up to ideal per shift, higher-priority shifts first.
+     */
     private void fillUpToIdealByPriority(List<ShiftInstance> instances, List<Employee> candidates,
                                          LocalDate date, Long locationId) {
         for (ShiftInstance instance : instances) {
@@ -184,7 +227,9 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         }
     }
 
-    /** Phase 4: Fill remaining slots with language-qualified employees, spread across shifts (tier-ordered). */
+    /**
+     * Phase 4: Fill remaining slots with language-qualified employees, spread across shifts (tier-ordered).
+     */
     private void improveLanguageDistribution(List<ShiftInstance> instances, List<Employee> candidates,
                                              LocalDate date, Long locationId) {
         Set<Long> assigned = getAssignedEmployeeIdsForDay(instances);

@@ -2,7 +2,10 @@ package com.shifterizator.shifterizatorbackend.company.mapper;
 
 import com.shifterizator.shifterizatorbackend.company.dto.LocationResponseDto;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
-import org.springframework.stereotype.Component;import java.util.Set;import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class LocationMapper {
@@ -14,7 +17,8 @@ public class LocationMapper {
                 location.getName(),
                 location.getAddress(),
                 location.getCompany().getId(),
-                getOpenDays(location)
+                getOpenDays(location),
+                getFirstDayOfWeek(location)
         );
     }
 
@@ -29,12 +33,23 @@ public class LocationMapper {
                 .collect(Collectors.toSet());
     }
 
-    private Set<String> getOpenDays (Location location){
+    private Set<String> getOpenDays(Location location) {
         Set<String> openDays = location.getOpenDaysOfWeek() == null
                 ? null
                 : location.getOpenDaysOfWeek().stream()
                 .map(Enum::name)
                 .collect(Collectors.toSet());
         return openDays;
+    }
+
+    private String getFirstDayOfWeek(Location location) {
+        return location.getFirstDayOfWeek() == null ? null : location.getFirstDayOfWeek().name();
+    }
+
+    public static java.time.DayOfWeek toFirstDayOfWeek(String firstDayOfWeek) {
+        if (firstDayOfWeek == null || firstDayOfWeek.isBlank()) {
+            return null;
+        }
+        return java.time.DayOfWeek.valueOf(firstDayOfWeek.trim().toUpperCase());
     }
 }

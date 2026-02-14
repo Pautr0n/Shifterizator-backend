@@ -49,6 +49,8 @@ public record EmployeeResponseDto(
         /** Preferred weekday off (e.g. WEDNESDAY, FRIDAY), or null if not set. */
         String preferredDayOff,
 
+        Integer shiftsPerWeek,
+
         @Schema(
                 description = "Ordered list of preferred shift template IDs (first = highest preference)",
                 example = "[5, 3, 7]"

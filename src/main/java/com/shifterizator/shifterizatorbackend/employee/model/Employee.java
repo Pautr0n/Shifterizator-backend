@@ -2,9 +2,7 @@ package com.shifterizator.shifterizatorbackend.employee.model;
 
 import com.shifterizator.shifterizatorbackend.user.model.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -45,6 +43,13 @@ public class Employee {
     @Enumerated(EnumType.STRING)
     @Column(name = "preferred_day_off", length = 10)
     private DayOfWeek preferredDayOff;
+
+    /**
+     * Number of shifts this employee can be assigned per week.
+     * Null = use application default (e.g. 5).
+     */
+    @Column(name = "shifts_per_week")
+    private Integer shiftsPerWeek;
 
     @NotNull
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

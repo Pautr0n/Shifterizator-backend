@@ -70,6 +70,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setEmail(dto.email());
         employee.setPhone(dto.phone());
         employee.setPreferredDayOff(EmployeeMapper.parsePreferredDayOff(dto.preferredDayOff()));
+        employee.setShiftsPerWeek(dto.shiftsPerWeek());
         employee.setPosition(position);
 
         employeeDomainService.assignUser(employee, dto, id);
@@ -170,6 +171,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
         employee.setPreferredDayOff(EmployeeMapper.parsePreferredDayOff(dto.preferredDayOff()));
+        employee.setShiftsPerWeek(dto.shiftsPerWeek());
         employeeDomainService.assignShiftPreferencesFromIds(employee,
                 dto.preferredShiftTemplateIds() != null ? dto.preferredShiftTemplateIds() : List.of());
         return employeeMapper.toPreferencesResponse(employee);

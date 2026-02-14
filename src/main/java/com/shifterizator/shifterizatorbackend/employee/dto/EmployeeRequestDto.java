@@ -1,10 +1,7 @@
 package com.shifterizator.shifterizatorbackend.employee.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 import java.util.List;
 import java.util.Set;
@@ -57,6 +54,11 @@ public record EmployeeRequestDto(
         )
         /** Optional. Preferred weekday off (e.g. WEDNESDAY, FRIDAY). Must be a valid DayOfWeek name. */
         String preferredDayOff,
+
+        /** Shifts per week; null = use default (e.g. 5). */
+        @Positive(message = "Shift per week must be positive")
+        @Min(1) @Max(7)
+        Integer shiftsPerWeek,
 
         @Schema(
                 description = "Ordered list of preferred shift template IDs (first = highest preference)",

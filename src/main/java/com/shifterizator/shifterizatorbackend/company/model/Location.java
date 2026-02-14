@@ -51,6 +51,14 @@ public class Location {
     @Enumerated(EnumType.STRING)
     private Set<DayOfWeek> openDaysOfWeek;
 
+    /**
+     * First day of the working week (e.g. MONDAY = ISO week, SUNDAY = US-style).
+     * Used for "max N shifts per week" and reporting. Null = MONDAY.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "first_day_of_week", length = 10)
+    private DayOfWeek firstDayOfWeek;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

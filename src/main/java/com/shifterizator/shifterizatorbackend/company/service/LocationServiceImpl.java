@@ -31,6 +31,7 @@ public class LocationServiceImpl implements LocationService {
                 .address(dto.address())
                 .company(company)
                 .openDaysOfWeek(LocationMapper.toOpenDaysOfWeek(dto.openDaysOfWeek()))
+                .firstDayOfWeek(LocationMapper.toFirstDayOfWeek(dto.firstDayOfWeek()))
                 .build();
 
         return locationRepository.save(location);
@@ -44,6 +45,7 @@ public class LocationServiceImpl implements LocationService {
         location.setName(dto.name());
         location.setAddress(dto.address());
         location.setOpenDaysOfWeek(LocationMapper.toOpenDaysOfWeek(dto.openDaysOfWeek()));
+        location.setFirstDayOfWeek(LocationMapper.toFirstDayOfWeek(dto.firstDayOfWeek()));
 
         return location;
     }

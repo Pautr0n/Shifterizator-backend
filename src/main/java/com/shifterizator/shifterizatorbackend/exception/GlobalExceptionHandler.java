@@ -3,6 +3,7 @@ package com.shifterizator.shifterizatorbackend.exception;
 import com.shifterizator.shifterizatorbackend.auth.exception.AuthException;
 import com.shifterizator.shifterizatorbackend.auth.exception.InvalidCredentialsException;
 import com.shifterizator.shifterizatorbackend.auth.exception.InvalidRefreshTokenException;
+import com.shifterizator.shifterizatorbackend.shift.exception.ScheduleDaySkippedException;
 import com.shifterizator.shifterizatorbackend.user.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

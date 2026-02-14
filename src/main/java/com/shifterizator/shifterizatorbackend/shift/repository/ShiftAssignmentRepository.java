@@ -32,6 +32,18 @@ public interface ShiftAssignmentRepository extends JpaRepository<ShiftAssignment
     List<ShiftAssignment> findByEmployee_IdAndShiftInstance_DateBetweenAndDeletedAtIsNull(
             Long employeeId, LocalDate startDate, LocalDate endDate);
 
+    @Query("""
+            SELECT COUNT(sa) FROM ShiftAssignment sa
+            WHERE sa.employee.id = :employeeId
+              AND sa.shiftInstance.date BETWEEN :startDate AND :endDate
+              AND sa.deletedAt IS NULL
+            """)
+    long countByEmployee_IdAndShiftInstance_DateBetweenAndDeletedAtIsNull(
+            @Param("employeeId") Long employeeId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
     Optional<ShiftAssignment> findByShiftInstance_IdAndEmployee_IdAndDeletedAtIsNull(Long shiftInstanceId, Long employeeId);
 
     /**
