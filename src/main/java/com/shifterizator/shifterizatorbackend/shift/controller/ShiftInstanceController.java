@@ -9,6 +9,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftGenerationService;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftInstanceService;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftSchedulerService;
+import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceRequirementStatusService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -42,6 +43,7 @@ public class ShiftInstanceController {
     private final ShiftInstanceMapper shiftInstanceMapper;
     private final ShiftGenerationService shiftGenerationService;
     private final ShiftSchedulerService shiftSchedulerService;
+    private final ShiftInstanceRequirementStatusService requirementStatusService;
 
     @Operation(
             summary = "Generate shift instances for a month",
@@ -58,7 +60,7 @@ public class ShiftInstanceController {
         YearMonth yearMonth = YearMonth.of(dto.year(), dto.month());
         List<ShiftInstance> instances = shiftGenerationService.generateMonth(dto.locationId(), yearMonth);
         List<ShiftInstanceResponseDto> body = instances.stream()
-                .map(i -> shiftInstanceMapper.toDto(i, shiftInstanceService.getAssignedCount(i.getId())))
+                .map(i -> toDtoWithStatus(i))
                 .toList();
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
@@ -108,8 +110,7 @@ public class ShiftInstanceController {
     @PostMapping
     public ResponseEntity<ShiftInstanceResponseDto> create(@Valid @RequestBody ShiftInstanceRequestDto dto) {
         ShiftInstance instance = shiftInstanceService.create(dto);
-        int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(shiftInstanceMapper.toDto(instance, assignedCount));
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDtoWithStatus(instance));
     }
 
     @Operation(
@@ -127,8 +128,7 @@ public class ShiftInstanceController {
             @Parameter(description = "Shift instance ID", required = true) @PathVariable Long id,
             @Valid @RequestBody ShiftInstanceRequestDto dto) {
         ShiftInstance instance = shiftInstanceService.update(id, dto);
-        int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
-        return ResponseEntity.ok(shiftInstanceMapper.toDto(instance, assignedCount));
+        return ResponseEntity.ok(toDtoWithStatus(instance));
     }
 
     @Operation(
@@ -161,8 +161,7 @@ public class ShiftInstanceController {
     public ResponseEntity<ShiftInstanceResponseDto> findById(
             @Parameter(description = "Shift instance ID", required = true) @PathVariable Long id) {
         ShiftInstance instance = shiftInstanceService.findById(id);
-        int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
-        return ResponseEntity.ok(shiftInstanceMapper.toDto(instance, assignedCount));
+        return ResponseEntity.ok(toDtoWithStatus(instance));
     }
 
     @Operation(
@@ -181,10 +180,7 @@ public class ShiftInstanceController {
             Pageable pageable
     ) {
         Page<ShiftInstance> page = shiftInstanceService.search(locationId, startDate, endDate, pageable);
-        return ResponseEntity.ok(page.map(instance -> {
-            int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
-            return shiftInstanceMapper.toDto(instance, assignedCount);
-        }));
+        return ResponseEntity.ok(page.map(this::toDtoWithStatus));
     }
 
     @Operation(
@@ -201,10 +197,7 @@ public class ShiftInstanceController {
             @Parameter(description = "Date (ISO)", required = true) @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         List<ShiftInstance> list = shiftInstanceService.findByLocationAndDate(locationId, date);
-        return ResponseEntity.ok(list.stream().map(instance -> {
-            int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
-            return shiftInstanceMapper.toDto(instance, assignedCount);
-        }).toList());
+        return ResponseEntity.ok(list.stream().map(this::toDtoWithStatus).toList());
     }
 
     @Operation(
@@ -222,9 +215,13 @@ public class ShiftInstanceController {
             @Parameter(description = "End date (ISO)", required = true) @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
         List<ShiftInstance> list = shiftInstanceService.findByLocationAndDateRange(locationId, startDate, endDate);
-        return ResponseEntity.ok(list.stream().map(instance -> {
-            int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
-            return shiftInstanceMapper.toDto(instance, assignedCount);
-        }).toList());
+        return ResponseEntity.ok(list.stream().map(this::toDtoWithStatus).toList());
+    }
+
+    private ShiftInstanceResponseDto toDtoWithStatus(ShiftInstance instance) {
+        int assignedCount = shiftInstanceService.getAssignedCount(instance.getId());
+        var positionStatus = requirementStatusService.getPositionRequirementStatus(instance);
+        var languageStatus = requirementStatusService.getLanguageRequirementStatus(instance);
+        return shiftInstanceMapper.toDto(instance, assignedCount, positionStatus, languageStatus);
     }
 }

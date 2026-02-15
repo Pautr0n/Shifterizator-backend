@@ -5,8 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.util.List;
 
-@Schema(description = "Shift instance (one shift slot on a date at a location) with assignment count")
+@Schema(description = "Shift instance with assignment count and per-position/per-language requirement fulfillment")
 public record ShiftInstanceResponseDto(
         @Schema(description = "Shift instance ID") Long id,
         @Schema(description = "Shift template ID") Long shiftTemplateId,
@@ -19,6 +20,8 @@ public record ShiftInstanceResponseDto(
         @Schema(description = "Ideal employees") Integer idealEmployees,
         @Schema(description = "Number of assigned employees") Integer assignedEmployees,
         @Schema(description = "Whether staffing is complete") Boolean isComplete,
+        @Schema(description = "Per-position required/ideal/assigned counts") List<PositionRequirementStatusDto> positionRequirementStatus,
+        @Schema(description = "Per-language required/assigned counts") List<LanguageRequirementStatusDto> languageRequirementStatus,
         @Schema(description = "Notes") String notes,
         @Schema(description = "Creation timestamp") LocalDateTime createdAt,
         @Schema(description = "Last update timestamp") LocalDateTime updatedAt,

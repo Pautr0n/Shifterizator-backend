@@ -14,6 +14,8 @@ public interface EmployeeLanguageRepository extends JpaRepository<EmployeeLangua
 
     List<EmployeeLanguage> findByEmployee_Id(Long employeeId);
 
+    List<EmployeeLanguage> findByEmployee_IdIn(List<Long> employeeIds);
+
     @Modifying
     @Query("DELETE FROM EmployeeLanguage el WHERE el.employee.id = :employeeId")
     void deleteByEmployee_Id(@Param("employeeId") Long employeeId);

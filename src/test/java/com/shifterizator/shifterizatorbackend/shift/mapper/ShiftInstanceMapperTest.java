@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,7 +36,7 @@ class ShiftInstanceMapperTest {
                 .isComplete(false)
                 .build();
 
-        var dto = mapper.toDto(instance, 2);
+        var dto = mapper.toDto(instance, 2, List.of(), List.of());
 
         assertThat(dto.id()).isEqualTo(99L);
         assertThat(dto.shiftTemplateId()).isEqualTo(1L);
@@ -44,6 +45,8 @@ class ShiftInstanceMapperTest {
         assertThat(dto.date()).isEqualTo(LocalDate.of(2024, 12, 24));
         assertThat(dto.assignedEmployees()).isEqualTo(2);
         assertThat(dto.isComplete()).isFalse();
+        assertThat(dto.positionRequirementStatus()).isEmpty();
+        assertThat(dto.languageRequirementStatus()).isEmpty();
     }
 
     @Test

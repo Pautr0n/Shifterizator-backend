@@ -14,6 +14,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftInstanceService;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftSchedulerService;
+import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceRequirementStatusService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ import java.time.YearMonth;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -58,6 +60,9 @@ class ShiftInstanceControllerTest {
 
     @MockitoBean
     private ShiftSchedulerService shiftSchedulerService;
+
+    @MockitoBean
+    private ShiftInstanceRequirementStatusService requirementStatusService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -118,6 +123,8 @@ class ShiftInstanceControllerTest {
                 null,
                 2,
                 false,
+                List.of(),
+                List.of(),
                 null,
                 null,
                 null,
@@ -130,7 +137,9 @@ class ShiftInstanceControllerTest {
     void create_shouldReturn201AndBody() throws Exception {
         when(shiftInstanceService.create(any())).thenReturn(instance);
         when(shiftInstanceService.getAssignedCount(99L)).thenReturn(0);
-        when(shiftInstanceMapper.toDto(instance, 0)).thenReturn(responseDto);
+        when(requirementStatusService.getPositionRequirementStatus(instance)).thenReturn(List.of());
+        when(requirementStatusService.getLanguageRequirementStatus(instance)).thenReturn(List.of());
+        when(shiftInstanceMapper.toDto(eq(instance), eq(0), anyList(), anyList())).thenReturn(responseDto);
 
         mockMvc.perform(post("/api/shift-instances")
                         .with(csrf())
@@ -147,7 +156,9 @@ class ShiftInstanceControllerTest {
     void findById_shouldReturn200AndBody() throws Exception {
         when(shiftInstanceService.findById(99L)).thenReturn(instance);
         when(shiftInstanceService.getAssignedCount(99L)).thenReturn(2);
-        when(shiftInstanceMapper.toDto(instance, 2)).thenReturn(responseDto);
+        when(requirementStatusService.getPositionRequirementStatus(instance)).thenReturn(List.of());
+        when(requirementStatusService.getLanguageRequirementStatus(instance)).thenReturn(List.of());
+        when(shiftInstanceMapper.toDto(eq(instance), eq(2), anyList(), anyList())).thenReturn(responseDto);
 
         mockMvc.perform(get("/api/shift-instances/99").with(csrf()))
                 .andExpect(status().isOk())
@@ -161,7 +172,9 @@ class ShiftInstanceControllerTest {
     void findByLocationAndDate_shouldReturnList() throws Exception {
         when(shiftInstanceService.findByLocationAndDate(10L, DATE)).thenReturn(List.of(instance));
         when(shiftInstanceService.getAssignedCount(99L)).thenReturn(2);
-        when(shiftInstanceMapper.toDto(instance, 2)).thenReturn(responseDto);
+        when(requirementStatusService.getPositionRequirementStatus(instance)).thenReturn(List.of());
+        when(requirementStatusService.getLanguageRequirementStatus(instance)).thenReturn(List.of());
+        when(shiftInstanceMapper.toDto(eq(instance), eq(2), anyList(), anyList())).thenReturn(responseDto);
 
         mockMvc.perform(get("/api/shift-instances/by-location/10/date/" + DATE.toString()).with(csrf()))
                 .andExpect(status().isOk())
@@ -174,7 +187,9 @@ class ShiftInstanceControllerTest {
     void generateMonth_shouldReturn201AndListOfInstances() throws Exception {
         when(shiftGenerationService.generateMonth(10L, YearMonth.of(2025, 2))).thenReturn(List.of(instance));
         when(shiftInstanceService.getAssignedCount(99L)).thenReturn(0);
-        when(shiftInstanceMapper.toDto(instance, 0)).thenReturn(responseDto);
+        when(requirementStatusService.getPositionRequirementStatus(instance)).thenReturn(List.of());
+        when(requirementStatusService.getLanguageRequirementStatus(instance)).thenReturn(List.of());
+        when(shiftInstanceMapper.toDto(eq(instance), eq(0), anyList(), anyList())).thenReturn(responseDto);
 
         mockMvc.perform(post("/api/shift-instances/generate-month")
                         .with(csrf())
