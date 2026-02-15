@@ -3,6 +3,7 @@ package com.shifterizator.shifterizatorbackend.user.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shifterizator.shifterizatorbackend.auth.jwt.JwtAuthenticationFilter;
 import com.shifterizator.shifterizatorbackend.auth.jwt.JwtUtil;
+import com.shifterizator.shifterizatorbackend.auth.service.CurrentUserService;
 import com.shifterizator.shifterizatorbackend.user.dto.UserRequestDto;
 import com.shifterizator.shifterizatorbackend.user.dto.UserResponseDto;
 import com.shifterizator.shifterizatorbackend.user.exception.UserAlreadyExistsException;
@@ -50,13 +51,16 @@ class UserControllerTest {
     private UserService userService;
 
     @MockitoBean
+    private UserMapper userMapper;
+
+    @MockitoBean
+    private CurrentUserService currentUserService;
+
+    @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockitoBean
     private JwtUtil jwtUtil;
-
-    @MockitoBean
-    private UserMapper userMapper;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -86,7 +90,7 @@ class UserControllerTest {
         user.setId(10L);
 
         UserResponseDto responseDto = new UserResponseDto(
-                10L, "john123", "john@mail.com", null, "EMPLOYEE", null, true, null, null
+                10L, "john123", "john@mail.com", null, "EMPLOYEE", null, true, null, null, null
         );
 
         when(userService.createUser(any())).thenReturn(user);
@@ -147,7 +151,7 @@ class UserControllerTest {
         user.setId(10L);
 
         UserResponseDto responseDto = new UserResponseDto(
-                10L, "johnUpdated", "johnUpdated@mail.com", null, "EMPLOYEE", null, true, null, null
+                10L, "johnUpdated", "johnUpdated@mail.com", null, "EMPLOYEE", null, true, null, null, null
         );
 
         when(userService.updateUser(eq(10L), any())).thenReturn(user);
@@ -196,7 +200,7 @@ class UserControllerTest {
         user.setIsActive(true);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null, null
         );
 
         when(userService.activateUser(10L)).thenReturn(user);
@@ -217,7 +221,7 @@ class UserControllerTest {
         user.setIsActive(false);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, false, null, null
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, false, null, null, null
         );
 
         when(userService.deactivateUser(10L)).thenReturn(user);
@@ -262,7 +266,7 @@ class UserControllerTest {
         user.setId(10L);
 
         UserResponseDto responseDto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null, null
         );
 
         when(userService.getUser(10L)).thenReturn(user);
@@ -295,7 +299,7 @@ class UserControllerTest {
         user.setId(10L);
 
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null, null
         );
 
         Pageable pageable = PageRequest.of(0, 10);
@@ -316,7 +320,7 @@ class UserControllerTest {
         user.setId(10L);
         user.setIsActive(true);
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null, null
         );
         Pageable pageable = PageRequest.of(0, 10);
         when(userService.search(any(), any(), any(), any(), eq(true), any()))
@@ -334,7 +338,7 @@ class UserControllerTest {
         User user = new User("john", "john@mail.com", "hashed", Role.EMPLOYEE, null);
         user.setId(10L);
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null, null
         );
         Pageable pageable = PageRequest.of(0, 10);
         when(userService.search(any(), any(), eq("john"), any(), any(), any()))
@@ -353,7 +357,7 @@ class UserControllerTest {
         user.setId(10L);
         user.setIsActive(true);
         UserResponseDto dto = new UserResponseDto(
-                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null
+                10L, "john", "john@mail.com", null, "EMPLOYEE", null, true, null, null, null
         );
         Pageable pageable = PageRequest.of(0, 10);
         when(userService.search(any(), any(), eq("john"), any(), eq(true), any()))

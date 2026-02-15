@@ -32,4 +32,6 @@ public interface UserService {
     List<AssignableUserDto> listAssignableByCompanyIds(Set<Long> companyIds);
 
     User resetPassword(Long id, String newPassword);
+
+    User updateProfilePicture(Long userId, String profilePictureUrl);
 }

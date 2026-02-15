@@ -170,6 +170,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    public User updateProfilePicture(Long userId, String profilePictureUrl) {
+        User user = findByIdOrThrow(userId);
+        user.setProfilePictureUrl(profilePictureUrl);
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
     public User resetPassword(Long id, String newPassword) {
         User user = findByIdOrThrow(id);
         user.setPassword(passwordEncoder.encode(newPassword));

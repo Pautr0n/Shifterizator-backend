@@ -113,6 +113,7 @@ class AvailabilityFlowIT extends BaseIntegrationTest {
                 null,
                 5,
                 List.of(),
+                null,
                 null
         );
 

@@ -136,6 +136,7 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 null,
                 5,
                 List.of(),
+                null,
                 null
         );
         MvcResult result = mockMvc.perform(post("/api/employees")

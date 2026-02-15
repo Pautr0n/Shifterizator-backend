@@ -67,7 +67,10 @@ public record EmployeeResponseDto(
         Long userId,
 
         @Schema(description = "Username of the linked user account, or null if none", nullable = true)
-        String linkedUsername
+        String linkedUsername,
+
+        @Schema(description = "Profile picture URL", nullable = true)
+        String profilePictureUrl
 
 ) {
 }

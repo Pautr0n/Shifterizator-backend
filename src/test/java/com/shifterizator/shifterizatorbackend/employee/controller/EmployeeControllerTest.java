@@ -104,6 +104,7 @@ class EmployeeControllerTest {
                 null,
                 5,
                 null,
+                null,
                 null
         );
 
@@ -136,6 +137,7 @@ class EmployeeControllerTest {
                 List.of(),
                 LocalDateTime.of(2024, 1, 1, 10, 0),
                 LocalDateTime.of(2024, 1, 2, 12, 0),
+                null,
                 null,
                 null
         );
@@ -174,7 +176,7 @@ class EmployeeControllerTest {
     void create_shouldReturn400_whenInvalidDto() throws Exception {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "", "", "invalid", "123",
-                null, Set.of(), null, null, null, null, null, null
+                null, Set.of(), null, null, null, null, null, null, null
         );
 
         mvc.perform(post("/api/employees")
@@ -190,7 +192,7 @@ class EmployeeControllerTest {
     void createEmployee_should_return_409_when_email_exists() throws Exception {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), null, null, 5, null, null
+                1L, Set.of(1L), Set.of(10L), null, null, 5, null, null, null
         );
 
         when(employeeService.create(any()))

@@ -65,7 +65,10 @@ public record EmployeeRequestDto(
         )
         List<Long> preferredShiftTemplateIds,
 
-        Long userId
+        Long userId,
+
+        @Schema(description = "Profile picture URL (e.g. from R2 after upload)")
+        String profilePictureUrl
 
 ) {
 }

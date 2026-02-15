@@ -13,11 +13,16 @@ server:
     include-message: always
 
 jwt:
-  # JWT secret from environment variable (required in production)
-  # For development, fallback to a default (NEVER use this in production!)
   secret: ${JWT_SECRET:63yYuYleXPvNFkojq6peEcbwFS8Kbb5NerVz5Sapqk+Q/rMdWm3PUDNb8siO/yh1UkQibSOhrPUDdIt1dCs5fQ==}
-  expiration: ${JWT_EXPIRATION:900000}          # 15 minutos en ms
-  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 días en ms
+  expiration: ${JWT_EXPIRATION:900000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+r2:
+  access-key: ${R2_ACCESS_KEY:}
+  secret-key: ${R2_SECRET_KEY:}
+  endpoint: ${R2_ENDPOINT:}
+  bucket: ${R2_BUCKET:}
+  public-base-url: ${R2_PUBLIC_BASE_URL:}
 
 
 management:

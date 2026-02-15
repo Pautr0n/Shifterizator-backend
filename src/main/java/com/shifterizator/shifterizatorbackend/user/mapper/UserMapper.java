@@ -30,6 +30,7 @@ public class UserMapper {
                 user.getRole().name(),
                 user.getCompany() != null ? user.getCompany().getId() : null,
                 user.getIsActive(),
+                user.getProfilePictureUrl(),
                 user.getCreatedBy(),
                 user.getUpdatedBy()
         );

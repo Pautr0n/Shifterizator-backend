@@ -55,7 +55,7 @@ class EmployeeServiceImplTest {
     void create_shouldCreateEmployeeSuccessfully() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, 5, null, null
+                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, 5, null, null, null
         );
 
         Position position = Position.builder().id(1L).name("Waiter").build();
@@ -90,7 +90,7 @@ class EmployeeServiceImplTest {
     void create_shouldThrowWhenPositionNotFound() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, 5, null, null
+                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, 5, null, null, null
         );
 
         when(positionRepository.findById(1L)).thenReturn(Optional.empty());
@@ -104,7 +104,7 @@ class EmployeeServiceImplTest {
     void update_shouldUpdateEmployeeSuccessfully() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, 5, null, null
+                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, 5, null, null, null
         );
 
         Position position = Position.builder().id(1L).name("Waiter").build();
@@ -138,7 +138,7 @@ class EmployeeServiceImplTest {
     void update_shouldThrowWhenEmployeeNotFound() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
                 "John", "Connor", "john@example.com", "123",
-                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, 5, null, null
+                1L, Set.of(1L), Set.of(10L), Set.of(1L), null, 5, null, null, null
         );
 
         when(employeeRepository.findActiveById(99L)).thenReturn(Optional.empty());

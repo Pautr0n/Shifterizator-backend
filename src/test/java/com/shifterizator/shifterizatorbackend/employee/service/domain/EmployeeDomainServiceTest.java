@@ -62,7 +62,7 @@ class EmployeeDomainServiceTest {
     @Test
     void validateEmailUniqueness_shouldDoNothingWhenEmailIsNull() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", null, "123", 1L, Set.of(1L), null, null, null, null, null, null
+                "John", "Connor", null, "123", 1L, Set.of(1L), null, null, null, null, null, null, null
         );
 
         service.validateEmailUniqueness(dto, null);
@@ -73,7 +73,7 @@ class EmployeeDomainServiceTest {
     @Test
     void validateEmailUniqueness_shouldThrowWhenEmailExistsForAnotherEmployee() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null, null
         );
 
         when(employeeRepository.existsByEmailAndCompany("john@example.com", 1L))
@@ -89,7 +89,7 @@ class EmployeeDomainServiceTest {
     @Test
     void validateEmailUniqueness_shouldNotThrowWhenSameEmployeeKeepsSameEmail() {
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null, null
         );
 
         when(employeeRepository.existsByEmailAndCompany("john@example.com", 1L))
@@ -124,7 +124,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeCompanies().add(EmployeeCompany.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L, 2L), null, null, null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L, 2L), null, null, null, null, null, null, null
         );
 
         Company company1 = new Company();
@@ -149,7 +149,7 @@ class EmployeeDomainServiceTest {
     void assignCompanies_shouldThrowWhenCompanyNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null, null
         );
 
         when(companyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
@@ -165,7 +165,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLocations().add(EmployeeLocation.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L, 11L), null, null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L, 11L), null, null, null, null, null, null
         );
 
         Location loc1 = Location.builder().id(10L).name("HQ").build();
@@ -188,7 +188,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLocations().add(EmployeeLocation.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null, null
         );
 
         service.assignLocations(employee, dto);
@@ -200,7 +200,7 @@ class EmployeeDomainServiceTest {
     void assignLocations_shouldThrowWhenLocationNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L), null, null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), Set.of(10L), null, null, null, null, null, null
         );
 
         when(locationRepository.findById(10L)).thenReturn(Optional.empty());
@@ -216,7 +216,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLanguages().add(EmployeeLanguage.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L, 2L), null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L, 2L), null, null, null, null, null
         );
 
         Language lang1 = Language.builder().id(1L).code("EN").name("English").build();
@@ -239,7 +239,7 @@ class EmployeeDomainServiceTest {
         employee.getEmployeeLanguages().add(EmployeeLanguage.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null, null
         );
 
         service.assignLanguages(employee, dto);
@@ -251,7 +251,7 @@ class EmployeeDomainServiceTest {
     void assignLanguages_shouldThrowWhenLanguageNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L), null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, Set.of(1L), null, null, null, null, null
         );
 
         when(languageRepository.findById(1L)).thenReturn(Optional.empty());
@@ -267,7 +267,7 @@ class EmployeeDomainServiceTest {
         employee.getShiftPreferences().add(com.shifterizator.shifterizatorbackend.employee.model.EmployeeShiftPreference.builder().id(99L).build());
 
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, List.of(10L, 20L), null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, List.of(10L, 20L), null, null
         );
 
         ShiftTemplate t1 = ShiftTemplate.builder().id(10L).build();
@@ -291,7 +291,7 @@ class EmployeeDomainServiceTest {
     void assignShiftPreferences_shouldThrowWhenTemplateNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, List.of(10L), null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, List.of(10L), null, null
         );
 
         when(shiftTemplateRepository.findById(10L)).thenReturn(Optional.empty());
@@ -305,7 +305,7 @@ class EmployeeDomainServiceTest {
     void assignUser_shouldAssignUserWhenUserIdProvided() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, 10L
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, 10L, null
         );
 
         Company company = new Company();
@@ -325,7 +325,7 @@ class EmployeeDomainServiceTest {
         User existingUser = User.builder().id(10L).username("johndoe").build();
         Employee employee = Employee.builder().user(existingUser).build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, null, null
         );
 
         service.assignUser(employee, dto, null);
@@ -337,7 +337,7 @@ class EmployeeDomainServiceTest {
     void assignUser_shouldThrowWhenUserNotFound() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, 99L
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, 99L, null
         );
 
         when(userRepository.findByIdAndDeletedAtIsNull(99L)).thenReturn(Optional.empty());
@@ -351,7 +351,7 @@ class EmployeeDomainServiceTest {
     void assignUser_shouldThrowWhenUserAlreadyAssignedToAnotherEmployee() {
         Employee employee = Employee.builder().build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, 10L
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, 10L, null
         );
 
         Company company = new Company();
@@ -374,7 +374,7 @@ class EmployeeDomainServiceTest {
         User user = User.builder().id(10L).username("johndoe").company(company).build();
         Employee employee = Employee.builder().id(99L).user(user).build();
         EmployeeRequestDto dto = new EmployeeRequestDto(
-                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, 10L
+                "John", "Connor", "john@example.com", "123", 1L, Set.of(1L), null, null, null, null, null, 10L, null
         );
 
         when(userRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(user));

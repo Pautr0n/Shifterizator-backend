@@ -57,7 +57,8 @@ public class EmployeeMapper {
                 employee.getCreatedAt(),
                 employee.getUpdatedAt(),
                 employee.getUser() != null ? employee.getUser().getId() : null,
-                employee.getUser() != null ? employee.getUser().getUsername() : null
+                employee.getUser() != null ? employee.getUser().getUsername() : null,
+                employee.getProfilePictureUrl()
         );
     }
 

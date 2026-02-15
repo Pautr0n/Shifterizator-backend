@@ -11,6 +11,7 @@ public record UserResponseDto(
         @Schema(description = "Role") String role,
         @Schema(description = "Company ID") Long companyId,
         @Schema(description = "Whether the user is active") Boolean isActive,
+        @Schema(description = "Profile picture URL") String profilePictureUrl,
         @Schema(description = "Created by username") String createdBy,
         @Schema(description = "Updated by username") String updatedBy
 ) {

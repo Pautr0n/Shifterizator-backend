@@ -139,6 +139,7 @@ class EmployeeLifecycleFlowIT extends BaseIntegrationTest {
                 "FRIDAY",
                 5,
                 List.of(),
+                null,
                 null
         );
 

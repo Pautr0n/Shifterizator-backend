@@ -56,6 +56,9 @@ public class Employee {
     @JoinColumn(name = "user_id", unique = true)
     private User user;
 
+    @Column(name = "profile_picture_url", length = 512)
+    private String profilePictureUrl;
+
     @OneToMany(
             mappedBy = "employee",
             cascade = CascadeType.ALL,

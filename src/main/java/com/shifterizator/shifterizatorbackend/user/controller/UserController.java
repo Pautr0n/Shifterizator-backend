@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.user.controller;
 
+import com.shifterizator.shifterizatorbackend.auth.service.CurrentUserService;
 import com.shifterizator.shifterizatorbackend.user.dto.AssignableUserDto;
+import com.shifterizator.shifterizatorbackend.user.dto.ProfilePictureUpdateDto;
 import com.shifterizator.shifterizatorbackend.user.dto.ResetPasswordRequestDto;
 import com.shifterizator.shifterizatorbackend.user.dto.UserRequestDto;
 import com.shifterizator.shifterizatorbackend.user.dto.UserResponseDto;
@@ -36,6 +38,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+    private final CurrentUserService currentUserService;
 
     @Operation(summary = "Create user", description = "Creates a new user. Restricted to SUPERADMIN or COMPANYADMIN (company-scoped).", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses(value = {
@@ -127,6 +130,18 @@ public class UserController {
     ) {
         userService.resetPassword(id, dto.newPassword());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Update my profile picture", description = "Sets the profile picture URL for the authenticated user.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profile picture updated"),
+            @ApiResponse(responseCode = "400", description = "Validation error")
+    })
+    @PatchMapping("/me/profile-picture")
+    public ResponseEntity<UserResponseDto> updateMyProfilePicture(@Valid @RequestBody ProfilePictureUpdateDto dto) {
+        long userId = currentUserService.getCurrentUser().getId();
+        User updated = userService.updateProfilePicture(userId, dto.profilePictureUrl());
+        return ResponseEntity.ok(userMapper.toDto(updated));
     }
 
     @Operation(summary = "Get user by ID", description = "Retrieves a user by ID.", security = @SecurityRequirement(name = "Bearer Authentication"))

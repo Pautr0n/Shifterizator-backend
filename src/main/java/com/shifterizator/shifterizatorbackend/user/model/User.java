@@ -66,7 +66,10 @@ public class User {
     private String updatedBy;
     private LocalDateTime deletedAt;
 
+    @Column(name = "profile_picture_url", length = 512)
+    private String profilePictureUrl;
+
     public User(String username, String email, String password, Role role, Company company) {
-        this(null, username, false, email, null, password, role, company, null, true, null, null, null, null, null);
+        this(null, username, false, email, null, password, role, company, null, true, null, null, null, null, null, null);
     }
 }
