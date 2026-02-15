@@ -73,8 +73,7 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
         existing.setDate(dto.date());
         existing.setStartTime(dto.startTime());
         existing.setEndTime(dto.endTime());
-        existing.setRequiredEmployees(dto.requiredEmployees());
-        existing.setIdealEmployees(dto.idealEmployees());
+        // requiredEmployees and idealEmployees are read-only (computed from template required positions)
         existing.setNotes(dto.notes());
 
         return existing;

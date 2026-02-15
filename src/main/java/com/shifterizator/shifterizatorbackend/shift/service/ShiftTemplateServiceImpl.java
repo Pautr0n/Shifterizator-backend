@@ -39,6 +39,7 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         List<LanguageRequirementDto> langReqs = buildLanguageRequirementsFromDto(dto);
         shiftTemplateDomainService.buildLanguageRequirements(template, langReqs);
         shiftTemplateDomainService.buildPositionRequirements(template, dto.requiredPositions());
+        shiftTemplateDomainService.validateAtLeastOneRequiredPosition(template);
         shiftTemplateDomainService.applyComputedRequiredAndIdeal(template);
 
         return shiftTemplateRepository.save(template);
@@ -67,6 +68,7 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         List<LanguageRequirementDto> langReqs = buildLanguageRequirementsFromDto(dto);
         shiftTemplateDomainService.buildLanguageRequirements(existing, langReqs);
         shiftTemplateDomainService.buildPositionRequirements(existing, dto.requiredPositions());
+        shiftTemplateDomainService.validateAtLeastOneRequiredPosition(existing);
         shiftTemplateDomainService.applyComputedRequiredAndIdeal(existing);
 
         return existing;

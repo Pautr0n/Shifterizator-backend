@@ -97,12 +97,26 @@ class ShiftTemplateServiceImplTest {
         when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
         when(shiftTemplateMapper.toEntity(dto, location)).thenReturn(template);
         when(shiftTemplateRepository.save(any(ShiftTemplate.class))).thenReturn(saved);
+        doAnswer(inv -> {
+            ShiftTemplate t = inv.getArgument(0);
+            for (PositionRequirementDto req : dto.requiredPositions()) {
+                Position pos = req.positionId() == 1L ? position1 : position2;
+                var stp = com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition.builder()
+                        .shiftTemplate(t)
+                        .position(pos)
+                        .requiredCount(req.requiredCount())
+                        .build();
+                t.getRequiredPositions().add(stp);
+            }
+            return null;
+        }).when(shiftTemplateDomainService).buildPositionRequirements(template, dto.requiredPositions());
 
         ShiftTemplate result = service.create(dto);
 
         assertThat(result.getId()).isEqualTo(99L);
         verify(shiftTemplateDomainService).buildLanguageRequirements(eq(template), any());
         verify(shiftTemplateDomainService).buildPositionRequirements(template, dto.requiredPositions());
+        verify(shiftTemplateDomainService).validateAtLeastOneRequiredPosition(template);
         verify(shiftTemplateDomainService).applyComputedRequiredAndIdeal(template);
         verify(shiftTemplateRepository).save(any(ShiftTemplate.class));
     }

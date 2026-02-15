@@ -94,6 +94,23 @@ public class ShiftTemplateDomainService {
         template.setRequiredPositions(positions);
     }
 
+    /**
+     * Validates that the template has at least one required position with requiredCount >= 1.
+     * Call after buildPositionRequirements. Fails if requiredPositions is null, empty, or no position has requiredCount >= 1.
+     */
+    public void validateAtLeastOneRequiredPosition(ShiftTemplate template) {
+        if (template.getRequiredPositions() == null || template.getRequiredPositions().isEmpty()) {
+            throw new ShiftValidationException(
+                    "Shift template must have at least one required position with required count >= 1");
+        }
+        boolean hasRequired = template.getRequiredPositions().stream()
+                .anyMatch(stp -> stp.getRequiredCount() != null && stp.getRequiredCount() >= 1);
+        if (!hasRequired) {
+            throw new ShiftValidationException(
+                    "Shift template must have at least one required position with required count >= 1");
+        }
+    }
+
     public void applyComputedRequiredAndIdeal(ShiftTemplate template) {
         if (template.getRequiredPositions() == null || template.getRequiredPositions().isEmpty()) {
             return;

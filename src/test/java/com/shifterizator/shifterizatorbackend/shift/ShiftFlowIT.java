@@ -12,6 +12,8 @@ import com.shifterizator.shifterizatorbackend.company.dto.LocationRequestDto;
 import com.shifterizator.shifterizatorbackend.company.dto.LocationResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.PositionDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.GenerateMonthRequestDto;
+import com.shifterizator.shifterizatorbackend.shift.dto.GenerateRangeRequestDto;
+import com.shifterizator.shifterizatorbackend.shift.dto.GenerateRangeResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateResponseDto;
@@ -435,5 +437,107 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
         assertThat(badResult.getResponse().getContentAsString()).contains("marked as");
+    }
+
+    @Test
+    @DisplayName("Generate-and-schedule range: two templates (morning + afternoon), instances created and employees assigned")
+    void generateAndScheduleRangeCreatesInstancesAndAssignsEmployees() throws Exception {
+        String adminToken = loginAndGetBearerToken("admin", "Admin123!");
+        Long companyId = createCompany(adminToken, "range");
+        Long locationId = createLocation(adminToken, companyId, "range");
+        Long positionId = createPosition(adminToken, companyId);
+        createEmployee(adminToken, companyId, positionId, locationId, "1");
+        createEmployee(adminToken, companyId, positionId, locationId, "2");
+
+        // Morning shift 09:00–13:00
+        ShiftTemplateRequestDto morningTemplate = new ShiftTemplateRequestDto(
+                locationId,
+                List.of(new PositionRequirementDto(positionId, 1, null)),
+                LocalTime.of(9, 0),
+                LocalTime.of(13, 0),
+                "Morning shift",
+                null,
+                null,
+                true,
+                1
+        );
+        MvcResult morningResult = mockMvc.perform(post("/api/shift-templates")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(morningTemplate)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andReturn();
+        ShiftTemplateResponseDto morning = objectMapper.readValue(
+                morningResult.getResponse().getContentAsString(),
+                ShiftTemplateResponseDto.class
+        );
+
+        // Afternoon shift 14:00–18:00
+        ShiftTemplateRequestDto afternoonTemplate = new ShiftTemplateRequestDto(
+                locationId,
+                List.of(new PositionRequirementDto(positionId, 1, null)),
+                LocalTime.of(14, 0),
+                LocalTime.of(18, 0),
+                "Afternoon shift",
+                null,
+                null,
+                true,
+                2
+        );
+        mockMvc.perform(post("/api/shift-templates")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(afternoonTemplate)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists());
+
+        // Monday–Sunday range
+        LocalDate monday = LocalDate.of(2026, 2, 2);
+        LocalDate sunday = LocalDate.of(2026, 2, 8);
+        GenerateRangeRequestDto rangeRequest = new GenerateRangeRequestDto(
+                locationId,
+                monday,
+                sunday,
+                true
+        );
+
+        MvcResult generateResult = mockMvc.perform(post("/api/shift-instances/generate-and-schedule-range")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rangeRequest)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        GenerateRangeResponseDto response = objectMapper.readValue(
+                generateResult.getResponse().getContentAsString(),
+                GenerateRangeResponseDto.class
+        );
+        assertThat(response.count()).isGreaterThan(0);
+        assertThat(response.instances()).isNotEmpty();
+
+        // Verify instances have requiredEmployees from template (sum of positions)
+        assertThat(response.instances())
+                .allMatch(i -> i.requiredEmployees() != null && i.requiredEmployees() >= 1);
+
+        // Fetch by range and verify at least one instance has at least one assignment
+        MvcResult rangeResult = mockMvc.perform(get("/api/shift-instances/by-location/{locationId}/range", locationId)
+                        .header("Authorization", adminToken)
+                        .param("startDate", monday.toString())
+                        .param("endDate", sunday.toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<ShiftInstanceResponseDto> instances = objectMapper.readValue(
+                rangeResult.getResponse().getContentAsString(),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, ShiftInstanceResponseDto.class)
+        );
+        assertThat(instances).isNotEmpty();
+        long withAssignments = instances.stream()
+                .filter(i -> i.assignedEmployees() != null && i.assignedEmployees() > 0)
+                .count();
+        assertThat(withAssignments)
+                .as("At least one shift instance should have employees assigned after generate-and-schedule")
+                .isGreaterThan(0);
     }
 }

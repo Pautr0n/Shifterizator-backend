@@ -57,17 +57,20 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
 
         List<ShiftInstance> instances = loadAndSortInstancesByPriority(locationId, date);
         if (instances.isEmpty()) {
+            log.info("Skipped scheduling for {}: no shifts defined for this day", date);
             throw new ScheduleDaySkippedException("No shifts defined for this day.");
         }
 
         List<Employee> candidates = loadCandidatesForDay(locationId, date);
         if (candidates.isEmpty()) {
+            log.info("Skipped scheduling for {}: no candidates available on this date", date);
             throw new ScheduleDaySkippedException("No candidates available on: " + date);
         }
 
         List<Employee> candidatesWithinCap = filterByMaxShiftsPerWeek(
                 candidates, date, location.getFirstDayOfWeek());
         if (candidatesWithinCap.isEmpty()) {
+            log.info("Skipped scheduling for {}: no candidates under max shifts/week available", date);
             throw new ScheduleDaySkippedException("No candidates under 5 shifts/week available on: " + date);
         }
 
@@ -83,7 +86,9 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
             try {
                 scheduleDayRunner.runScheduleDay(locationId, date);
             } catch (ScheduleDaySkippedException e) {
-                log.debug("Skipped scheduling for {}: {}", date, e.getMessage());
+                log.info("Skipped scheduling for {}: {}", date, e.getMessage());
+            } catch (Exception e) {
+                log.warn("Scheduling failed for {} (continuing with next day): {}", date, e.getMessage(), e);
             }
         }
     }
@@ -106,7 +111,7 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
 
     private List<ShiftInstance> loadAndSortInstancesByPriority(Long locationId, LocalDate date) {
         List<ShiftInstance> list = shiftInstanceRepository
-                .findByLocation_IdAndDateAndDeletedAtIsNullOrderByStartTimeAsc(locationId, date);
+                .findByLocationIdAndDateWithTemplateAndPositions(locationId, date);
         return list.stream()
                 .sorted(Comparator
                         .comparing(ShiftInstance::getShiftTemplate,
@@ -171,7 +176,12 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
     }
 
     private int getIdealTarget(ShiftInstance instance) {
-        return instance.getIdealEmployees() != null ? instance.getIdealEmployees() : instance.getRequiredEmployees();
+        int required = getRequiredEmployeesSafe(instance);
+        return instance.getIdealEmployees() != null ? instance.getIdealEmployees() : required;
+    }
+
+    private int getRequiredEmployeesSafe(ShiftInstance instance) {
+        return instance.getRequiredEmployees() != null ? instance.getRequiredEmployees() : 1;
     }
 
     private boolean shiftNeedsMore(ShiftInstance instance, int targetCount) {
@@ -183,8 +193,8 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         try {
             shiftAssignmentService.assign(new ShiftAssignmentRequestDto(shiftInstanceId, employeeId));
             return true;
-        } catch (ShiftValidationException e) {
-            log.trace("Assignment skipped: {}", e.getMessage());
+        } catch (Exception e) {
+            log.debug("Assignment skipped for shift {} employee {}: {}", shiftInstanceId, employeeId, e.getMessage());
             return false;
         }
     }
@@ -192,7 +202,7 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
     private void fillMinimumsForAllShifts(List<ShiftInstance> instances, List<Employee> candidates,
                                           LocalDate date, Long locationId) {
         for (ShiftInstance instance : instances) {
-            fillShiftUpTo(instance, instance.getRequiredEmployees(), candidates, date, locationId, instances);
+            fillShiftUpTo(instance, getRequiredEmployeesSafe(instance), candidates, date, locationId, instances);
         }
     }
 

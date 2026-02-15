@@ -17,6 +17,15 @@ public interface ShiftInstanceRepository extends JpaRepository<ShiftInstance, Lo
 
     List<ShiftInstance> findByLocation_IdAndDateAndDeletedAtIsNullOrderByStartTimeAsc(Long locationId, LocalDate date);
 
+    @Query("""
+            SELECT DISTINCT i FROM ShiftInstance i
+            LEFT JOIN FETCH i.shiftTemplate t
+            LEFT JOIN FETCH t.requiredPositions
+            WHERE i.location.id = :locationId AND i.date = :date AND i.deletedAt IS NULL
+            ORDER BY i.startTime
+            """)
+    List<ShiftInstance> findByLocationIdAndDateWithTemplateAndPositions(@Param("locationId") Long locationId, @Param("date") LocalDate date);
+
     List<ShiftInstance> findByLocation_IdAndDateAndShiftTemplate_IdAndDeletedAtIsNull(Long locationId, LocalDate date, Long shiftTemplateId);
 
     List<ShiftInstance> findByLocation_IdAndDateBetweenAndDeletedAtIsNullOrderByDateAscStartTimeAsc(Long locationId, LocalDate startDate, LocalDate endDate);

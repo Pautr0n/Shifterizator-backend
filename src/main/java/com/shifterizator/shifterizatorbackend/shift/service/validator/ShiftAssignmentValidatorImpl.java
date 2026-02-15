@@ -44,9 +44,16 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
 
     @Override
     public void validatePositionMatch(Employee employee, ShiftInstance shiftInstance) {
+        var requiredPositions = shiftInstance.getShiftTemplate() != null
+                ? shiftInstance.getShiftTemplate().getRequiredPositions()
+                : null;
+        if (requiredPositions == null || requiredPositions.isEmpty()) {
+            throw new ShiftValidationException(
+                    "Shift template has no required positions; at least one required position is mandatory for assignment");
+        }
         Long employeePositionId = employee.getPosition().getId();
-        boolean positionMatches = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
-                .anyMatch(stp -> stp.getPosition().getId().equals(employeePositionId));
+        boolean positionMatches = requiredPositions.stream()
+                .anyMatch(stp -> stp.getPosition() != null && employeePositionId.equals(stp.getPosition().getId()));
 
         if (!positionMatches) {
             throw new ShiftValidationException("Employee position does not match any required position for this shift template");
@@ -91,9 +98,16 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
 
     @Override
     public void validatePositionCapacity(Employee employee, ShiftInstance shiftInstance) {
+        var requiredPositions = shiftInstance.getShiftTemplate() != null
+                ? shiftInstance.getShiftTemplate().getRequiredPositions()
+                : null;
+        if (requiredPositions == null || requiredPositions.isEmpty()) {
+            throw new ShiftValidationException(
+                    "Shift template has no required positions; at least one required position is mandatory for assignment");
+        }
         Long employeePositionId = employee.getPosition().getId();
 
-        var positionReq = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
+        var positionReq = requiredPositions.stream()
                 .filter(stp -> stp.getPosition().getId().equals(employeePositionId))
                 .findFirst()
                 .orElse(null);

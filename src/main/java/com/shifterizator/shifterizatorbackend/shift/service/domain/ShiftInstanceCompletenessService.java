@@ -18,7 +18,14 @@ public class ShiftInstanceCompletenessService {
         List<ShiftAssignment> assignments = shiftAssignmentRepository.findByShiftInstance_IdAndDeletedAtIsNull(
                 shiftInstance.getId());
 
-        boolean isComplete = shiftInstance.getShiftTemplate().getRequiredPositions().stream()
+        var template = shiftInstance.getShiftTemplate();
+        var requiredPositions = template != null ? template.getRequiredPositions() : null;
+        if (requiredPositions == null || requiredPositions.isEmpty()) {
+            shiftInstance.setIsComplete(false);
+            return;
+        }
+
+        boolean isComplete = requiredPositions.stream()
                 .allMatch(stp -> {
                     long assignedCount = assignments.stream()
                             .filter(a -> a.getEmployee().getPosition().getId().equals(stp.getPosition().getId()))

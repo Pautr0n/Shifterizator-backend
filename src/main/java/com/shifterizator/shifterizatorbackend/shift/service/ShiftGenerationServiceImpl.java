@@ -191,14 +191,15 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
             return;
         }
         ShiftTemplate template = ctx.templates().get(0);
+        var requiredAndIdeal = requiredAndIdealFromTemplate(template);
         ShiftInstance instance = ShiftInstance.builder()
                 .shiftTemplate(template)
                 .location(ctx.location())
                 .date(date)
                 .startTime(special.getOpenTime())
                 .endTime(special.getCloseTime())
-                .requiredEmployees(template.getRequiredEmployees())
-                .idealEmployees(template.getIdealEmployees())
+                .requiredEmployees(requiredAndIdeal.required())
+                .idealEmployees(requiredAndIdeal.ideal())
                 .isComplete(false)
                 .build();
         created.add(shiftInstanceRepository.save(instance));
@@ -206,18 +207,40 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
 
     private void createInstancesForNormalDay(GenerationContext ctx, LocalDate date, List<ShiftInstance> created) {
         for (ShiftTemplate template : ctx.templates()) {
+            var requiredAndIdeal = requiredAndIdealFromTemplate(template);
             ShiftInstance instance = ShiftInstance.builder()
                     .shiftTemplate(template)
                     .location(ctx.location())
                     .date(date)
                     .startTime(template.getStartTime())
                     .endTime(template.getEndTime())
-                    .requiredEmployees(template.getRequiredEmployees())
-                    .idealEmployees(template.getIdealEmployees())
+                    .requiredEmployees(requiredAndIdeal.required())
+                    .idealEmployees(requiredAndIdeal.ideal())
                     .isComplete(false)
                     .build();
             created.add(shiftInstanceRepository.save(instance));
         }
+    }
+
+    /**
+     * Computes required and ideal employee counts from template: from requiredPositions when present and non-empty,
+     * otherwise from template's requiredEmployees/idealEmployees (default 1 for required).
+     */
+    private static record RequiredAndIdeal(int required, Integer ideal) {}
+
+    private static RequiredAndIdeal requiredAndIdealFromTemplate(ShiftTemplate template) {
+        if (template.getRequiredPositions() != null && !template.getRequiredPositions().isEmpty()) {
+            int required = template.getRequiredPositions().stream()
+                    .mapToInt(stp -> stp.getRequiredCount() != null ? stp.getRequiredCount() : 0)
+                    .sum();
+            int ideal = template.getRequiredPositions().stream()
+                    .mapToInt(stp -> stp.getIdealCount() != null ? stp.getIdealCount() : (stp.getRequiredCount() != null ? stp.getRequiredCount() : 0))
+                    .sum();
+            return new RequiredAndIdeal(required, ideal);
+        }
+        int required = template.getRequiredEmployees() != null ? template.getRequiredEmployees() : 1;
+        Integer ideal = template.getIdealEmployees();
+        return new RequiredAndIdeal(required, ideal);
     }
 
     private record GenerationContext(

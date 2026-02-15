@@ -223,7 +223,8 @@ class ShiftInstanceServiceImplTest {
 
         assertThat(result.getStartTime()).isEqualTo(LocalTime.of(10, 0));
         assertThat(result.getEndTime()).isEqualTo(LocalTime.of(18, 0));
-        assertThat(result.getRequiredEmployees()).isEqualTo(5);
+        // requiredEmployees and idealEmployees are read-only on update (computed from template)
+        assertThat(result.getRequiredEmployees()).isEqualTo(3);
         assertThat(result.getNotes()).isEqualTo("Updated notes");
     }
 
