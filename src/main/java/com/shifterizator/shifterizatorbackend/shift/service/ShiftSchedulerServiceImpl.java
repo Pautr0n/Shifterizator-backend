@@ -17,6 +17,8 @@ import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepo
 import com.shifterizator.shifterizatorbackend.shift.service.advisor.ShiftCandidateTierService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +46,10 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
     private final ShiftAssignmentService shiftAssignmentService;
     private final ShiftCandidateTierService shiftCandidateTierService;
     private final LocationService locationService;
+
+    @Lazy
+    @Autowired
+    private ScheduleDayRunner scheduleDayRunner;
 
     @Override
     public void scheduleDay(Long locationId, LocalDate date) {
@@ -75,7 +81,7 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
         validateRange(startDate, endDate);
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             try {
-                scheduleDay(locationId, date);
+                scheduleDayRunner.runScheduleDay(locationId, date);
             } catch (ScheduleDaySkippedException e) {
                 log.debug("Skipped scheduling for {}: {}", date, e.getMessage());
             }

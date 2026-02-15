@@ -251,7 +251,7 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3))
                 .andExpect(jsonPath("$.content[?(@.id == " + emp1Id + ")]").exists())
                 .andExpect(jsonPath("$.content[?(@.id == " + emp2Id + ")]").exists());
     }

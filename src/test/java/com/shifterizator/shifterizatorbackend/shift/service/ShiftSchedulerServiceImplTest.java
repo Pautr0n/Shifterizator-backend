@@ -50,6 +50,8 @@ class ShiftSchedulerServiceImplTest {
     private ShiftCandidateTierService shiftCandidateTierService;
     @Mock
     private LocationService locationService;
+    @Mock
+    private ScheduleDayRunner scheduleDayRunner;
 
     @InjectMocks
     private ShiftSchedulerServiceImpl scheduler;
