@@ -30,6 +30,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
@@ -60,6 +61,7 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(17, 0),
                 "Morning shift",
                 Set.of(),
+                null,
                 null,
                 true,
                 null
@@ -94,13 +96,13 @@ class ShiftTemplateServiceImplTest {
                 .build();
 
         when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
-        when(shiftTemplateDomainService.resolveLanguages(Set.of())).thenReturn(Set.of());
-        when(shiftTemplateMapper.toEntity(dto, location, Set.of())).thenReturn(template);
+        when(shiftTemplateMapper.toEntity(dto, location)).thenReturn(template);
         when(shiftTemplateRepository.save(any(ShiftTemplate.class))).thenReturn(saved);
 
         ShiftTemplate result = service.create(dto);
 
         assertThat(result.getId()).isEqualTo(99L);
+        verify(shiftTemplateDomainService).buildLanguageRequirements(eq(template), any());
         verify(shiftTemplateDomainService).buildPositionRequirements(template, dto.requiredPositions());
         verify(shiftTemplateRepository).save(any(ShiftTemplate.class));
     }
@@ -114,6 +116,7 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(17, 0),
                 "Test",
                 Set.of(),
+                null,
                 null,
                 true,
                 null
@@ -137,6 +140,7 @@ class ShiftTemplateServiceImplTest {
                 "Test",
                 Set.of(),
                 null,
+                null,
                 true,
                 null
         );
@@ -146,8 +150,7 @@ class ShiftTemplateServiceImplTest {
         Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
 
         when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
-        when(shiftTemplateDomainService.resolveLanguages(Set.of())).thenReturn(Set.of());
-        when(shiftTemplateMapper.toEntity(any(), any(), any())).thenReturn(ShiftTemplate.builder().build());
+        when(shiftTemplateMapper.toEntity(any(), any())).thenReturn(ShiftTemplate.builder().build());
         doThrow(new PositionNotFoundException("Position not found: 999"))
                 .when(shiftTemplateDomainService).buildPositionRequirements(any(), any());
 
@@ -165,6 +168,7 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(9, 0),
                 "Test",
                 Set.of(),
+                null,
                 null,
                 true,
                 null
@@ -192,6 +196,7 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(17, 0),
                 "Test",
                 Set.of(),
+                null,
                 0,
                 true,
                 null
@@ -206,8 +211,7 @@ class ShiftTemplateServiceImplTest {
                 .build();
 
         when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
-        when(shiftTemplateDomainService.resolveLanguages(Set.of())).thenReturn(Set.of());
-        when(shiftTemplateMapper.toEntity(any(), any(), any())).thenReturn(templateWithInvalidIdeal);
+        when(shiftTemplateMapper.toEntity(any(), any())).thenReturn(templateWithInvalidIdeal);
         doNothing().when(shiftTemplateDomainService).buildPositionRequirements(any(), any());
         doThrow(new ShiftValidationException("Ideal employees must be greater than or equal to required employees"))
                 .when(shiftTemplateDomainService).validateIdealEmployees(1, 0);
@@ -227,6 +231,7 @@ class ShiftTemplateServiceImplTest {
                 "Test",
                 Set.of(),
                 null,
+                null,
                 true,
                 null
         );
@@ -236,7 +241,6 @@ class ShiftTemplateServiceImplTest {
         Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
 
         when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
-        when(shiftTemplateDomainService.resolveLanguages(Set.of())).thenReturn(Set.of());
         doThrow(new ShiftValidationException("Ideal count per position must be greater than or equal to required count"))
                 .when(shiftTemplateDomainService).buildPositionRequirements(any(), argThat(
                         list -> list != null && list.size() == 1
@@ -259,6 +263,7 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(18, 0),
                 "Updated shift",
                 Set.of(),
+                null,
                 null,
                 true,
                 null
@@ -284,7 +289,6 @@ class ShiftTemplateServiceImplTest {
                 .build();
 
         when(shiftTemplateRepository.findById(99L)).thenReturn(Optional.of(existing));
-        when(shiftTemplateDomainService.resolveLanguages(Set.of())).thenReturn(Set.of());
         doAnswer(invocation -> {
             ShiftTemplate template = invocation.getArgument(0);
             List<PositionRequirementDto> requirements = invocation.getArgument(1);
@@ -319,6 +323,7 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(17, 0),
                 "Test",
                 Set.of(),
+                null,
                 null,
                 true,
                 null

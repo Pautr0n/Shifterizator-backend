@@ -4,9 +4,6 @@ import com.shifterizator.shifterizatorbackend.availability.model.AvailabilityTyp
 import com.shifterizator.shifterizatorbackend.availability.model.EmployeeAvailability;
 import com.shifterizator.shifterizatorbackend.availability.repository.EmployeeAvailabilityRepository;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
-import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLanguage;
-import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeLanguageRepository;
-import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftAssignment;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
@@ -15,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -24,7 +19,6 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
 
     private final ShiftAssignmentRepository shiftAssignmentRepository;
     private final EmployeeAvailabilityRepository employeeAvailabilityRepository;
-    private final EmployeeLanguageRepository employeeLanguageRepository;
 
     @Override
     public void validateNotAlreadyAssigned(Long shiftInstanceId, Long employeeId) {
@@ -79,23 +73,7 @@ public class ShiftAssignmentValidatorImpl implements ShiftAssignmentValidator {
 
     @Override
     public void validateLanguageRequirements(Employee employee, ShiftInstance shiftInstance) {
-        Set<Long> requiredLanguageIds = shiftInstance.getShiftTemplate().getRequiredLanguages().stream()
-                .map(Language::getId)
-                .collect(Collectors.toSet());
-
-        if (requiredLanguageIds.isEmpty()) {
-            return;
-        }
-
-        List<EmployeeLanguage> employeeLanguages = employeeLanguageRepository.findByEmployee_Id(employee.getId());
-        Set<Long> employeeLanguageIds = employeeLanguages.stream()
-                .map(el -> el.getLanguage().getId())
-                .collect(Collectors.toSet());
-
-        boolean hasAtLeastOne = requiredLanguageIds.stream().anyMatch(employeeLanguageIds::contains);
-        if (!hasAtLeastOne) {
-            throw new ShiftValidationException("Employee does not speak any of the required languages for this shift");
-        }
+        // Intentionally no-op: do not block assignment on language. Fill with available employees.
     }
 
     @Override

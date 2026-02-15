@@ -169,6 +169,7 @@ class EmployeeLifecycleFlowIT extends BaseIntegrationTest {
                 "Morning shift",
                 null,
                 null,
+                null,
                 true,
                 null
         );

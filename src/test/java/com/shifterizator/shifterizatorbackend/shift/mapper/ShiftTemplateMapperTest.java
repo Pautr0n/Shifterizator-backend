@@ -7,6 +7,7 @@ import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.shift.dto.PositionRequirementDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
+import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplateLanguageRequirement;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +52,12 @@ class ShiftTemplateMapperTest {
                 .build();
 
         template.setRequiredPositions(Set.of(stp1, stp2));
-        template.setRequiredLanguages(Set.of(language));
+        ShiftTemplateLanguageRequirement langReq = ShiftTemplateLanguageRequirement.builder()
+                .shiftTemplate(template)
+                .language(language)
+                .requiredCount(1)
+                .build();
+        template.setRequiredLanguageRequirements(Set.of(langReq));
 
         var dto = mapper.toDto(template);
 
@@ -61,6 +67,9 @@ class ShiftTemplateMapperTest {
         assertThat(dto.requiredPositions()).hasSize(2);
         assertThat(dto.totalRequiredEmployees()).isEqualTo(3);
         assertThat(dto.requiredLanguages()).contains("English");
+        assertThat(dto.requiredLanguageRequirements()).hasSize(1);
+        assertThat(dto.requiredLanguageRequirements().get(0).languageName()).isEqualTo("English");
+        assertThat(dto.requiredLanguageRequirements().get(0).requiredCount()).isEqualTo(1);
         assertThat(dto.priority()).isEqualTo(1);
     }
 
@@ -78,11 +87,12 @@ class ShiftTemplateMapperTest {
                 "Morning shift",
                 Set.of(),
                 null,
+                null,
                 true,
                 2
         );
 
-        ShiftTemplate entity = mapper.toEntity(dto, location, Set.of());
+        ShiftTemplate entity = mapper.toEntity(dto, location);
 
         assertThat(entity.getLocation()).isEqualTo(location);
         assertThat(entity.getStartTime()).isEqualTo(LocalTime.of(9, 0));

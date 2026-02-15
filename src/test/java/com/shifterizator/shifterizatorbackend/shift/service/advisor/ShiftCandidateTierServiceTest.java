@@ -10,6 +10,7 @@ import com.shifterizator.shifterizatorbackend.employee.model.EmployeeLanguage;
 import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
+import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplateLanguageRequirement;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,7 +60,7 @@ class ShiftCandidateTierServiceTest {
         ShiftTemplate template = ShiftTemplate.builder().id(1L).location(loc).build();
         ShiftTemplatePosition stp = ShiftTemplatePosition.builder().shiftTemplate(template).position(position).requiredCount(1).build();
         template.setRequiredPositions(Set.of(stp));
-        template.setRequiredLanguages(Set.of());
+        template.setRequiredLanguageRequirements(Set.of());
         Employee employee = Employee.builder()
                 .id(100L)
                 .position(position)
@@ -81,7 +82,7 @@ class ShiftCandidateTierServiceTest {
         Position position = Position.builder().id(1L).name("Cashier").company(loc.getCompany()).build();
         ShiftTemplate template = ShiftTemplate.builder().id(1L).location(loc).build();
         template.setRequiredPositions(Set.of());
-        template.setRequiredLanguages(Set.of());
+        template.setRequiredLanguageRequirements(Set.of());
         Employee employee = Employee.builder()
                 .id(100L)
                 .position(position)
@@ -104,7 +105,12 @@ class ShiftCandidateTierServiceTest {
         ShiftTemplate template = ShiftTemplate.builder().id(1L).location(loc).build();
         ShiftTemplatePosition stp = ShiftTemplatePosition.builder().shiftTemplate(template).position(position).requiredCount(1).build();
         template.setRequiredPositions(Set.of(stp));
-        template.setRequiredLanguages(Set.of(english));
+        ShiftTemplateLanguageRequirement langReq = ShiftTemplateLanguageRequirement.builder()
+                .shiftTemplate(template)
+                .language(english)
+                .requiredCount(1)
+                .build();
+        template.setRequiredLanguageRequirements(Set.of(langReq));
         Employee employee = Employee.builder()
                 .id(100L)
                 .position(position)

@@ -1,5 +1,7 @@
 package com.shifterizator.shifterizatorbackend.shift.dto;
 
+import com.shifterizator.shifterizatorbackend.shift.dto.LanguageRequirementResponseDto;
+
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +18,7 @@ public record ShiftTemplateResponseDto(
         Integer idealEmployees,
         String description,
         Set<String> requiredLanguages,
+        List<LanguageRequirementResponseDto> requiredLanguageRequirements,
         Boolean isActive,
         Integer priority,
         LocalDateTime createdAt,

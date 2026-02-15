@@ -9,9 +9,11 @@ import com.shifterizator.shifterizatorbackend.employee.repository.PositionReposi
 import com.shifterizator.shifterizatorbackend.language.exception.LanguageNotFoundException;
 import com.shifterizator.shifterizatorbackend.language.model.Language;
 import com.shifterizator.shifterizatorbackend.language.repository.LanguageRepository;
+import com.shifterizator.shifterizatorbackend.shift.dto.LanguageRequirementDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.PositionRequirementDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
+import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplateLanguageRequirement;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,32 @@ public class ShiftTemplateDomainService {
                 .map(id -> languageRepository.findById(id)
                         .orElseThrow(() -> new LanguageNotFoundException("Language not found")))
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Builds language requirements with required count per language.
+     * Skips entries with requiredCount == 0.
+     */
+    public void buildLanguageRequirements(ShiftTemplate template, List<LanguageRequirementDto> requirements) {
+        if (requirements == null || requirements.isEmpty()) {
+            template.getRequiredLanguageRequirements().clear();
+            return;
+        }
+        Set<ShiftTemplateLanguageRequirement> set = new HashSet<>();
+        for (LanguageRequirementDto req : requirements) {
+            if (req.requiredCount() == null || req.requiredCount() <= 0) {
+                continue;
+            }
+            Language language = languageRepository.findById(req.languageId())
+                    .orElseThrow(() -> new LanguageNotFoundException("Language not found: " + req.languageId()));
+            set.add(ShiftTemplateLanguageRequirement.builder()
+                    .shiftTemplate(template)
+                    .language(language)
+                    .requiredCount(req.requiredCount())
+                    .build());
+        }
+        template.getRequiredLanguageRequirements().clear();
+        template.getRequiredLanguageRequirements().addAll(set);
     }
 
     public void buildPositionRequirements(ShiftTemplate template, List<PositionRequirementDto> requirements) {

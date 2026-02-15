@@ -271,6 +271,7 @@ class PaginationAndSearchFlowIT extends BaseIntegrationTest {
                 "Search shift",
                 null,
                 null,
+                null,
                 true,
                 null
         );

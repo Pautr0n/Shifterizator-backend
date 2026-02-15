@@ -49,17 +49,17 @@ public class ShiftCandidateTierService {
     }
 
     private boolean meetsLanguageRequirements(Employee employee, ShiftInstance shiftInstance) {
-        Set<Long> requiredIds = shiftInstance.getShiftTemplate().getRequiredLanguages().stream()
-                .map(lang -> lang.getId())
-                .collect(Collectors.toSet());
-        if (requiredIds.isEmpty()) {
+        var requirements = shiftInstance.getShiftTemplate().getRequiredLanguageRequirements();
+        if (requirements == null || requirements.isEmpty()) {
             return true;
         }
+        Set<Long> requiredLanguageIds = requirements.stream()
+                .map(r -> r.getLanguage().getId())
+                .collect(Collectors.toSet());
         Set<Long> employeeLanguageIds = employeeLanguageRepository.findByEmployee_Id(employee.getId()).stream()
                 .map(el -> el.getLanguage().getId())
                 .collect(Collectors.toSet());
-
-        return requiredIds.stream().anyMatch(employeeLanguageIds::contains);
+        return requiredLanguageIds.stream().anyMatch(employeeLanguageIds::contains);
     }
 
     private boolean hasShiftTemplateInPreferences(Employee employee, ShiftInstance shiftInstance) {

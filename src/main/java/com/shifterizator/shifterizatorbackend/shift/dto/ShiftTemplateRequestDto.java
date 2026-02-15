@@ -29,6 +29,9 @@ public record ShiftTemplateRequestDto(
 
         Set<Long> requiredLanguageIds,
 
+        @Valid
+        List<LanguageRequirementDto> requiredLanguageRequirements,
+
         Integer idealEmployees,
 
         @NotNull(message = "Is active flag is required")

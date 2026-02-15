@@ -75,7 +75,7 @@ class ShiftTemplateControllerTest {
 
     private String toJson(long locationId, String startTime, String endTime, String description, boolean isActive) {
         return String.format(
-                "{\"locationId\":%d,\"requiredPositions\":[{\"positionId\":1,\"requiredCount\":2},{\"positionId\":2,\"requiredCount\":1}],\"startTime\":\"%s\",\"endTime\":\"%s\",\"description\":\"%s\",\"requiredLanguageIds\":[],\"isActive\":%b}",
+                "{\"locationId\":%d,\"requiredPositions\":[{\"positionId\":1,\"requiredCount\":2},{\"positionId\":2,\"requiredCount\":1}],\"startTime\":\"%s\",\"endTime\":\"%s\",\"description\":\"%s\",\"requiredLanguageIds\":[],\"requiredLanguageRequirements\":null,\"isActive\":%b}",
                 locationId, startTime, endTime, description, isActive);
     }
 
@@ -108,6 +108,7 @@ class ShiftTemplateControllerTest {
                 null,
                 "Morning shift",
                 Set.of(),
+                List.of(),
                 true,
                 1,
                 null,

@@ -1,12 +1,13 @@
 package com.shifterizator.shifterizatorbackend.shift.mapper;
 
+import com.shifterizator.shifterizatorbackend.shift.dto.LanguageRequirementResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.PositionRequirementResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
+import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplateLanguageRequirement;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplatePosition;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
-import com.shifterizator.shifterizatorbackend.language.model.Language;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -36,9 +37,18 @@ public class ShiftTemplateMapper {
                 .sum()
                 : 0;
 
-        Set<String> languages = template.getRequiredLanguages() != null
-                ? template.getRequiredLanguages().stream()
-                .map(Language::getName)
+        List<LanguageRequirementResponseDto> languageReqs = template.getRequiredLanguageRequirements() != null
+                ? template.getRequiredLanguageRequirements().stream()
+                .map(r -> new LanguageRequirementResponseDto(
+                        r.getLanguage().getId(),
+                        r.getLanguage().getName(),
+                        r.getRequiredCount()))
+                .collect(Collectors.toList())
+                : List.of();
+
+        Set<String> languageNames = template.getRequiredLanguageRequirements() != null
+                ? template.getRequiredLanguageRequirements().stream()
+                .map(r -> r.getLanguage().getName())
                 .collect(Collectors.toSet())
                 : Set.of();
 
@@ -52,7 +62,8 @@ public class ShiftTemplateMapper {
                 totalRequiredEmployees,
                 template.getIdealEmployees(),
                 template.getDescription(),
-                languages,
+                languageNames,
+                languageReqs,
                 template.getIsActive(),
                 template.getPriority(),
                 template.getCreatedAt(),
@@ -62,14 +73,13 @@ public class ShiftTemplateMapper {
         );
     }
 
-    public ShiftTemplate toEntity(ShiftTemplateRequestDto dto, Location location, Set<Language> languages) {
+    public ShiftTemplate toEntity(ShiftTemplateRequestDto dto, Location location) {
         return ShiftTemplate.builder()
                 .location(location)
                 .startTime(dto.startTime())
                 .endTime(dto.endTime())
                 .description(dto.description())
                 .idealEmployees(dto.idealEmployees())
-                .requiredLanguages(languages != null ? languages : Set.of())
                 .isActive(dto.isActive() != null ? dto.isActive() : true)
                 .priority(dto.priority())
                 .build();

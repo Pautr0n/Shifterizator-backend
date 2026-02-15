@@ -52,14 +52,13 @@ public class ShiftTemplate {
     @Column(length = 200)
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "shift_template_languages",
-            joinColumns = @JoinColumn(name = "shift_template_id"),
-            inverseJoinColumns = @JoinColumn(name = "language_id")
+    @OneToMany(
+            mappedBy = "shiftTemplate",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
     )
     @Builder.Default
-    private Set<com.shifterizator.shifterizatorbackend.language.model.Language> requiredLanguages = new HashSet<>();
+    private Set<ShiftTemplateLanguageRequirement> requiredLanguageRequirements = new HashSet<>();
 
     @Column(nullable = false)
     @Builder.Default

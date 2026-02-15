@@ -1,6 +1,7 @@
 package com.shifterizator.shifterizatorbackend.shift.service;
 
 import com.shifterizator.shifterizatorbackend.company.model.Location;
+import com.shifterizator.shifterizatorbackend.shift.dto.LanguageRequirementDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftTemplateRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftTemplateNotFoundException;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftTemplateMapper;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -32,9 +35,9 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         Location location = shiftTemplateDomainService.resolveLocation(dto.locationId());
         shiftTemplateDomainService.validateTimes(dto.startTime(), dto.endTime());
 
-        var languages = shiftTemplateDomainService.resolveLanguages(dto.requiredLanguageIds());
-        ShiftTemplate template = shiftTemplateMapper.toEntity(dto, location, languages);
-
+        ShiftTemplate template = shiftTemplateMapper.toEntity(dto, location);
+        List<LanguageRequirementDto> langReqs = buildLanguageRequirementsFromDto(dto);
+        shiftTemplateDomainService.buildLanguageRequirements(template, langReqs);
         shiftTemplateDomainService.buildPositionRequirements(template, dto.requiredPositions());
         shiftTemplateDomainService.validateIdealEmployees(template.getRequiredEmployees(), template.getIdealEmployees());
 
@@ -53,21 +56,37 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         }
 
         shiftTemplateDomainService.validateTimes(dto.startTime(), dto.endTime());
-        var languages = shiftTemplateDomainService.resolveLanguages(dto.requiredLanguageIds());
 
         existing.setLocation(location);
         existing.setStartTime(dto.startTime());
         existing.setEndTime(dto.endTime());
         existing.setDescription(dto.description());
         existing.setIdealEmployees(dto.idealEmployees());
-        existing.setRequiredLanguages(languages);
         existing.setIsActive(dto.isActive() != null ? dto.isActive() : true);
         existing.setPriority(dto.priority());
 
+        List<LanguageRequirementDto> langReqs = buildLanguageRequirementsFromDto(dto);
+        shiftTemplateDomainService.buildLanguageRequirements(existing, langReqs);
         shiftTemplateDomainService.buildPositionRequirements(existing, dto.requiredPositions());
         shiftTemplateDomainService.validateIdealEmployees(existing.getRequiredEmployees(), existing.getIdealEmployees());
 
         return existing;
+    }
+
+
+    private List<LanguageRequirementDto> buildLanguageRequirementsFromDto(ShiftTemplateRequestDto dto) {
+        if (dto.requiredLanguageRequirements() != null && !dto.requiredLanguageRequirements().isEmpty()) {
+            return dto.requiredLanguageRequirements();
+        }
+        Set<Long> ids = dto.requiredLanguageIds();
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        List<LanguageRequirementDto> list = new ArrayList<>();
+        for (Long languageId : ids) {
+            list.add(new LanguageRequirementDto(languageId, 1));
+        }
+        return list;
     }
 
     @Override
