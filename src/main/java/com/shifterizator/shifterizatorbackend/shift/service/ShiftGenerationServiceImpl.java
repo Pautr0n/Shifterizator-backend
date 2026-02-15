@@ -10,6 +10,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceDomainService;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 public class ShiftGenerationServiceImpl implements ShiftGenerationService {
+
+    private static final int MAX_RANGE_DAYS = 56;
 
     private final ShiftInstanceDomainService shiftInstanceDomainService;
     private final ShiftTemplateRepository shiftTemplateRepository;
@@ -59,6 +63,75 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
         }
 
         return created;
+    }
+
+    @Override
+    public List<ShiftInstance> generateRange(Long locationId, LocalDate startDate, LocalDate endDate) {
+        validateRange(startDate, endDate);
+        GenerationContext ctx = loadContextForRange(locationId, startDate, endDate);
+        List<ShiftInstance> created = new ArrayList<>();
+
+        for (LocalDate date = ctx.firstDay(); !date.isAfter(ctx.lastDay()); date = date.plusDays(1)) {
+            shiftInstanceRepository.softDeleteByLocationAndDate(ctx.locationId(), date, ctx.deletedAt());
+
+            if (ctx.blackoutDates().contains(date)) {
+                continue;
+            }
+
+            SpecialOpeningHours special = ctx.specialByDate().get(date);
+
+            if (special != null) {
+                createInstancesForSpecialDay(ctx, date, special, created);
+            } else if (isWeekdayClosedForLocation(ctx.location(), date)) {
+                continue;
+            } else {
+                createInstancesForNormalDay(ctx, date, created);
+            }
+        }
+
+        return created;
+    }
+
+    private void validateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate.getDayOfWeek() != DayOfWeek.MONDAY) {
+            throw new ShiftValidationException("Start date must be a Monday");
+        }
+        if (endDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
+            throw new ShiftValidationException("End date must be a Sunday");
+        }
+        if (endDate.isBefore(startDate)) {
+            throw new ShiftValidationException("End date must be on or after start date");
+        }
+        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        if (days > MAX_RANGE_DAYS) {
+            throw new ShiftValidationException("Range must not exceed 8 weeks");
+        }
+    }
+
+    private GenerationContext loadContextForRange(Long locationId, LocalDate startDate, LocalDate endDate) {
+        Location location = shiftInstanceDomainService.resolveLocation(locationId);
+
+        List<BlackoutDay> blackoutDays = blackoutDayService.findByLocationAndDateRange(locationId, startDate, endDate);
+        Set<LocalDate> blackoutDates = blackoutDays.stream().map(BlackoutDay::getDate).collect(Collectors.toSet());
+
+        List<SpecialOpeningHours> specialHoursList = specialOpeningHoursService.findByLocationAndDateRange(locationId, startDate, endDate);
+        Map<LocalDate, SpecialOpeningHours> specialByDate = specialHoursList.stream()
+                .collect(Collectors.toMap(SpecialOpeningHours::getDate, soh -> soh, (a, b) -> a));
+
+        List<ShiftTemplate> templates = shiftTemplateRepository
+                .findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId);
+        LocalDateTime deletedAt = LocalDateTime.now();
+
+        return new GenerationContext(
+                locationId,
+                location,
+                blackoutDates,
+                specialByDate,
+                templates,
+                startDate,
+                endDate,
+                deletedAt
+        );
     }
 
     private GenerationContext loadContext(Long locationId, YearMonth yearMonth) {

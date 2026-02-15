@@ -17,6 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
@@ -139,7 +140,16 @@ public class BlackoutDayServiceImpl implements BlackoutDayService {
         return blackoutDayRepository.findAll(spec);
     }
 
-    private void ensureNoOverlapWithSpecialOpeningHours(Long locationId, java.time.LocalDate date) {
+    @Override
+    @Transactional(readOnly = true)
+    public List<BlackoutDay> findByLocationAndDateRange(Long locationId, LocalDate start, LocalDate end) {
+        Specification<BlackoutDay> spec = BlackoutDaySpecs.notDeleted()
+                .and(BlackoutDaySpecs.byLocation(locationId))
+                .and(BlackoutDaySpecs.inDateRange(start, end));
+        return blackoutDayRepository.findAll(spec);
+    }
+
+    private void ensureNoOverlapWithSpecialOpeningHours(Long locationId, LocalDate date) {
         if (blackoutDayRepository.existsSpecialOpeningHoursForLocationAndDate(locationId, date)) {
             throw new BlackoutDayValidationException("A special opening hours record already exists for this location and date");
         }

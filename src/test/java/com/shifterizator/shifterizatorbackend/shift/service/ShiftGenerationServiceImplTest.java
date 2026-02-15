@@ -11,6 +11,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceDomainService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -269,5 +270,62 @@ class ShiftGenerationServiceImplTest {
         ShiftInstance onSunday = result.stream().filter(i -> i.getDate().equals(sunday)).findFirst().orElseThrow();
         assertThat(onSunday.getStartTime()).isEqualTo(LocalTime.of(10, 0));
         assertThat(onSunday.getEndTime()).isEqualTo(LocalTime.of(18, 0));
+    }
+
+    @Test
+    void generateRange_shouldThrowWhenStartNotMonday() {
+        LocalDate tuesday = LocalDate.of(2025, 2, 4);
+        LocalDate sunday = LocalDate.of(2025, 2, 9);
+        assertThatThrownBy(() -> service.generateRange(1L, tuesday, sunday))
+                .isInstanceOf(ShiftValidationException.class)
+                .hasMessage("Start date must be a Monday");
+        verify(shiftInstanceDomainService, never()).resolveLocation(any());
+    }
+
+    @Test
+    void generateRange_shouldThrowWhenEndNotSunday() {
+        LocalDate monday = LocalDate.of(2025, 2, 3);
+        LocalDate saturday = LocalDate.of(2025, 2, 8);
+        assertThatThrownBy(() -> service.generateRange(1L, monday, saturday))
+                .isInstanceOf(ShiftValidationException.class)
+                .hasMessage("End date must be a Sunday");
+        verify(shiftInstanceDomainService, never()).resolveLocation(any());
+    }
+
+    @Test
+    void generateRange_shouldThrowWhenRangeExceeds8Weeks() {
+        LocalDate monday = LocalDate.of(2025, 2, 3);
+        LocalDate sunday = LocalDate.of(2025, 4, 6);
+        assertThatThrownBy(() -> service.generateRange(1L, monday, sunday))
+                .isInstanceOf(ShiftValidationException.class)
+                .hasMessage("Range must not exceed 8 weeks");
+        verify(shiftInstanceDomainService, never()).resolveLocation(any());
+    }
+
+    @Test
+    void generateRange_shouldCreateInstancesForValidWeek() {
+        Long locationId = 1L;
+        Location loc = location(locationId);
+        ShiftTemplate t1 = template(1L, loc, LocalTime.of(9, 0), LocalTime.of(17, 0));
+        LocalDate monday = LocalDate.of(2025, 2, 3);
+        LocalDate sunday = LocalDate.of(2025, 2, 9);
+
+        when(shiftInstanceDomainService.resolveLocation(locationId)).thenReturn(loc);
+        when(blackoutDayService.findByLocationAndDateRange(locationId, monday, sunday)).thenReturn(List.of());
+        when(specialOpeningHoursService.findByLocationAndDateRange(locationId, monday, sunday)).thenReturn(List.of());
+        when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId))
+                .thenReturn(List.of(t1));
+        when(shiftInstanceRepository.softDeleteByLocationAndDate(any(), any(), any())).thenReturn(0);
+        when(shiftInstanceRepository.save(any(ShiftInstance.class))).thenAnswer(inv -> {
+            ShiftInstance i = inv.getArgument(0);
+            return ShiftInstance.builder().id(100L).shiftTemplate(i.getShiftTemplate()).location(i.getLocation())
+                    .date(i.getDate()).startTime(i.getStartTime()).endTime(i.getEndTime()).requiredEmployees(i.getRequiredEmployees()).build();
+        });
+
+        List<ShiftInstance> result = service.generateRange(locationId, monday, sunday);
+
+        assertThat(result).hasSize(7);
+        verify(blackoutDayService).findByLocationAndDateRange(locationId, monday, sunday);
+        verify(specialOpeningHoursService).findByLocationAndDateRange(locationId, monday, sunday);
     }
 }

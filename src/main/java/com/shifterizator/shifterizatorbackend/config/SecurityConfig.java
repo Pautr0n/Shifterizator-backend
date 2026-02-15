@@ -120,7 +120,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, "/api/shift-templates/**")
                                 .hasAnyRole("SUPERADMIN", "COMPANYADMIN", "SHIFTMANAGER")
                                 .requestMatchers("/api/shift-templates/**").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/shift-instances/generate-month",
+                                .requestMatchers(HttpMethod.POST, "/api/shift-instances/generate-month", "/api/shift-instances/generate-range",
                                         "/api/shift-instances/schedule-day", "/api/shift-instances/schedule-month")
                                 .hasAnyRole("SUPERADMIN", "COMPANYADMIN", "SHIFTMANAGER")
                                 .requestMatchers(HttpMethod.POST, "/api/shift-instances/**")

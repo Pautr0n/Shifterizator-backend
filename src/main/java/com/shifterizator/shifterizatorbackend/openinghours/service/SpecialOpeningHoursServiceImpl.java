@@ -17,6 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
@@ -139,6 +140,15 @@ public class SpecialOpeningHoursServiceImpl implements SpecialOpeningHoursServic
         Specification<SpecialOpeningHours> spec = SpecialOpeningHoursSpecs.notDeleted()
                 .and(SpecialOpeningHoursSpecs.byLocation(locationId))
                 .and(SpecialOpeningHoursSpecs.inMonth(yearMonth));
+        return openingHoursRepository.findAll(spec);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SpecialOpeningHours> findByLocationAndDateRange(Long locationId, LocalDate start, LocalDate end) {
+        Specification<SpecialOpeningHours> spec = SpecialOpeningHoursSpecs.notDeleted()
+                .and(SpecialOpeningHoursSpecs.byLocation(locationId))
+                .and(SpecialOpeningHoursSpecs.inDateRange(start, end));
         return openingHoursRepository.findAll(spec);
     }
 

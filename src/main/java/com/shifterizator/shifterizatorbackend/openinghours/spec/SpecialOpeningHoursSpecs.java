@@ -33,4 +33,11 @@ public final class SpecialOpeningHoursSpecs {
                 cb.lessThanOrEqualTo(root.get("date"), end)
         );
     }
+
+    public static Specification<SpecialOpeningHours> inDateRange(LocalDate start, LocalDate end) {
+        return (root, query, cb) -> cb.and(
+                cb.greaterThanOrEqualTo(root.get("date"), start),
+                cb.lessThanOrEqualTo(root.get("date"), end)
+        );
+    }
 }

@@ -1,6 +1,8 @@
 package com.shifterizator.shifterizatorbackend.shift.controller;
 
 import com.shifterizator.shifterizatorbackend.shift.dto.GenerateMonthRequestDto;
+import com.shifterizator.shifterizatorbackend.shift.dto.GenerateRangeRequestDto;
+import com.shifterizator.shifterizatorbackend.shift.dto.GenerateRangeResponseDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ScheduleDayRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceResponseDto;
@@ -63,6 +65,26 @@ public class ShiftInstanceController {
                 .map(i -> toDtoWithStatus(i))
                 .toList();
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+
+    @Operation(
+            summary = "Generate shift instances for a date range",
+            description = "Generates shift instances for a location from start date (Monday) to end date (Sunday), max 8 weeks. Returns count and list of created instances.",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Shift instances generated successfully"),
+            @ApiResponse(responseCode = "400", description = "Validation error (e.g. start not Monday, end not Sunday, range over 8 weeks)"),
+            @ApiResponse(responseCode = "404", description = "Location not found")
+    })
+    @PostMapping("/generate-range")
+    public ResponseEntity<GenerateRangeResponseDto> generateRange(@Valid @RequestBody GenerateRangeRequestDto dto) {
+        List<ShiftInstance> instances = shiftGenerationService.generateRange(dto.locationId(), dto.startDate(), dto.endDate());
+        List<ShiftInstanceResponseDto> dtos = instances.stream()
+                .map(this::toDtoWithStatus)
+                .toList();
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new GenerateRangeResponseDto(instances.size(), dtos));
     }
 
     @Operation(

@@ -3,6 +3,7 @@ package com.shifterizator.shifterizatorbackend.blackoutdays.spec;
 import com.shifterizator.shifterizatorbackend.blackoutdays.model.BlackoutDay;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 
 public final class BlackoutDaySpecs {
@@ -27,6 +28,13 @@ public final class BlackoutDaySpecs {
     public static Specification<BlackoutDay> inMonth(YearMonth yearMonth) {
         var start = yearMonth.atDay(1);
         var end = yearMonth.atEndOfMonth();
+        return (root, query, cb) -> cb.and(
+                cb.greaterThanOrEqualTo(root.get("date"), start),
+                cb.lessThanOrEqualTo(root.get("date"), end)
+        );
+    }
+
+    public static Specification<BlackoutDay> inDateRange(LocalDate start, LocalDate end) {
         return (root, query, cb) -> cb.and(
                 cb.greaterThanOrEqualTo(root.get("date"), start),
                 cb.lessThanOrEqualTo(root.get("date"), end)

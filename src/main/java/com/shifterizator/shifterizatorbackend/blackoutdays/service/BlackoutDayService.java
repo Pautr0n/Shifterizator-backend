@@ -5,6 +5,7 @@ import com.shifterizator.shifterizatorbackend.blackoutdays.model.BlackoutDay;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -23,4 +24,6 @@ public interface BlackoutDayService {
     List<BlackoutDay> findByLocation(Long locationId);
 
     List<BlackoutDay> findByLocationAndMonth(Long locationId, YearMonth yearMonth);
+
+    List<BlackoutDay> findByLocationAndDateRange(Long locationId, LocalDate start, LocalDate end);
 }

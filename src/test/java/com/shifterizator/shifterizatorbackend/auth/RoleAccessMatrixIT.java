@@ -169,6 +169,12 @@ class RoleAccessMatrixIT extends BaseIntegrationTest {
                     Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER)
             ),
             new EndpointExpectation(
+                    "Shift instances generate range",
+                    "POST",
+                    "/api/shift-instances/generate-range",
+                    Set.of(TestRole.SUPERADMIN, TestRole.COMPANYADMIN, TestRole.SHIFTMANAGER)
+            ),
+            new EndpointExpectation(
                     "Shift assignments by employee",
                     "GET",
                     "/api/shift-assignments/employee/1",

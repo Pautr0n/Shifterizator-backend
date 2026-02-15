@@ -7,6 +7,7 @@ import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceResponseDto;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.service.ShiftGenerationService;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFoundException;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftInstanceMapper;
@@ -201,6 +202,40 @@ class ShiftInstanceControllerTest {
                 .andExpect(jsonPath("$[0].locationId").value(10));
 
         verify(shiftGenerationService).generateMonth(10L, YearMonth.of(2025, 2));
+    }
+
+    @Test
+    void generateRange_shouldReturn201WithCountAndInstances() throws Exception {
+        LocalDate monday = LocalDate.of(2025, 2, 3);
+        LocalDate sunday = LocalDate.of(2025, 2, 9);
+        when(shiftGenerationService.generateRange(10L, monday, sunday)).thenReturn(List.of(instance));
+        when(shiftInstanceService.getAssignedCount(99L)).thenReturn(0);
+        when(requirementStatusService.getPositionRequirementStatus(instance)).thenReturn(List.of());
+        when(requirementStatusService.getLanguageRequirementStatus(instance)).thenReturn(List.of());
+        when(shiftInstanceMapper.toDto(eq(instance), eq(0), anyList(), anyList())).thenReturn(responseDto);
+
+        mockMvc.perform(post("/api/shift-instances/generate-range")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"locationId\":10,\"startDate\":\"2025-02-03\",\"endDate\":\"2025-02-09\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.count").value(1))
+                .andExpect(jsonPath("$.instances.length()").value(1))
+                .andExpect(jsonPath("$.instances[0].id").value(99));
+
+        verify(shiftGenerationService).generateRange(10L, monday, sunday);
+    }
+
+    @Test
+    void generateRange_shouldReturn400WhenStartNotMonday() throws Exception {
+        when(shiftGenerationService.generateRange(any(), any(), any()))
+                .thenThrow(new ShiftValidationException("Start date must be a Monday"));
+
+        mockMvc.perform(post("/api/shift-instances/generate-range")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"locationId\":10,\"startDate\":\"2025-02-04\",\"endDate\":\"2025-02-09\"}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
