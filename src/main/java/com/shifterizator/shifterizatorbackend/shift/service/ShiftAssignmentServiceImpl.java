@@ -27,7 +27,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(noRollbackFor = Exception.class)
 public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
 
     private final ShiftAssignmentRepository shiftAssignmentRepository;
@@ -40,9 +40,11 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
 
     @Override
     public ShiftAssignmentAssignResult assign(ShiftAssignmentRequestDto dto) {
-        ShiftInstance shiftInstance = shiftInstanceRepository.findById(dto.shiftInstanceId())
-                .filter(i -> i.getDeletedAt() == null)
+        System.out.println(">>> ENTER assign() for shift " + dto.shiftInstanceId());
+        ShiftInstance shiftInstance = shiftInstanceRepository.findByIdFullyLoaded(dto.shiftInstanceId())
                 .orElseThrow(() -> new ShiftInstanceNotFoundException("Shift instance not found"));
+
+        System.out.println("REQ POS = " + shiftInstance.getShiftTemplate().getRequiredPositions().size());
 
         Employee employee = employeeRepository.findById(dto.employeeId())
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));

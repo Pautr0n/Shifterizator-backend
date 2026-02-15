@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ShiftInstanceRepository extends JpaRepository<ShiftInstance, Long>, JpaSpecificationExecutor<ShiftInstance> {
@@ -29,6 +30,23 @@ public interface ShiftInstanceRepository extends JpaRepository<ShiftInstance, Lo
     List<ShiftInstance> findByLocation_IdAndDateAndShiftTemplate_IdAndDeletedAtIsNull(Long locationId, LocalDate date, Long shiftTemplateId);
 
     List<ShiftInstance> findByLocation_IdAndDateBetweenAndDeletedAtIsNullOrderByDateAscStartTimeAsc(Long locationId, LocalDate startDate, LocalDate endDate);
+
+    @Query("""
+                SELECT DISTINCT i FROM ShiftInstance i
+                LEFT JOIN FETCH i.shiftTemplate t
+                LEFT JOIN FETCH t.requiredPositions rp
+                LEFT JOIN FETCH rp.position p
+                WHERE i.id = :id AND i.deletedAt IS NULL
+            """)
+    Optional<ShiftInstance> findByIdFullyLoaded(@Param("id") Long id);
+
+    @Query("""
+                SELECT i FROM ShiftInstance i
+                LEFT JOIN FETCH i.shiftTemplate t
+                LEFT JOIN FETCH t.requiredPositions rp
+                WHERE i.id = :id AND i.deletedAt IS NULL
+            """)
+    Optional<ShiftInstance> findByIdWithTemplateAndPositions(@Param("id") Long id);
 
     @Query("""
             SELECT COUNT(sa) FROM ShiftAssignment sa

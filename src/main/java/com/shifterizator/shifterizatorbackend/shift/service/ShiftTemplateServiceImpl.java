@@ -47,8 +47,8 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
 
     @Override
     public ShiftTemplate update(Long id, ShiftTemplateRequestDto dto) {
-        ShiftTemplate existing = shiftTemplateRepository.findById(id)
-                .filter(t -> t.getDeletedAt() == null)
+        ShiftTemplate existing = shiftTemplateRepository.findByIdWithRequiredPositions(id).stream()
+                .findFirst()
                 .orElseThrow(() -> new ShiftTemplateNotFoundException("Shift template not found"));
 
         Location location = existing.getLocation();
@@ -67,6 +67,7 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
 
         List<LanguageRequirementDto> langReqs = buildLanguageRequirementsFromDto(dto);
         shiftTemplateDomainService.buildLanguageRequirements(existing, langReqs);
+        // Update existing rows by id, remove positions not in DTO, add only new positions (no duplicate key).
         shiftTemplateDomainService.buildPositionRequirements(existing, dto.requiredPositions());
         shiftTemplateDomainService.validateAtLeastOneRequiredPosition(existing);
         shiftTemplateDomainService.applyComputedRequiredAndIdeal(existing);

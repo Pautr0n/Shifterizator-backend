@@ -194,8 +194,9 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
             shiftAssignmentService.assign(new ShiftAssignmentRequestDto(shiftInstanceId, employeeId));
             return true;
         } catch (Exception e) {
-            log.debug("Assignment skipped for shift {} employee {}: {}", shiftInstanceId, employeeId, e.getMessage());
+            log.warn("Assignment skipped for shift {} employee {}: {}", shiftInstanceId, employeeId, e.getMessage());
             return false;
+
         }
     }
 
