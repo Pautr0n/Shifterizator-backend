@@ -75,7 +75,13 @@ public class ShiftTemplateDomainService {
     }
 
     public void buildPositionRequirements(ShiftTemplate template, List<PositionRequirementDto> requirements) {
-        Set<ShiftTemplatePosition> positions = new HashSet<>();
+        Set<ShiftTemplatePosition> set = template.getRequiredPositions();
+        if (set == null) {
+            set = new HashSet<>();
+            template.setRequiredPositions(set);
+        } else {
+            set.clear();
+        }
 
         for (PositionRequirementDto req : requirements) {
             validateIdealCount(req.requiredCount(), req.idealCount());
@@ -88,10 +94,8 @@ public class ShiftTemplateDomainService {
                     .requiredCount(req.requiredCount())
                     .idealCount(req.idealCount())
                     .build();
-            positions.add(templatePosition);
+            set.add(templatePosition);
         }
-
-        template.setRequiredPositions(positions);
     }
 
     /**
