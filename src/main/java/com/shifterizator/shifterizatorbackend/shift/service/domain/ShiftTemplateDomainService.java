@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,10 +49,6 @@ public class ShiftTemplateDomainService {
                 .collect(Collectors.toSet());
     }
 
-    /**
-     * Builds language requirements with required count per language.
-     * Skips entries with requiredCount == 0.
-     */
     public void buildLanguageRequirements(ShiftTemplate template, List<LanguageRequirementDto> requirements) {
         if (requirements == null || requirements.isEmpty()) {
             template.getRequiredLanguageRequirements().clear();
@@ -75,19 +72,49 @@ public class ShiftTemplateDomainService {
     }
 
     public void buildPositionRequirements(ShiftTemplate template, List<PositionRequirementDto> requirements) {
+        if (requirements == null || requirements.isEmpty()) {
+            if (template.getRequiredPositions() != null) {
+                template.getRequiredPositions().clear();
+            }
+            return;
+        }
+
         Set<ShiftTemplatePosition> set = template.getRequiredPositions();
         if (set == null) {
             set = new HashSet<>();
             template.setRequiredPositions(set);
-        } else {
-            set.clear();
         }
 
+        Map<Long, PositionRequirementDto> byPositionId = requirements.stream()
+                .collect(Collectors.toMap(PositionRequirementDto::positionId, r -> r, (a, b) -> a));
+
+        set.removeIf(stp -> {
+            Long posId = stp.getPosition() != null ? stp.getPosition().getId() : null;
+            if (posId == null) {
+                return true;
+            }
+            PositionRequirementDto dto = byPositionId.get(posId);
+            if (dto == null) {
+                return true;
+            }
+            validateIdealCount(dto.requiredCount(), dto.idealCount());
+            stp.setRequiredCount(dto.requiredCount());
+            stp.setIdealCount(dto.idealCount());
+            return false;
+        });
+
+        Set<Long> existingPositionIds = set.stream()
+                .map(stp -> stp.getPosition() != null ? stp.getPosition().getId() : null)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+
         for (PositionRequirementDto req : requirements) {
+            if (existingPositionIds.contains(req.positionId())) {
+                continue;
+            }
             validateIdealCount(req.requiredCount(), req.idealCount());
             Position position = positionRepository.findById(req.positionId())
                     .orElseThrow(() -> new PositionNotFoundException("Position not found: " + req.positionId()));
-
             ShiftTemplatePosition templatePosition = ShiftTemplatePosition.builder()
                     .shiftTemplate(template)
                     .position(position)
@@ -95,13 +122,10 @@ public class ShiftTemplateDomainService {
                     .idealCount(req.idealCount())
                     .build();
             set.add(templatePosition);
+            existingPositionIds.add(req.positionId());
         }
     }
 
-    /**
-     * Validates that the template has at least one required position with requiredCount >= 1.
-     * Call after buildPositionRequirements. Fails if requiredPositions is null, empty, or no position has requiredCount >= 1.
-     */
     public void validateAtLeastOneRequiredPosition(ShiftTemplate template) {
         if (template.getRequiredPositions() == null || template.getRequiredPositions().isEmpty()) {
             throw new ShiftValidationException(
