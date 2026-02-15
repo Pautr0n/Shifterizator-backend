@@ -16,6 +16,8 @@ public interface ShiftInstanceService {
 
     void delete(Long id, boolean hardDelete);
 
+    void deleteByIds(List<Long> ids);
+
     ShiftInstance findById(Long id);
 
     Page<ShiftInstance> search(Long locationId, LocalDate startDate, LocalDate endDate, Pageable pageable);

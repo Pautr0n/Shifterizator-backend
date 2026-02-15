@@ -10,6 +10,7 @@ import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceDomainService;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftGenerationConflictException;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -66,8 +67,22 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
     }
 
     @Override
-    public List<ShiftInstance> generateRange(Long locationId, LocalDate startDate, LocalDate endDate) {
+    public List<ShiftInstance> generateRange(Long locationId, LocalDate startDate, LocalDate endDate, boolean replaceExisting) {
         validateRange(startDate, endDate);
+        if (!replaceExisting) {
+            List<ShiftInstance> existing = shiftInstanceRepository
+                    .findByLocation_IdAndDateBetweenAndDeletedAtIsNullOrderByDateAscStartTimeAsc(locationId, startDate, endDate);
+            if (!existing.isEmpty()) {
+                List<LocalDate> existingDates = existing.stream()
+                        .map(ShiftInstance::getDate)
+                        .distinct()
+                        .sorted()
+                        .toList();
+                throw new ShiftGenerationConflictException(
+                        "Some dates already have shifts. Set replaceExisting=true to replace them.",
+                        existingDates);
+            }
+        }
         GenerationContext ctx = loadContextForRange(locationId, startDate, endDate);
         List<ShiftInstance> created = new ArrayList<>();
 

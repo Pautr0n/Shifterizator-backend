@@ -15,6 +15,8 @@ public record GenerateRangeRequestDto(
         LocalDate startDate,
         @Schema(description = "End date (must be Sunday)", example = "2025-02-09", required = true)
         @NotNull(message = "End date is required")
-        LocalDate endDate
+        LocalDate endDate,
+        @Schema(description = "If true, replace existing shifts on those dates; if false, return 409 when any date has existing shifts")
+        Boolean replaceExisting
 ) {
 }

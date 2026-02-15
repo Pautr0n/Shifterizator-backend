@@ -10,5 +10,5 @@ public interface ShiftGenerationService {
 
     List<ShiftInstance> generateMonth(Long locationId, YearMonth yearMonth);
 
-    List<ShiftInstance> generateRange(Long locationId, LocalDate startDate, LocalDate endDate);
+    List<ShiftInstance> generateRange(Long locationId, LocalDate startDate, LocalDate endDate, boolean replaceExisting);
 }

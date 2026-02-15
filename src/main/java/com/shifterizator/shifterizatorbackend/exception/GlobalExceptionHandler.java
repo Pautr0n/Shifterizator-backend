@@ -3,7 +3,8 @@ package com.shifterizator.shifterizatorbackend.exception;
 import com.shifterizator.shifterizatorbackend.auth.exception.AuthException;
 import com.shifterizator.shifterizatorbackend.auth.exception.InvalidCredentialsException;
 import com.shifterizator.shifterizatorbackend.auth.exception.InvalidRefreshTokenException;
-import com.shifterizator.shifterizatorbackend.shift.exception.ScheduleDaySkippedException;
+import com.shifterizator.shifterizatorbackend.shift.dto.ShiftGenerationConflictDto;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftGenerationConflictException;
 import com.shifterizator.shifterizatorbackend.user.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -87,6 +88,15 @@ public class GlobalExceptionHandler {
                 HttpStatus.UNAUTHORIZED.value()
         );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(ShiftGenerationConflictException.class)
+    public ResponseEntity<ShiftGenerationConflictDto> handleShiftGenerationConflict(ShiftGenerationConflictException ex) {
+        ShiftGenerationConflictDto body = new ShiftGenerationConflictDto(
+                ex.getMessage(),
+                ex.getExistingDates()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

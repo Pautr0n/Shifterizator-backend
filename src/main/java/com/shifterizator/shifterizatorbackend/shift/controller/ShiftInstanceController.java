@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.YearMonth;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/shift-instances")
@@ -79,7 +80,31 @@ public class ShiftInstanceController {
     })
     @PostMapping("/generate-range")
     public ResponseEntity<GenerateRangeResponseDto> generateRange(@Valid @RequestBody GenerateRangeRequestDto dto) {
-        List<ShiftInstance> instances = shiftGenerationService.generateRange(dto.locationId(), dto.startDate(), dto.endDate());
+        boolean replace = Boolean.TRUE.equals(dto.replaceExisting());
+        List<ShiftInstance> instances = shiftGenerationService.generateRange(dto.locationId(), dto.startDate(), dto.endDate(), replace);
+        List<ShiftInstanceResponseDto> dtos = instances.stream()
+                .map(this::toDtoWithStatus)
+                .toList();
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new GenerateRangeResponseDto(instances.size(), dtos));
+    }
+
+    @Operation(
+            summary = "Generate shift instances and schedule (assign employees) for a date range",
+            description = "Generates shift instances for the range then runs auto-assignment. One-step create and schedule. Use replaceExisting=true to replace existing shifts on those dates.",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Shifts generated and scheduled"),
+            @ApiResponse(responseCode = "409", description = "Some dates have existing shifts; send replaceExisting=true to replace"),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "404", description = "Location not found")
+    })
+    @PostMapping("/generate-and-schedule-range")
+    public ResponseEntity<GenerateRangeResponseDto> generateAndScheduleRange(@Valid @RequestBody GenerateRangeRequestDto dto) {
+        boolean replace = Boolean.TRUE.equals(dto.replaceExisting());
+        List<ShiftInstance> instances = shiftGenerationService.generateRange(dto.locationId(), dto.startDate(), dto.endDate(), replace);
+        shiftSchedulerService.scheduleRange(dto.locationId(), dto.startDate(), dto.endDate());
         List<ShiftInstanceResponseDto> dtos = instances.stream()
                 .map(this::toDtoWithStatus)
                 .toList();
@@ -167,6 +192,20 @@ public class ShiftInstanceController {
             @Parameter(description = "Shift instance ID", required = true) @PathVariable Long id,
             @Parameter(description = "If true, permanently delete even when assignments exist") @RequestParam(defaultValue = "false") boolean hardDelete) {
         shiftInstanceService.delete(id, hardDelete);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Delete multiple shift instances",
+            description = "Soft-deletes the given shift instances by ID.",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Shift instances deleted successfully")
+    })
+    @DeleteMapping("/bulk")
+    public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
+        shiftInstanceService.deleteByIds(ids != null ? ids : new ArrayList<>());
         return ResponseEntity.noContent().build();
     }
 

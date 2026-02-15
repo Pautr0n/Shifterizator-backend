@@ -2,6 +2,7 @@ package com.shifterizator.shifterizatorbackend.shift.service;
 
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftInstanceRequestDto;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftAlreadyExistsException;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFoundException;
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftInstanceMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
@@ -35,6 +36,14 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
         Location location = shiftInstanceDomainService.resolveLocation(dto.locationId());
         shiftInstanceDomainService.validateTimes(dto.startTime(), dto.endTime());
         shiftInstanceDomainService.validateIdealEmployees(dto.requiredEmployees(), dto.idealEmployees());
+
+        List<ShiftInstance> existingSame = shiftInstanceRepository
+                .findByLocation_IdAndDateAndShiftTemplate_IdAndDeletedAtIsNull(
+                        dto.locationId(), dto.date(), dto.shiftTemplateId());
+        if (!existingSame.isEmpty()) {
+            throw new ShiftAlreadyExistsException(
+                    "A shift with this template already exists for this date. Delete the existing shift or choose another date.");
+        }
 
         ShiftInstance instance = shiftInstanceMapper.toEntity(dto, template, location);
         return shiftInstanceRepository.save(instance);
@@ -80,6 +89,19 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
             shiftInstanceRepository.delete(instance);
         } else {
             instance.setDeletedAt(LocalDateTime.now());
+        }
+    }
+
+    @Override
+    public void deleteByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        for (Long id : ids) {
+            shiftInstanceRepository.findById(id)
+                    .filter(i -> i.getDeletedAt() == null)
+                    .ifPresent(i -> i.setDeletedAt(now));
         }
     }
 

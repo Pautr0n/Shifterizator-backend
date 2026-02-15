@@ -276,7 +276,7 @@ class ShiftGenerationServiceImplTest {
     void generateRange_shouldThrowWhenStartNotMonday() {
         LocalDate tuesday = LocalDate.of(2025, 2, 4);
         LocalDate sunday = LocalDate.of(2025, 2, 9);
-        assertThatThrownBy(() -> service.generateRange(1L, tuesday, sunday))
+        assertThatThrownBy(() -> service.generateRange(1L, tuesday, sunday, false))
                 .isInstanceOf(ShiftValidationException.class)
                 .hasMessage("Start date must be a Monday");
         verify(shiftInstanceDomainService, never()).resolveLocation(any());
@@ -286,7 +286,7 @@ class ShiftGenerationServiceImplTest {
     void generateRange_shouldThrowWhenEndNotSunday() {
         LocalDate monday = LocalDate.of(2025, 2, 3);
         LocalDate saturday = LocalDate.of(2025, 2, 8);
-        assertThatThrownBy(() -> service.generateRange(1L, monday, saturday))
+        assertThatThrownBy(() -> service.generateRange(1L, monday, saturday, false))
                 .isInstanceOf(ShiftValidationException.class)
                 .hasMessage("End date must be a Sunday");
         verify(shiftInstanceDomainService, never()).resolveLocation(any());
@@ -296,7 +296,7 @@ class ShiftGenerationServiceImplTest {
     void generateRange_shouldThrowWhenRangeExceeds8Weeks() {
         LocalDate monday = LocalDate.of(2025, 2, 3);
         LocalDate sunday = LocalDate.of(2025, 4, 6);
-        assertThatThrownBy(() -> service.generateRange(1L, monday, sunday))
+        assertThatThrownBy(() -> service.generateRange(1L, monday, sunday, false))
                 .isInstanceOf(ShiftValidationException.class)
                 .hasMessage("Range must not exceed 8 weeks");
         verify(shiftInstanceDomainService, never()).resolveLocation(any());
@@ -315,6 +315,8 @@ class ShiftGenerationServiceImplTest {
         when(specialOpeningHoursService.findByLocationAndDateRange(locationId, monday, sunday)).thenReturn(List.of());
         when(shiftTemplateRepository.findByLocation_IdAndDeletedAtIsNullAndIsActiveTrueOrderByPriorityAscStartTimeAsc(locationId))
                 .thenReturn(List.of(t1));
+        when(shiftInstanceRepository.findByLocation_IdAndDateBetweenAndDeletedAtIsNullOrderByDateAscStartTimeAsc(locationId, monday, sunday))
+                .thenReturn(List.of());
         when(shiftInstanceRepository.softDeleteByLocationAndDate(any(), any(), any())).thenReturn(0);
         when(shiftInstanceRepository.save(any(ShiftInstance.class))).thenAnswer(inv -> {
             ShiftInstance i = inv.getArgument(0);
@@ -322,7 +324,7 @@ class ShiftGenerationServiceImplTest {
                     .date(i.getDate()).startTime(i.getStartTime()).endTime(i.getEndTime()).requiredEmployees(i.getRequiredEmployees()).build();
         });
 
-        List<ShiftInstance> result = service.generateRange(locationId, monday, sunday);
+        List<ShiftInstance> result = service.generateRange(locationId, monday, sunday, false);
 
         assertThat(result).hasSize(7);
         verify(blackoutDayService).findByLocationAndDateRange(locationId, monday, sunday);
