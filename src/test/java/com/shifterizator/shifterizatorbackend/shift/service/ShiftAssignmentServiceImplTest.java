@@ -21,6 +21,7 @@ import com.shifterizator.shifterizatorbackend.shift.service.validator.ShiftAssig
 import com.shifterizator.shifterizatorbackend.company.model.Company;
 import com.shifterizator.shifterizatorbackend.company.model.Location;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -55,6 +56,9 @@ class ShiftAssignmentServiceImplTest {
 
     @Mock
     private ShiftAssignmentPreferenceAdvisor shiftAssignmentPreferenceAdvisor;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private ShiftAssignmentServiceImpl service;

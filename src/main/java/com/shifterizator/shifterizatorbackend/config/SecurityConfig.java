@@ -154,6 +154,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/test/shiftmanager").hasRole("SHIFTMANAGER")
                                 .requestMatchers("/api/test/readonlymanager").hasRole("READONLYMANAGER")
                                 .requestMatchers("/api/test/employee").hasRole("EMPLOYEE")
+                                .requestMatchers("/api/notifications/**").authenticated()
                                 .requestMatchers("/api/auth/**").authenticated()
                                 .anyRequest().authenticated();
                 })

@@ -3,6 +3,8 @@ package com.shifterizator.shifterizatorbackend.shift.service;
 import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.model.Employee;
 import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeRepository;
+import com.shifterizator.shifterizatorbackend.notification.event.ShiftAssignmentCreatedEvent;
+import com.shifterizator.shifterizatorbackend.notification.event.ShiftAssignmentRemovedEvent;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentAssignResult;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ShiftAssignmentNotFoundException;
@@ -15,6 +17,7 @@ import com.shifterizator.shifterizatorbackend.shift.service.advisor.ShiftAssignm
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceCompletenessService;
 import com.shifterizator.shifterizatorbackend.shift.service.validator.ShiftAssignmentValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,7 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
     private final ShiftAssignmentValidator shiftAssignmentValidator;
     private final ShiftInstanceCompletenessService shiftInstanceCompletenessService;
     private final ShiftAssignmentPreferenceAdvisor shiftAssignmentPreferenceAdvisor;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     public ShiftAssignmentAssignResult assign(ShiftAssignmentRequestDto dto) {
@@ -61,6 +65,8 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
 
         shiftInstanceCompletenessService.updateCompleteness(shiftInstance);
 
+        applicationEventPublisher.publishEvent(new ShiftAssignmentCreatedEvent(saved));
+
         List<String> warnings = shiftAssignmentPreferenceAdvisor.getWarnings(saved.getEmployee(), saved.getShiftInstance());
         return new ShiftAssignmentAssignResult(saved, warnings);
     }
@@ -75,6 +81,8 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
 
         ShiftInstance shiftInstance = assignment.getShiftInstance();
         shiftInstanceCompletenessService.updateCompleteness(shiftInstance);
+
+        applicationEventPublisher.publishEvent(new ShiftAssignmentRemovedEvent(assignment));
     }
 
     @Override
@@ -84,6 +92,7 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
         for (ShiftAssignment assignment : inRange) {
             assignment.setDeletedAt(LocalDateTime.now());
             shiftInstanceCompletenessService.updateCompleteness(assignment.getShiftInstance());
+            applicationEventPublisher.publishEvent(new ShiftAssignmentRemovedEvent(assignment));
         }
     }
 

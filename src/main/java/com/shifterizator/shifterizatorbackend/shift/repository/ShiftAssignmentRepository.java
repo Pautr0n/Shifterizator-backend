@@ -49,4 +49,14 @@ public interface ShiftAssignmentRepository extends JpaRepository<ShiftAssignment
               AND sa.deletedAt IS NULL
             """)
     List<Long> findAssignedEmployeeIdsByShiftInstanceIdIn(@Param("shiftInstanceIds") List<Long> shiftInstanceIds);
+
+    @Query("""
+            SELECT sa FROM ShiftAssignment sa
+            LEFT JOIN FETCH sa.shiftInstance si
+            LEFT JOIN FETCH si.location
+            LEFT JOIN FETCH sa.employee e
+            LEFT JOIN FETCH e.user
+            WHERE sa.id = :id
+            """)
+    Optional<ShiftAssignment> findByIdWithShiftInstanceAndEmployeeUser(@Param("id") Long id);
 }
