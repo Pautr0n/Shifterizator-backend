@@ -48,7 +48,7 @@ public class Notification {
     @Column(name = "related_entity_id")
     private Long relatedEntityId;
 
-    @Column(nullable = false)
+    @Column(name = "is_read", nullable = false)
     @Builder.Default
     private Boolean read = false;
 

@@ -43,3 +43,7 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     try-it-out-enabled: true
+
+logging:
+  level:
+    com.shifterizator.shifterizatorbackend.shift.service.ShiftSchedulerServiceImpl: DEBUG

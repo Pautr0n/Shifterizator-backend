@@ -18,7 +18,7 @@ spring:
     hibernate:
       # Use 'validate' for production to prevent automatic schema changes
       # If you prefer automatic migrations, use 'update' but ensure only one instance runs
-      ddl-auto: ${DDL_AUTO:validate}
+      ddl-auto: ${DDL_AUTO:update}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
