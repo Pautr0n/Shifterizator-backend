@@ -1,8 +1,8 @@
 package com.shifterizator.shifterizatorbackend.employee.service;
+
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesRequestDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeePreferencesResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeRequestDto;
-import com.shifterizator.shifterizatorbackend.employee.dto.EmployeeResponseDto;
 import com.shifterizator.shifterizatorbackend.employee.exception.EmployeeNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.exception.PositionNotFoundException;
 import com.shifterizator.shifterizatorbackend.employee.mapper.EmployeeMapper;
@@ -74,7 +74,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setPreferredDayOff(EmployeeMapper.parsePreferredDayOff(dto.preferredDayOff()));
         employee.setShiftsPerWeek(dto.shiftsPerWeek());
         employee.setPosition(position);
-        employee.setProfilePictureUrl(dto.profilePictureUrl());
+        if (dto.profilePictureUrl()!=null) {
+            employee.setProfilePictureUrl(dto.profilePictureUrl());
+        }
 
         employeeDomainService.assignUser(employee, dto, id);
         employeeDomainService.assignCompanies(employee, dto);
