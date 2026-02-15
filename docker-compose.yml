@@ -9,11 +9,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-shifterizator_prod}
       MYSQL_USER: ${MYSQL_USER:-shifterizator}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-changeme}
-      R2_ACCESS_KEY: ${R2_ACCESS_KEY:-}
-      R2_SECRET_KEY: ${R2_SECRET_KEY:-}
-      R2_ENDPOINT: ${R2_ENDPOINT:-}
-      R2_BUCKET: ${R2_BUCKET:-}
-      R2_PUBLIC_BASE_URL: ${R2_PUBLIC_BASE_URL:-}
+
     ports:
       - "${MYSQL_PORT:-3307}:3306"
     volumes:
@@ -37,6 +33,13 @@ services:
     environment:
       # Spring Profile
       SPRING_PROFILES_ACTIVE: prod
+
+      #Cloudflare R2
+      R2_ACCESS_KEY: ${R2_ACCESS_KEY:-}
+      R2_SECRET_KEY: ${R2_SECRET_KEY:-}
+      R2_ENDPOINT: ${R2_ENDPOINT:-}
+      R2_BUCKET: ${R2_BUCKET:-}
+      R2_PUBLIC_BASE_URL: ${R2_PUBLIC_BASE_URL:-}
       
       # Database Connection (uses service name from docker-compose network)
       MYSQLHOST: shifterizator-mysql
