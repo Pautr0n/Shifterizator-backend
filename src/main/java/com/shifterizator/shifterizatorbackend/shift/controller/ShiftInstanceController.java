@@ -104,18 +104,18 @@ public class ShiftInstanceController {
     }
 
     @Operation(
-            summary = "Schedule a full month",
-            description = "Triggers auto-assignment of employees to shifts for a location for the given month.",
+            summary = "Schedule a date range",
+            description = "Triggers auto-assignment of employees to shifts for a location from start date (Monday) to end date (Sunday), max 8 weeks. Days with no shifts or no candidates are skipped.",
             security = @SecurityRequirement(name = "Bearer Authentication")
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Scheduling accepted"),
-            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "400", description = "Validation error (e.g. start not Monday, end not Sunday, range over 8 weeks)"),
             @ApiResponse(responseCode = "404", description = "Location not found")
     })
-    @PostMapping("/schedule-month")
-    public ResponseEntity<Void> scheduleMonth(@Valid @RequestBody GenerateMonthRequestDto dto) {
-        shiftSchedulerService.scheduleMonth(dto.locationId(), YearMonth.of(dto.year(), dto.month()));
+    @PostMapping("/schedule-range")
+    public ResponseEntity<Void> scheduleRange(@Valid @RequestBody GenerateRangeRequestDto dto) {
+        shiftSchedulerService.scheduleRange(dto.locationId(), dto.startDate(), dto.endDate());
         return ResponseEntity.accepted().build();
     }
 

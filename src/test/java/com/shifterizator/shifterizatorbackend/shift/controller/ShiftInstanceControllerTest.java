@@ -250,13 +250,13 @@ class ShiftInstanceControllerTest {
     }
 
     @Test
-    void scheduleMonth_shouldReturn202Accepted() throws Exception {
-        mockMvc.perform(post("/api/shift-instances/schedule-month")
+    void scheduleRange_shouldReturn202Accepted() throws Exception {
+        mockMvc.perform(post("/api/shift-instances/schedule-range")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"locationId\":10,\"year\":2025,\"month\":2}"))
+                        .content("{\"locationId\":10,\"startDate\":\"2025-02-03\",\"endDate\":\"2025-02-09\"}"))
                 .andExpect(status().isAccepted());
 
-        verify(shiftSchedulerService).scheduleMonth(10L, YearMonth.of(2025, 2));
+        verify(shiftSchedulerService).scheduleRange(10L, LocalDate.of(2025, 2, 3), LocalDate.of(2025, 2, 9));
     }
 }

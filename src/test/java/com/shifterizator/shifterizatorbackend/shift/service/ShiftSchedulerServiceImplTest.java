@@ -10,6 +10,7 @@ import com.shifterizator.shifterizatorbackend.employee.repository.EmployeeReposi
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentAssignResult;
 import com.shifterizator.shifterizatorbackend.shift.dto.ShiftAssignmentRequestDto;
 import com.shifterizator.shifterizatorbackend.shift.exception.ScheduleDaySkippedException;
+import com.shifterizator.shifterizatorbackend.shift.exception.ShiftValidationException;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftAssignment;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
@@ -136,17 +137,11 @@ class ShiftSchedulerServiceImplTest {
     }
 
     @Test
-    void scheduleMonth_shouldThrowOnFirstDayWhenNoInstances() {
-        Location loc = location(1L);
-        when(locationService.findById(1L)).thenReturn(loc);
-        when(shiftInstanceRepository.findByLocation_IdAndDateAndDeletedAtIsNullOrderByStartTimeAsc(eq(1L), any(LocalDate.class)))
-                .thenReturn(List.of());
-
-        assertThatThrownBy(() -> scheduler.scheduleMonth(1L, java.time.YearMonth.of(2025, 2)))
-                .isInstanceOf(ScheduleDaySkippedException.class)
-                .hasMessageContaining("No shifts defined");
-
-        verify(shiftInstanceRepository, atLeastOnce()).findByLocation_IdAndDateAndDeletedAtIsNullOrderByStartTimeAsc(eq(1L), any(LocalDate.class));
+    void scheduleRange_shouldThrowWhenStartNotMonday() {
+        assertThatThrownBy(() -> scheduler.scheduleRange(1L, LocalDate.of(2025, 2, 4), LocalDate.of(2025, 2, 9)))
+                .isInstanceOf(ShiftValidationException.class)
+                .hasMessage("Start date must be a Monday");
+        verify(locationService, never()).findById(any());
     }
 
     @Test

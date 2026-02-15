@@ -87,7 +87,6 @@ class ShiftTemplateMapperTest {
                 "Morning shift",
                 Set.of(),
                 null,
-                null,
                 true,
                 2
         );

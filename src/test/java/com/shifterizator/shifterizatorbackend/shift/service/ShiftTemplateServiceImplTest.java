@@ -62,7 +62,6 @@ class ShiftTemplateServiceImplTest {
                 "Morning shift",
                 Set.of(),
                 null,
-                null,
                 true,
                 null
         );
@@ -104,6 +103,7 @@ class ShiftTemplateServiceImplTest {
         assertThat(result.getId()).isEqualTo(99L);
         verify(shiftTemplateDomainService).buildLanguageRequirements(eq(template), any());
         verify(shiftTemplateDomainService).buildPositionRequirements(template, dto.requiredPositions());
+        verify(shiftTemplateDomainService).applyComputedRequiredAndIdeal(template);
         verify(shiftTemplateRepository).save(any(ShiftTemplate.class));
     }
 
@@ -116,7 +116,6 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(17, 0),
                 "Test",
                 Set.of(),
-                null,
                 null,
                 true,
                 null
@@ -139,7 +138,6 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(17, 0),
                 "Test",
                 Set.of(),
-                null,
                 null,
                 true,
                 null
@@ -169,7 +167,6 @@ class ShiftTemplateServiceImplTest {
                 "Test",
                 Set.of(),
                 null,
-                null,
                 true,
                 null
         );
@@ -188,40 +185,6 @@ class ShiftTemplateServiceImplTest {
     }
 
     @Test
-    void create_shouldThrowWhenIdealEmployeesLessThanRequired() {
-        ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
-                1L,
-                List.of(new PositionRequirementDto(1L, 1, null)),
-                LocalTime.of(9, 0),
-                LocalTime.of(17, 0),
-                "Test",
-                Set.of(),
-                null,
-                0,
-                true,
-                null
-        );
-
-        Company company = new Company("Skynet", "Skynet", "12345678T", "test@test.com", "+34999999999");
-        company.setId(1L);
-        Location location = Location.builder().id(1L).name("HQ").address("Main").company(company).build();
-        ShiftTemplate templateWithInvalidIdeal = ShiftTemplate.builder()
-                .requiredEmployees(1)
-                .idealEmployees(0)
-                .build();
-
-        when(shiftTemplateDomainService.resolveLocation(1L)).thenReturn(location);
-        when(shiftTemplateMapper.toEntity(any(), any())).thenReturn(templateWithInvalidIdeal);
-        doNothing().when(shiftTemplateDomainService).buildPositionRequirements(any(), any());
-        doThrow(new ShiftValidationException("Ideal employees must be greater than or equal to required employees"))
-                .when(shiftTemplateDomainService).validateIdealEmployees(1, 0);
-
-        assertThatThrownBy(() -> service.create(dto))
-                .isInstanceOf(ShiftValidationException.class)
-                .hasMessageContaining("Ideal employees must be greater than or equal to required");
-    }
-
-    @Test
     void create_shouldThrowWhenPositionIdealCountLessThanRequiredCount() {
         ShiftTemplateRequestDto dto = new ShiftTemplateRequestDto(
                 1L,
@@ -230,7 +193,6 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(17, 0),
                 "Test",
                 Set.of(),
-                null,
                 null,
                 true,
                 null
@@ -263,7 +225,6 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(18, 0),
                 "Updated shift",
                 Set.of(),
-                null,
                 null,
                 true,
                 null
@@ -312,6 +273,7 @@ class ShiftTemplateServiceImplTest {
         assertThat(result.getEndTime()).isEqualTo(LocalTime.of(18, 0));
         assertThat(result.getDescription()).isEqualTo("Updated shift");
         assertThat(result.getRequiredPositions()).hasSize(2);
+        verify(shiftTemplateDomainService).applyComputedRequiredAndIdeal(existing);
     }
 
     @Test
@@ -323,7 +285,6 @@ class ShiftTemplateServiceImplTest {
                 LocalTime.of(17, 0),
                 "Test",
                 Set.of(),
-                null,
                 null,
                 true,
                 null

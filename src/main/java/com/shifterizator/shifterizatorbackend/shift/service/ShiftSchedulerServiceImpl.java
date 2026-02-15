@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +35,7 @@ import java.util.Set;
 public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
 
     private static final int DEFAULT_SHIFTS_PER_WEEK = 5;
+    private static final int MAX_RANGE_DAYS = 56;
 
     private final ShiftInstanceRepository shiftInstanceRepository;
     private final ShiftAssignmentRepository shiftAssignmentRepository;
@@ -70,11 +71,30 @@ public class ShiftSchedulerServiceImpl implements ShiftSchedulerService {
     }
 
     @Override
-    public void scheduleMonth(Long locationId, YearMonth yearMonth) {
-        LocalDate first = yearMonth.atDay(1);
-        LocalDate last = yearMonth.atEndOfMonth();
-        for (LocalDate date = first; !date.isAfter(last); date = date.plusDays(1)) {
-            scheduleDay(locationId, date);
+    public void scheduleRange(Long locationId, LocalDate startDate, LocalDate endDate) {
+        validateRange(startDate, endDate);
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            try {
+                scheduleDay(locationId, date);
+            } catch (ScheduleDaySkippedException e) {
+                log.debug("Skipped scheduling for {}: {}", date, e.getMessage());
+            }
+        }
+    }
+
+    private void validateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate.getDayOfWeek() != DayOfWeek.MONDAY) {
+            throw new ShiftValidationException("Start date must be a Monday");
+        }
+        if (endDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
+            throw new ShiftValidationException("End date must be a Sunday");
+        }
+        if (endDate.isBefore(startDate)) {
+            throw new ShiftValidationException("End date must be on or after start date");
+        }
+        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        if (days > MAX_RANGE_DAYS) {
+            throw new ShiftValidationException("Range must not exceed 8 weeks");
         }
     }
 

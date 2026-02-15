@@ -137,7 +137,6 @@ class CalendarRulesFlowIT extends BaseIntegrationTest {
                 "Regular shift",
                 null,
                 null,
-                null,
                 true,
                 null
         );

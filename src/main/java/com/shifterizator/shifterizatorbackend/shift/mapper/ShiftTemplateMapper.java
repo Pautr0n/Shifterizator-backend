@@ -37,6 +37,12 @@ public class ShiftTemplateMapper {
                 .sum()
                 : 0;
 
+        Integer totalIdealEmployees = template.getRequiredPositions() != null
+                ? template.getRequiredPositions().stream()
+                .mapToInt(stp -> stp.getIdealCount() != null ? stp.getIdealCount() : stp.getRequiredCount())
+                .sum()
+                : null;
+
         List<LanguageRequirementResponseDto> languageReqs = template.getRequiredLanguageRequirements() != null
                 ? template.getRequiredLanguageRequirements().stream()
                 .map(r -> new LanguageRequirementResponseDto(
@@ -60,7 +66,7 @@ public class ShiftTemplateMapper {
                 template.getStartTime(),
                 template.getEndTime(),
                 totalRequiredEmployees,
-                template.getIdealEmployees(),
+                totalIdealEmployees,
                 template.getDescription(),
                 languageNames,
                 languageReqs,
@@ -79,7 +85,6 @@ public class ShiftTemplateMapper {
                 .startTime(dto.startTime())
                 .endTime(dto.endTime())
                 .description(dto.description())
-                .idealEmployees(dto.idealEmployees())
                 .isActive(dto.isActive() != null ? dto.isActive() : true)
                 .priority(dto.priority())
                 .build();

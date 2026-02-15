@@ -171,7 +171,6 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 "Morning shift",
                 null,
                 null,
-                null,
                 true,
                 null
         );
@@ -252,7 +251,6 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 "Assign shift",
                 null,
                 null,
-                null,
                 true,
                 null
         );
@@ -329,7 +327,6 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 "Dup shift",
                 null,
                 null,
-                null,
                 true,
                 null
         );
@@ -388,7 +385,6 @@ class ShiftFlowIT extends BaseIntegrationTest {
                 LocalTime.of(9, 0),
                 LocalTime.of(17, 0),
                 "Block shift",
-                null,
                 null,
                 null,
                 true,

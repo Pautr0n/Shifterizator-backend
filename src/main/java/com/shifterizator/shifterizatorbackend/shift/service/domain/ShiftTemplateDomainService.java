@@ -94,6 +94,20 @@ public class ShiftTemplateDomainService {
         template.setRequiredPositions(positions);
     }
 
+    public void applyComputedRequiredAndIdeal(ShiftTemplate template) {
+        if (template.getRequiredPositions() == null || template.getRequiredPositions().isEmpty()) {
+            return;
+        }
+        int required = template.getRequiredPositions().stream()
+                .mapToInt(ShiftTemplatePosition::getRequiredCount)
+                .sum();
+        int ideal = template.getRequiredPositions().stream()
+                .mapToInt(stp -> stp.getIdealCount() != null ? stp.getIdealCount() : stp.getRequiredCount())
+                .sum();
+        template.setRequiredEmployees(required);
+        template.setIdealEmployees(ideal);
+    }
+
     public void validateIdealCount(Integer requiredCount, Integer idealCount) {
         if (idealCount != null && requiredCount != null && idealCount < requiredCount) {
             throw new ShiftValidationException(
