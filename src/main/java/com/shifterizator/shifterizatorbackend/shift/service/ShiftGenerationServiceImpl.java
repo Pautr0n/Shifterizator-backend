@@ -7,6 +7,7 @@ import com.shifterizator.shifterizatorbackend.openinghours.model.SpecialOpeningH
 import com.shifterizator.shifterizatorbackend.openinghours.service.SpecialOpeningHoursService;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
+import com.shifterizator.shifterizatorbackend.shift.repository.ShiftAssignmentRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftTemplateRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceDomainService;
@@ -37,6 +38,7 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
     private final ShiftInstanceDomainService shiftInstanceDomainService;
     private final ShiftTemplateRepository shiftTemplateRepository;
     private final ShiftInstanceRepository shiftInstanceRepository;
+    private final ShiftAssignmentRepository shiftAssignmentRepository;
     private final BlackoutDayService blackoutDayService;
     private final SpecialOpeningHoursService specialOpeningHoursService;
 
@@ -47,6 +49,7 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
 
         for (LocalDate date = ctx.firstDay(); !date.isAfter(ctx.lastDay()); date = date.plusDays(1)) {
             shiftInstanceRepository.softDeleteByLocationAndDate(ctx.locationId(), date, ctx.deletedAt());
+            shiftAssignmentRepository.softDeleteByLocationAndDate(ctx.locationId(), date, ctx.deletedAt());
 
             if (ctx.blackoutDates().contains(date)) {
                 continue;
@@ -88,6 +91,7 @@ public class ShiftGenerationServiceImpl implements ShiftGenerationService {
 
         for (LocalDate date = ctx.firstDay(); !date.isAfter(ctx.lastDay()); date = date.plusDays(1)) {
             shiftInstanceRepository.softDeleteByLocationAndDate(ctx.locationId(), date, ctx.deletedAt());
+            shiftAssignmentRepository.softDeleteByLocationAndDate(ctx.locationId(), date, ctx.deletedAt());
 
             if (ctx.blackoutDates().contains(date)) {
                 continue;

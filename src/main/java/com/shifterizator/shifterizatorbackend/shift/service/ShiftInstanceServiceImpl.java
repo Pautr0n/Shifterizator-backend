@@ -7,6 +7,7 @@ import com.shifterizator.shifterizatorbackend.shift.exception.ShiftInstanceNotFo
 import com.shifterizator.shifterizatorbackend.shift.mapper.ShiftInstanceMapper;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftInstance;
 import com.shifterizator.shifterizatorbackend.shift.model.ShiftTemplate;
+import com.shifterizator.shifterizatorbackend.shift.repository.ShiftAssignmentRepository;
 import com.shifterizator.shifterizatorbackend.shift.repository.ShiftInstanceRepository;
 import com.shifterizator.shifterizatorbackend.shift.service.domain.ShiftInstanceDomainService;
 import com.shifterizator.shifterizatorbackend.shift.spec.ShiftInstanceSpecs;
@@ -29,6 +30,7 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
     private final ShiftInstanceRepository shiftInstanceRepository;
     private final ShiftInstanceMapper shiftInstanceMapper;
     private final ShiftInstanceDomainService shiftInstanceDomainService;
+    private final ShiftAssignmentRepository shiftAssignmentRepository;
 
     @Override
     public ShiftInstance create(ShiftInstanceRequestDto dto) {
@@ -73,7 +75,6 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
         existing.setDate(dto.date());
         existing.setStartTime(dto.startTime());
         existing.setEndTime(dto.endTime());
-        // requiredEmployees and idealEmployees are read-only (computed from template required positions)
         existing.setNotes(dto.notes());
 
         return existing;
@@ -87,7 +88,9 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
         if (hardDelete) {
             shiftInstanceRepository.delete(instance);
         } else {
+            LocalDateTime now = LocalDateTime.now();
             instance.setDeletedAt(LocalDateTime.now());
+            shiftAssignmentRepository.softDeleteByShiftInstanceId(id, now);
         }
     }
 
@@ -102,6 +105,8 @@ public class ShiftInstanceServiceImpl implements ShiftInstanceService {
                     .filter(i -> i.getDeletedAt() == null)
                     .ifPresent(i -> i.setDeletedAt(now));
         }
+        shiftAssignmentRepository.softDeleteByShiftInstanceIds(ids, now);
+
     }
 
     @Override
