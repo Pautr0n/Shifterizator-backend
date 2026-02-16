@@ -40,11 +40,8 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
 
     @Override
     public ShiftAssignmentAssignResult assign(ShiftAssignmentRequestDto dto) {
-        System.out.println(">>> ENTER assign() for shift " + dto.shiftInstanceId());
         ShiftInstance shiftInstance = shiftInstanceRepository.findByIdFullyLoaded(dto.shiftInstanceId())
                 .orElseThrow(() -> new ShiftInstanceNotFoundException("Shift instance not found"));
-
-        System.out.println("REQ POS = " + shiftInstance.getShiftTemplate().getRequiredPositions().size());
 
         Employee employee = employeeRepository.findById(dto.employeeId())
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
@@ -104,6 +101,18 @@ public class ShiftAssignmentServiceImpl implements ShiftAssignmentService {
         return shiftAssignmentRepository.findById(id)
                 .filter(a -> a.getDeletedAt() == null)
                 .orElseThrow(() -> new ShiftAssignmentNotFoundException("Assignment not found"));
+    }
+
+    @Override
+    public ShiftAssignment confirm(Long id) {
+        ShiftAssignment assignment = shiftAssignmentRepository.findById(id)
+                .filter(a -> a.getDeletedAt() == null)
+                .orElseThrow(() -> new ShiftAssignmentNotFoundException("Assignment not found"));
+
+        assignment.setIsConfirmed(true);
+        assignment.setConfirmedAt(LocalDateTime.now());
+
+        return shiftAssignmentRepository.save(assignment);
     }
 
     @Override

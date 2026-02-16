@@ -67,6 +67,22 @@ public class ShiftAssignmentController {
     }
 
     @Operation(
+            summary = "Confirm a shift assignment",
+            description = "Marks a shift assignment as confirmed by the employee.",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Assignment confirmed successfully"),
+            @ApiResponse(responseCode = "404", description = "Assignment not found")
+    })
+    @PatchMapping("/{id}/confirm")
+    public ResponseEntity<ShiftAssignmentResponseDto> confirm(
+            @Parameter(description = "Assignment ID", required = true) @PathVariable Long id) {
+        ShiftAssignment assignment = shiftAssignmentService.confirm(id);
+        return ResponseEntity.ok(shiftAssignmentMapper.toDto(assignment));
+    }
+
+    @Operation(
             summary = "Get assignment by ID",
             description = "Retrieves a shift assignment by its ID.",
             security = @SecurityRequirement(name = "Bearer Authentication")
