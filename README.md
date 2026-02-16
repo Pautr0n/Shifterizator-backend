@@ -2,16 +2,21 @@
 
 📄 **Description - App Statement**
 
-Shifterizator is a comprehensive backend system for automatic multi-business schedule generation and workforce management. This Spring Boot application provides a RESTful API for managing companies, employees, shifts, availability, and schedules across multiple business locations. The system supports role-based access control (RBAC) with different permission levels for super administrators, company administrators, shift managers, and employees.
+Shifterizator is a comprehensive backend system for automatic multi-business schedule generation and workforce management. This Spring Boot application provides a RESTful API for managing companies, employees, shifts, availability, and schedules across multiple business locations. The system supports role-based access control (RBAC) with different permission levels for super administrators, company administrators, shift managers, read-only managers, and employees.
 
 Key features include:
 - Multi-tenant architecture supporting multiple companies
 - Automatic shift generation based on templates and employee availability
+- Auto-scheduling of employees to shifts with candidate tiering
+- Shift assignment confirmation workflow
+- In-app notifications for shift assignments
 - Employee availability and preference management
 - Blackout days and special opening hours configuration
+- File storage (Cloudflare R2 / S3-compatible) for profile pictures and uploads
 - Comprehensive role-based access control
 - JWT-based authentication and authorization
-- RESTful API with pagination and filtering capabilities
+- RESTful API with pagination and filtering
+- OpenAPI / Swagger documentation (non-production)
 
 ---
 
@@ -24,6 +29,8 @@ Key features include:
 - **MySQL 8.0** - Production database
 - **H2 Database** - In-memory database for unit tests
 - **JWT (JJWT 0.11.5)** - JSON Web Token for authentication
+- **SpringDoc OpenAPI 3** - API documentation (Swagger UI)
+- **AWS SDK for S3** - S3-compatible storage (Cloudflare R2, AWS S3)
 - **Lombok** - Code generation and boilerplate reduction
 - **Maven** - Build and dependency management
 - **Testcontainers** - Integration testing with Docker containers
@@ -56,20 +63,22 @@ Key features include:
    cd shifterizator-backend
    ```
 
-3. **Set up MySQL database:**
+3. **Set up environment and MySQL database:**
    
+   Copy `.env.example` to `.env` and set required values (especially `JWT_SECRET` for production):
+   ```bash
+   cp .env.example .env
+   ```
+
    **Option A: Using Docker Compose (Recommended for development)**
    ```bash
    docker-compose up -d
    ```
-   This will start a MySQL container on port 3307 with:
-   - Database: `shifterizator_dev`
-   - Username: `root`
-   - Password: `root`
+   For local development with the `dev` profile, ensure `MYSQL_DATABASE=shifterizator_dev` in your `.env`. The MySQL container will run on port 3307 with defaults: `root` / `root`.
 
    **Option B: Using local MySQL**
    - Create a MySQL database named `shifterizator_dev`
-   - Update connection details in `src/main/resources/application-dev.yml` if needed
+   - Update connection details in `src/main/resources/application-dev.yml` or via environment variables if needed
 
 4. **Install dependencies:**
    ```bash
@@ -108,12 +117,19 @@ Key features include:
    # Run only unit tests
    ./mvnw test
    
-   # Run only integration tests
+   # Run only integration tests (skips unit tests)
    ./mvnw verify -DskipTests
    ```
 
-4. **Default seeded users:**
-   After the first run, the following users are automatically created:
+4. **API documentation (dev/test profiles):**
+   When running with `dev` or `test` profile, Swagger UI is available at:
+   ```
+   http://localhost:8080/swagger-ui.html
+   ```
+   OpenAPI docs are at `/v3/api-docs`. Swagger is disabled in production for security.
+
+5. **Default seeded users:**
+   When running with `dev` or `test` profile (not `prod`), the following users are automatically created on first run if the database is empty:
    - **SUPERADMIN**: `superadmin` / `SuperAdmin1!`
    - **COMPANYADMIN**: `admin` / `Admin123!`
    - **SHIFTMANAGER**: `manager` / `Manager123!`
@@ -132,6 +148,9 @@ Key features include:
      - `MYSQLUSER` - Database username
      - `MYSQLPASSWORD` - Database password
      - `PORT` - Application port (default: 8080)
+     - `JWT_SECRET` - JWT signing secret (required)
+   - For file uploads (profile pictures, etc.), configure S3-compatible storage (e.g. Cloudflare R2):
+     - `R2_ACCESS_KEY`, `R2_SECRET_KEY`, `R2_ENDPOINT`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`
 
 2. **Build the application:**
    ```bash
@@ -152,6 +171,7 @@ Key features include:
    # Run container
    docker run -p 8080:8080 \
      -e SPRING_PROFILES_ACTIVE=prod \
+     -e JWT_SECRET=your-jwt-secret \
      -e MYSQLHOST=your-db-host \
      -e MYSQLPORT=3306 \
      -e MYSQLDATABASE=shifterizator_prod \
@@ -204,6 +224,8 @@ Contributions are welcome! Please follow these steps to contribute:
 
 ## 📚 Additional Resources
 
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Docker deployment guide with environment variables and troubleshooting
+- **Swagger UI** - Interactive API docs at `/swagger-ui.html` when running with dev/test profile
 
 ---
 

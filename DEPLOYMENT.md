@@ -13,9 +13,13 @@ This guide explains how to deploy the Shifterizator backend application using Do
 
 ### 1. Clone and Navigate
 
+**Full stack (backend + frontend):** Clone both repos as siblings, then:
+
 ```bash
 cd shifterizator-backend
 ```
+
+**Backend only:** If you only need the API, clone just the backend repo and use `docker-compose up -d --build shifterizator-mysql shifterizator-backend` to skip the frontend.
 
 ### 2. Create Environment File
 
@@ -38,8 +42,10 @@ docker-compose up -d --build
 
 This will:
 - Build the Spring Boot application Docker image
+- Build the React frontend (requires `shifterizator-frontend` repo as sibling)
 - Start MySQL container
-- Start the application container
+- Start the backend container
+- Start the frontend container (served on port 3000 by default)
 - Wait for MySQL to be healthy before starting the app
 
 ### 4. Verify Deployment
@@ -59,6 +65,8 @@ Test the health endpoint:
 curl http://localhost:8080/api/health
 ```
 
+**If frontend is running:** Open http://localhost:3000 in your browser
+
 ## Environment Variables
 
 All configuration is done via the `.env` file. See `.env.example` for all available variables.
@@ -73,6 +81,8 @@ All configuration is done via the `.env` file. See `.env.example` for all availa
 ### Optional Variables
 
 - `APP_PORT` - External port for the application (default: 8080)
+- `FRONTEND_PORT` - External port for the frontend (default: 3000)
+- `VITE_API_BASE_URL` - API base URL for frontend (must be reachable from browser; default: `http://localhost:8080/api`)
 - `MYSQL_PORT` - External port for MySQL (default: 3306)
 - `CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed frontend origins
 - `DDL_AUTO` - JPA schema mode: `validate` (recommended) or `update`
@@ -138,6 +148,8 @@ docker-compose exec shifterizator-mysql mysql -u shifterizator -p shifterizator_
 └─────────────────────────────────────┘
 ```
 
+**Note:** The frontend service builds from `../shifterizator-frontend`. Clone both repos as siblings for full-stack Docker.
+
 ## Health Checks
 
 Both containers have health checks configured:
@@ -177,7 +189,14 @@ docker run --rm -v shifterizator-backend_shifterizator_mysql_data:/data -v $(pwd
 
 ### Port already in use
 
-Change `APP_PORT` or `MYSQL_PORT` in `.env` to use different ports.
+Change `APP_PORT`, `FRONTEND_PORT`, or `MYSQL_PORT` in `.env` to use different ports.
+
+### Frontend build fails (missing shifterizator-frontend)
+
+The frontend service expects `../shifterizator-frontend` to exist. If you only need the backend, run:
+```bash
+docker-compose up -d --build shifterizator-mysql shifterizator-backend
+```
 
 ### JWT Secret error
 

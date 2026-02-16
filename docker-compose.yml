@@ -84,5 +84,20 @@ services:
       retries: 3
       start_period: 60s
 
+  # React Frontend Container (requires shifterizator-frontend repo as sibling)
+  shifterizator-frontend:
+    build:
+      context: ../shifterizator-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080/api}
+        VITE_ENV: ${VITE_ENV:-production}
+    container_name: shifterizator-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - shifterizator-backend
+
 volumes:
   shifterizator_mysql_data:
