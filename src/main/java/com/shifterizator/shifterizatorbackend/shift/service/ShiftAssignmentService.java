@@ -17,6 +17,8 @@ public interface ShiftAssignmentService {
 
     ShiftAssignment findById(Long id);
 
+    ShiftAssignment confirm(Long id);
+
     List<ShiftAssignment> findByShiftInstance(Long shiftInstanceId);
 
     List<ShiftAssignment> findByEmployee(Long employeeId);
