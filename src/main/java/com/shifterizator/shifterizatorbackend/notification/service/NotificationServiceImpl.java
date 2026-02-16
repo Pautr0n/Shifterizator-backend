@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
@@ -56,7 +57,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createForShiftAssignmentCreated(Long assignmentId) {
         ShiftAssignment assignment = shiftAssignmentRepository
                 .findByIdWithShiftInstanceAndEmployeeUser(assignmentId)
@@ -77,7 +78,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createForShiftAssignmentRemoved(Long assignmentId) {
         ShiftAssignment assignment = shiftAssignmentRepository
                 .findByIdWithShiftInstanceAndEmployeeUser(assignmentId)
